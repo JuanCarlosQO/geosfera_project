@@ -1,0 +1,11 @@
+{
+  "name": "geosfera",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Geosfera: health monitoring for astronauts. NASA Space Apps Challenge 2026.",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.js"
+  }
+}

@@ -1,4 +1,4 @@
-import { FIELDS, fieldByKey } from "./log-core.js";
+import { FIELDS, fieldByKey, bandFor } from "./log-core.js";
 // Main dashboard ("Today") rules, with no DOM so Node can test them.
 // The six Cupola windows, what each reads from the daily log, and how today is summarised.
 
@@ -46,7 +46,7 @@ export function headline(summary) {
   const watch = flagged.filter((w) => status[w.id] === "watch");
   if (watch.length) return { title: "Mostly good today, Commander.", line: `${names(watch)} ${watch.length === 1 ? "is" : "are"} in the watch range.` };
   if (normal === total) return { title: "All clear today, Commander.", line: "Every window is normal." };
-  return { title: `${measured} of ${total} measured today, Commander.`, line: "Ranges are pending an approved official source, so readings are not judged yet." };
+  return { title: `${measured} of ${total} measured today, Commander.`, line: "Everything measured so far is in the normal range." };
 }
 
 function names(wins) {
@@ -145,5 +145,7 @@ export function reasonFor(key, reading) {
   if (reading.flag === "again") return "Changed a lot since the last reading (app rule). Check the device and measure again.";
   if (key === "exerciseMinutes") return (reading.value >= EXERCISE_GOAL_MIN) ? "NASA's 1.5 hours reached." : `${EXERCISE_GOAL_MIN - reading.value} min short of NASA's 1.5 hours.`;
   if (key === "mood") return "Self-reported on a 1–5 scale.";
-  return "Pending check: no approved official range yet.";
+  if (key === "radiationDose") return "Dosimeter reading. Typical on the ISS: about 0.5 mSv per day.";
+  const b = bandFor(key, reading);
+  return b ? `${b.band} · ${b.source} (Earth reference, pending team review).` : "Pending check: no approved official range yet.";
 }

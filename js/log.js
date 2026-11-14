@@ -3,6 +3,7 @@
 // change since then, and a live check. Rules live in log-core.js (tested).
 
 import * as L from "./log-core.js";
+import * as S from "./store.js";
 
 const GROUPS = [
   { id: "vitals", code: "SEQ 01", name: "Vitals", keys: ["heartRate", "bloodPressure", "temperature", "bloodOxygen", "glucose"] },
@@ -23,8 +24,8 @@ const ICONS = {
 };
 const icon = (k) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
 
-const readLog = () => { try { return JSON.parse(localStorage.getItem(L.LOG_KEY)) ?? {}; } catch { return {}; } };
-const writeLog = (log) => { try { localStorage.setItem(L.LOG_KEY, JSON.stringify(log)); return true; } catch { return false; } };
+const readLog = () => S.readLog();
+const writeLog = (log) => S.writeLog(log);
 const nice = (day) => { const [y, m, d] = day.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }); };
 const fmt = (v) => (Array.isArray(v) ? `${v[0]}/${v[1]}` : String(v));
 
@@ -96,6 +97,9 @@ function history(log, today) {
 }
 
 export function mountLog(host, { go }, day = L.dateKey()) {
+  const crew = S.getCrew();
+  if (!crew.members.length) { go("today"); return; }
+  const member = S.current();
   const today = L.dateKey();
   let log = readLog();
   const saved = log[day] ?? {};
@@ -107,6 +111,7 @@ export function mountLog(host, { go }, day = L.dateKey()) {
     <header class="ci-hud">
       <div class="hud-left">
         <p class="eyebrow">Module 3 · Daily procedure</p>
+        <div class="who" role="group" aria-label="Who is checking in">${crew.members.map((m) => `<button type="button" class="who-pill ${m.id === member.id ? "on" : ""}" data-who="${m.id}" aria-pressed="${m.id === member.id}">${m.name}<small>${m.role}</small></button>`).join("")}</div>
         <h1 id="ci-title" tabindex="-1">${day === today ? "Today's check-in" : `Correct ${nice(day)}`}</h1>
         <p class="lede">Work down the sequences. Skip what you could not measure. Every value is checked the moment you type it.</p>
       </div>
@@ -212,7 +217,7 @@ export function mountLog(host, { go }, day = L.dateKey()) {
     const jumps = L.FIELDS.filter((f) => entry[f.key]?.flag === "again");
     $("result").innerHTML = `<div class="result ok telemetry">
       <p class="eyebrow">Telemetry received · ${new Date().toISOString().slice(11, 16)} UTC</p>
-      <p><strong>Saved for ${day === today ? "today" : nice(day)}.</strong> ${L.countFilled(entry)} of ${L.FIELDS.length} steps logged.</p>
+      <p><strong>Saved for ${member.name}, ${day === today ? "today" : nice(day)}.</strong> ${L.countFilled(entry)} of ${L.FIELDS.length} steps logged.</p>
       <ul class="tm-chips">${L.FIELDS.filter((f) => entry[f.key]).map((f) => `<li class="${entry[f.key].flag === "again" ? "again" : ""}">${f.label}: <b>${fmt(entry[f.key].value)}</b>${f.unit ? ` ${f.unit}` : ""}</li>`).join("")}</ul>
       ${jumps.length ? `<p class="tone-again">◌ Measure again: ${jumps.map((f) => f.label.toLowerCase()).join(", ")}.</p>` : ""}
       <a class="cta" href="#today">See it in the Cupola</a></div>`;
@@ -220,12 +225,17 @@ export function mountLog(host, { go }, day = L.dateKey()) {
     $("history").innerHTML = history(log, today);
   });
 
+  host.querySelector(".who").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-who]");
+    if (b && b.dataset.who !== member.id) { S.setActive(b.dataset.who); mountLog(host, { go }, day); }
+  });
+
   host.addEventListener("click", (e) => {
     const t = e.target.closest("[data-edit],[data-do]");
     if (!t) return;
     if (t.dataset.edit) { go(t.dataset.edit === today ? "log" : `log/${t.dataset.edit}`); return; }
-    if (t.dataset.do === "csv") download(`geosfera-log-${today}.csv`, L.toCsv(log), "text/csv");
-    if (t.dataset.do === "backup") download(`geosfera-backup-${today}.json`, L.toBackup(log), "application/json");
+    if (t.dataset.do === "csv") download(`geosfera-log-${member.name.replace(/\s+/g, "-").toLowerCase()}-${today}.csv`, L.toCsv(log), "text/csv");
+    if (t.dataset.do === "backup") download(`geosfera-backup-${member.name.replace(/\s+/g, "-").toLowerCase()}-${today}.json`, L.toBackup(log), "application/json");
   });
 
   host.querySelector('[data-do="restore"]').addEventListener("change", async (e) => {

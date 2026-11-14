@@ -10,7 +10,7 @@ body::before {
 }
 
 /* ---- glass instrument panels ---- */
-.panel, .strip, .hz, .rd, .mission-card, .ring-card, .streak-card, .week-card, .badge, .fact, .risk, .tally li, .hz-detail {
+.panel, .strip, .hz, .rd, .crew-card, .mission-card, .ring-card, .streak-card, .week-card, .badge, .fact, .risk, .tally li, .hz-detail {
   position: relative; overflow: hidden;
   background: linear-gradient(160deg, #111821 0%, #0b1016 100%);
   border: 1px solid #222b35; border-radius: 18px;
@@ -23,7 +23,7 @@ body::before {
 }
 .panel:hover::before, .strip:hover::before, .rd:hover::before, .ring-card:hover::before, .streak-card:hover::before,
 .week-card:hover::before, .badge:hover::before, .risk:hover::before, .fact:hover::before { transform: translateX(120%); transition: transform 1s ease; }
-.panel:hover, .strip:hover, .rd:hover, .ring-card:hover, .streak-card:hover, .week-card:hover, .badge:hover, .risk:hover, .fact:hover, .hz:hover {
+.panel:hover, .strip:hover, .rd:hover, .crew-card:hover, .ring-card:hover, .streak-card:hover, .week-card:hover, .badge:hover, .risk:hover, .fact:hover, .hz:hover {
   border-color: #6fe3ff88; box-shadow: 0 0 0 1px #6fe3ff33, 0 14px 40px -18px #6fe3ff66; transform: translateY(-2px);
 }
 .badge.won { border-color: #6fe3ff66; box-shadow: 0 0 24px -12px #6fe3ff; }

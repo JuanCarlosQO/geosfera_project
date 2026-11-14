@@ -2,6 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SYMPTOMS, RED_FLAGS, CONDITIONS, KIT, SIDE_EFFECTS, KIT_FACTS, allQuotes } from "../js/data/med-kit.js";
+import { FORMS } from "../js/pill3d.js";
+import { ZONES } from "../js/data/med-zones.js";
 
 const sources = readFileSync(new URL("../docs/SOURCES.md", import.meta.url), "utf8");
 const OFFICIAL = /^https:\/\/(www\.nasa\.gov|humanresearchroadmap\.nasa\.gov|ntrs\.nasa\.gov|dailymed\.nlm\.nih\.gov|www\.nccih\.nih\.gov)\//;
@@ -44,6 +46,26 @@ describe("medication data is verified", () => {
       assert.ok(CONDITIONS.some((c) => c.options.includes(m.id)), `${m.id} is never offered`);
       assert.ok(m.reviewedBy === null || typeof m.reviewedBy === "string", m.id);
     }
+  });
+
+  it("draws every medication in a known 3D form and colour", () => {
+    for (const m of KIT) {
+      assert.ok(FORMS[m.form], `${m.id}: form ${m.form}`);
+      assert.match(m.tint, /^#[0-9a-f]{6}$/, m.id);
+    }
+  });
+
+  it("reaches every symptom and complaint from a body zone", () => {
+    const symptoms = new Set(SYMPTOMS.map((s) => s.id));
+    const reach = new Set(ZONES.flatMap((z) => z.symptoms));
+    for (const z of ZONES) {
+      assert.ok(z.symptoms.includes(z.main), z.id);
+      for (const s of z.symptoms) assert.ok(symptoms.has(s), `${z.id}: ${s}`);
+      assert.ok(z.at[0] >= 0 && z.at[0] <= 200 && z.at[1] >= 0 && z.at[1] <= 450, z.id);
+      assert.ok(["left", "right"].includes(z.side) && z.lit.length >= 1, z.id);
+    }
+    for (const s of symptoms) assert.ok(reach.has(s), `no zone leads to ${s}`);
+    for (const c of CONDITIONS) assert.ok(ZONES.some((z) => c.core.includes(z.main)), `no zone opens ${c.id}`);
   });
 
   it("reads each daily limit from the words it quotes", () => {

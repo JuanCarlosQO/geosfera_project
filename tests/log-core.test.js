@@ -48,9 +48,12 @@ describe("building a day", () => {
     l = L.saveDay(l, "2026-11-14", {});
     assert.equal(l["2026-11-14"], undefined);
   });
-  it("feeds the dashboard: jumps become Measure again, the rest Pending check", () => {
+  it("feeds the dashboard: jumps become Measure again, the rest use the reference ranges", () => {
     assert.equal(L.judgeReading("heartRate", { value: 130, flag: "again" }), "again");
-    assert.equal(L.judgeReading("heartRate", { value: 64 }), "pending");
+    assert.equal(L.judgeReading("heartRate", { value: 64 }), "normal");
+    assert.equal(L.judgeReading("heartRate", { value: 104 }), "watch");
+    assert.equal(L.judgeReading("glucose", { value: 130 }), "act");
+    assert.equal(L.judgeReading("radiationDose", { value: 0.5 }), "logged");
     assert.equal(L.judgeReading("exerciseMinutes", { value: 90 }), "logged");
     assert.equal(L.judgeReading("mood", { value: 4 }), "logged");
   });
