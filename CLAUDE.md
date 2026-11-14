@@ -39,7 +39,9 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `js/data/body-systems.js` | App grouping of the risks into seven body systems, the regions each lights, verified facts, status words and shapes |
 | `css/meds.css` | Module 8 styles |
 | `js/meds-core.js` | Medication rules, tested: symptoms to possible complaints, label interval and daily limit, kit stock and dates, source-warned combinations, dose record, "Did it work?", CSV |
-| `js/meds.js` | Module 8 screen: symptom chips, "Could be" cards with first steps and kit options, follow-up cards, record, demo kit |
+| `js/meds.js` | Module 8 screen: the body figure with seven tappable zones, the zone's few symptoms, "Could be" cards in three numbered steps, kit options as 3D models, follow-up cards, kit shelf, record |
+| `js/data/med-zones.js` | The body zones (where on the figure, which regions light, which symptoms each asks about); navigation only, an app choice |
+| `js/pill3d.js` | CSS-only 3D medication models (stacked layers) that turn and can be dragged; illustrations of the dose form, not the real products |
 | `js/data/med-kit.js` | Seven in-flight complaints and ten ISS-kit medications with exact quotes (NASA kit list and briefs, FDA labels); `reviewedBy` per medication for the pharmacist's sign-off |
 | `css/duty.css` | Module 9 styles (shares chips and cards with `meds.css`) |
 | `js/duty-core.js` | Fit-for-duty rules, tested: sleep against NASA's 7-9 hours, low mood, recent medication with a NASA performance caution, three workload answers, honest headline (talk / gaps / ready), saved checks |
