@@ -12,6 +12,7 @@ Built one at a time during the hackathon (14–15 November 2026).
 
 3. **Daily check-in.** A numbered checklist for heart rate, blood pressure, temperature, blood oxygen, blood sugar, sleep, exercise, radiation dose and mood. Each value is checked as you type; impossible values and sudden jumps ask you to measure again instead of raising an alarm. Export to CSV, save a backup and restore it on another device. Data never leaves the device.
 4. **Mission.** An exercise ring against NASA's 1.5 hours a day, a check-in streak, a week of exercise that draws itself and mission patches that reward checking in and doing the countermeasures, never what a reading says.
+5. **Crew.** Several astronauts share the station device. Each one is registered with a name and role and has their own daily log. The dashboard opens with the crew at a glance: one silhouette per astronaut, tinted by their status, with key readings and a heart-rate trend. Tap someone to see their Cupola.
 
 8. **Onboard medications.** Tap on the body where it bothers you: the zone lights up and Geosfera lists the common in-flight complaints that fit, what NASA says to try first and what the ISS medical kit holds for it, in the label's own words, each medication as a 3D model you can turn. It follows the label's interval and daily limit, warns about a past date or a combination a source cautions against, records each dose and later asks whether it worked. It never diagnoses, and every medication entry is marked "Pending check" until the team's pharmacist has reviewed it.
 
