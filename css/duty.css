@@ -1,0 +1,42 @@
+/* Module 9: fit for duty. Shares chips, cards and type with meds.css. */
+
+.meds .step-msg { margin: 6px 0 0; font-size: 13px; color: var(--tone-again); }
+.meds .step-msg:empty { display: none; }
+
+.duty-intro { margin: 0 0 10px; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.wl { margin: 0 0 14px; }
+.wl p { margin: 0 0 8px; font-size: 15px; }
+.wl-scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.wl-opt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; padding: 6px 2px; border-radius: 10px; border: 1px solid var(--seam-hi); cursor: pointer; text-align: center; }
+.wl-opt input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.wl-opt span { font-size: 17px; }
+.wl-opt small { font-size: 10px; color: var(--ink-3); }
+.wl-opt:has(input:checked) { background: var(--beacon); border-color: var(--beacon); color: var(--beacon-ink); }
+.wl-opt:has(input:checked) small { color: var(--beacon-ink); }
+.wl-opt:has(input:focus-visible) { outline: 2px solid #ffffff; outline-offset: 2px; }
+
+.duty-verdict { margin: 4px 0 12px; padding: 16px; border-radius: 16px; background: var(--hull); border: 1px solid var(--seam-hi); line-height: 1.5; }
+.duty-verdict p { margin: 0; }
+.duty-verdict p + p { margin-top: 4px; color: var(--ink-2); font-size: 14px; }
+.duty-verdict strong { font-size: 18px; font-weight: 600; }
+.duty-verdict[data-headline="talk"] { border-color: var(--tone-watch); }
+.duty-verdict[data-headline="ready"] { border-color: var(--tone-normal); }
+
+.duty-list { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.duty-row { padding: 14px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam); }
+.duty-row[data-state="flag"] { border-color: #7a5230; }
+.duty-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 15px; }
+.duty-head span:last-child { font-size: 14px; white-space: nowrap; }
+.duty-body { margin-top: 6px; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.duty-body p { margin: 0 0 6px; }
+.duty-med strong { color: var(--ink); font-weight: 600; }
+
+.duty-actions { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 4px; }
+.duty-log { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.duty-log li { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 0; border-bottom: 1px solid var(--seam); }
+.duty-log .mono { color: var(--ink-3); }
+@media (min-width: 560px) { .duty-log li { grid-template-columns: 150px 1fr auto; gap: 12px; align-items: baseline; } }
+
+.meds .duty-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; padding: 14px 16px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam-hi); color: var(--ink); text-decoration: none; }
+.meds .duty-link small { display: block; color: var(--ink-3); font-size: 12px; }
+.meds .duty-link span:last-child { color: var(--beacon); white-space: nowrap; }

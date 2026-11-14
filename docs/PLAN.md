@@ -21,6 +21,8 @@ Status: ✅ done · 🔍 in review · ⏳ to do
 | SCRUM-12 | 10–14 | Module 3: daily log — data model, on-device storage, entry form | Dev 2 | ⏳ |
 | SCRUM-13 | 14–20 | Module 3: health rules with tests (impossible values, jumps, ranges) | Dev 2 | ⏳ |
 | SCRUM-14 | 12–20 | Module 4: gamification — daily exercise ring, streaks, achievements | Dev 3 | ⏳ |
+| — | 11–14 | Module 8: onboard medications (symptoms, kit options with label directions, dose record, "Did it work?") on branch `meds-module` | Claude Code · pharmacist review pending | 🔍 |
+| — | 14–15 | Module 9: fit for duty (human factors: sleep, mood, cautioned medication, workload) on branch `meds-module` | Claude Code | 🔍 |
 | SCRUM-15 | 20–23 | Integrate, review and publish Day 1 | Team | ⏳ |
 
 ## Day 2 — Sunday 15 November (SCRUM-7)

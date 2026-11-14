@@ -18,7 +18,7 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `index.html` | Shell: masthead (mark, UTC clock, lock), station area, hatch root |
 | `css/base.css` | Tokens, shell and shared controls |
 | `css/hatch.css` | Module 1 styles |
-| `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`, `#log/<YYYY-MM-DD>`, `#mission`) and bottom dock |
+| `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`, `#log/<YYYY-MM-DD>`, `#mission`, `#meds`, `#duty`) and bottom dock |
 | `js/access-core.js` | Pure access rules, tested: code shape, guessable codes, PBKDF2 record, wrong-code waits, WebAuthn assertion check |
 | `js/hatch.js` | Module 1 screen: hatch with a ring of digits 0–9, four bolts, ISS in the porthole, fingerprint/face, forgot code, opening animation |
 | `css/today.css` | Main dashboard and bottom dock styles |
@@ -37,6 +37,14 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `js/data/nasa-risks.js` | The 17 NASA HRP risks, word for word, with links |
 | `js/data/hazards.js` | NASA's five hazards word for word, linked to body systems (app choice) |
 | `js/data/body-systems.js` | App grouping of the risks into seven body systems, the regions each lights, verified facts, status words and shapes |
+| `css/meds.css` | Module 8 styles |
+| `js/meds-core.js` | Medication rules, tested: symptoms to possible complaints, label interval and daily limit, kit stock and dates, source-warned combinations, dose record, "Did it work?", CSV |
+| `js/meds.js` | Module 8 screen: symptom chips, "Could be" cards with first steps and kit options, follow-up cards, record, demo kit |
+| `js/data/med-kit.js` | Seven in-flight complaints and ten ISS-kit medications with exact quotes (NASA kit list and briefs, FDA labels); `reviewedBy` per medication for the pharmacist's sign-off |
+| `css/duty.css` | Module 9 styles (shares chips and cards with `meds.css`) |
+| `js/duty-core.js` | Fit-for-duty rules, tested: sleep against NASA's 7-9 hours, low mood, recent medication with a NASA performance caution, three workload answers, honest headline (talk / gaps / ready), saved checks |
+| `js/duty.js` | Module 9 screen (`#duty`, opened from Meds): task, three workload scales, live result with reasons and sources, recent checks |
+| `js/data/duty.js` | Tasks, workload questions and the NASA quotes Fit for duty shows |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules
@@ -47,6 +55,8 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 3. **Daily check-in — done.** Like CrewCheck's check-in: numbered steps 3.01–3.09 (heart rate, blood pressure, temperature, blood oxygen, glucose, sleep, exercise, radiation dose, mood 1–5), a tick when a value is in, empty steps allowed, comma or point decimals. Impossible values (app-rule limits) block saving with "Measure again"; a jump from the last reading saves with flag "again", which the Cupola shows as ◌ Measure again. Other readings are "Pending check" until ranges have an approved source. Past days can be corrected.
 4. **Data storage — decided: A + B.** Everything stays on the device (`localStorage`, keys `geosfera.*`). B: CSV export, JSON backup and restore (restored values are checked again; days already on the device are never overwritten). "Forgot your code?" erases only `geosfera.*` keys. Deployment target: Vercel (own domain, so storage is not shared with other apps).
 5. **Mission (gamification) — done.** Exercise ring against NASA's 1.5 hours a day; check-in streak and best run; week of exercise bars that draw themselves with a 90-minute goal line; eight mission patches (first check-in, full checklist, 3- and 7-day streaks, 90 minutes, NASA week = 6 of 7 days, dosimeter on 5 days, second look after Measure again). A test proves no badge depends on a vital-sign value.
+8. **Onboard medications — in review (branch `meds-module`, built by a second team member with Claude Code).** Never a diagnosis: the crew member picks symptoms, the app lists common in-flight complaints that fit ("Could be"), NASA's non-drug steps first, then the ISS-kit medications with the label's own directions. It follows the label interval and daily limit, flags a past date, an empty pouch or a combination a source warns about, records each dose and later asks "Did it work?" (NASA's Dose Tracker idea). Two doses in a row that did not work send the crew member to the medical officer. Every medication shows "Pending check" until the team pharmacist fills `reviewedBy`. Demo stock and dates are simulated and labelled. Data key: `geosfera.meds`. Open points for the pharmacist are listed in `docs/SOURCES.md`.
+9. **Fit for duty — in review (same branch).** The human-factors check an aerospace engineer advising the team asked for. Before a critical task it shows what the crew member already logged that is worth telling a crewmate: sleep under the 7-9 hours NASA cites, mood 1-2, a medication recorded in the last 8 hours that NASA's kit list cautions about ("May cause sedation and impair performance."), or a high answer to NASA-STD-3001's three workload parts (time-stress, mental effort, frustration). It never says fit or unfit: headline is "Talk it over", "Nothing flagged, but some checks have no data" or "Nothing to mention". Reads `geosfera.log` and `geosfera.meds`; saves checks in `geosfera.duty`.
 6. Next modules are announced to Juan Carlos before starting. Jira and the Excel board are no longer used.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
