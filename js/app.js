@@ -1,4 +1,5 @@
 import { Hatch } from "./hatch.js";
+import { mountBody } from "./body.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -16,6 +17,8 @@ async function closeHatch() {
     onEnter() {
       station.inert = false;
       station.querySelector("h1")?.focus();
+      station.querySelector(".body-module")?.classList.remove("ready");
+      requestAnimationFrame(() => station.querySelector(".body-module")?.classList.add("ready"));
     }
   });
   await hatch.show();
@@ -23,6 +26,7 @@ async function closeHatch() {
 }
 
 document.querySelector('[data-action="lock"]').addEventListener("click", closeHatch);
+mountBody(station);
 stampUtc();
 setInterval(stampUtc, 1000);
 closeHatch();

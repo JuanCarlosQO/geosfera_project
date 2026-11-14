@@ -7,6 +7,7 @@ Daily health monitoring for astronauts. Team entry for the **NASA Space Apps Cha
 Built one at a time during the hackathon (14–15 November 2026).
 
 1. **Crew access.** The app opens behind a station hatch. Tap your 4-digit code on the ring of digits; each digit locks one of the four bolts, then the hatch opens onto the station. Optional fingerprint or face unlock.
+2. **Body hologram.** A human figure drawn for Geosfera stands on a ring of light with its skeleton and organs visible. Seven body systems surround it; tap one to light it up and read NASA's own words about the risks of spaceflight for that system, with links to nasa.gov.
 
 ## Run
 

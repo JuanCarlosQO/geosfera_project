@@ -21,12 +21,18 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `js/app.js` | Boot, UTC clock, lock button |
 | `js/access-core.js` | Pure access rules, tested: code shape, guessable codes, PBKDF2 record, wrong-code waits, WebAuthn assertion check |
 | `js/hatch.js` | Module 1 screen: hatch with a ring of digits 0–9, four bolts, ISS in the porthole, fingerprint/face, forgot code, opening animation |
+| `css/body.css` | Module 2 styles |
+| `js/anatomy.js` | Our own anatomical figure (SVG): outline, surface contours, skeleton, organs; every part has a `data-region` |
+| `js/body.js` | Module 2 screen: figure on a ring of light, seven body-system controls joined by lines, panel with NASA risks and facts |
+| `js/data/nasa-risks.js` | The 17 NASA HRP risks, word for word, with links |
+| `js/data/body-systems.js` | App grouping of the risks into seven body systems, the regions each lights, verified facts, status words and shapes |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules
 
 1. **Crew access — done.** Airlock design (mockup option A). Code kept only as a salted PBKDF2 hash; wrong-code waits; optional fingerprint/face (WebAuthn platform authenticator, signature checked in the app); "Forgot your code?" erases the device. It is a device lock, not encryption: say so honestly. Fingerprint needs https and a phone with a reader.
-2. Next modules: agreed with Juan Carlos one at a time, announced before starting.
+2. **Body hologram — done (Jira SCRUM-10, SCRUM-11).** Our own SVG figure (8-head proportions, anatomical position) with skeleton and organs on a ring of light, a scan line, seven body-system controls joined by lines. Tapping a system lights its organs and opens NASA's risks (exact text and links) and verified facts. Every system shows "No data" until the daily log exists. Tests check that all 17 risks are placed once and that every fact is quoted word for word in `docs/SOURCES.md`.
+3. Next modules follow the Jira plan (project SCRUM at juancarlosquesadaome.atlassian.net), announced before starting.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
 

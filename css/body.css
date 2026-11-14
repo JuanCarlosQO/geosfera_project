@@ -1,0 +1,123 @@
+/* Module 2: body hologram. */
+
+:root {
+  --holo: #6fe3ff;
+  --holo-deep: #2a7bd6;
+  --tone-normal: #8fd8c4;
+  --tone-watch: #ff9f5a;
+  --tone-act: #ff7b6b;
+  --tone-again: #8fb4ff;
+  --tone-none: #8d99a8;
+}
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.body-module { padding-top: 8px; }
+.module-head h1 { margin: 4px 0 8px; font-weight: 300; font-size: clamp(28px, 6vw, 40px); outline: none; }
+
+.body-layout { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.stage { position: relative; flex: 1 1 340px; max-width: 520px; margin: 0 auto; aspect-ratio: 360 / 470; }
+.system-panel { flex: 999 1 320px; min-width: 0; max-width: 560px; }
+
+/* ---- figure ---- */
+.figure-wrap { position: absolute; }
+.figure { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 0 10px #6fe3ff33); }
+
+.figure .shell { fill: url(#fig-fill); stroke: var(--holo); stroke-width: .9; stroke-linejoin: round; }
+.figure .bones path, .figure .bones line { fill: none; stroke: #bff4ff; stroke-width: .8; stroke-linecap: round; opacity: .55; }
+.figure .bones circle, .figure .bones rect { fill: none; stroke: #bff4ff; stroke-width: .7; opacity: .55; }
+.figure .organ path, .figure .organ ellipse { fill: #6fe3ff22; stroke: var(--holo); stroke-width: .7; }
+.figure .organ .detail { fill: none; opacity: .6; }
+.figure [data-region="vessels"] path { fill: none; stroke: #6fe3ff88; stroke-width: .7; }
+.figure .halo { fill: none; stroke: transparent; stroke-width: 1; }
+.figure .contour path { fill: none; stroke: #6fe3ff; stroke-width: .5; opacity: .35; stroke-linecap: round; }
+
+.figure .region { transition: opacity .4s, filter .4s; }
+.figure .region.lit { filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 10px var(--holo)); }
+.figure .organ.lit path, .figure .organ.lit ellipse { fill: #6fe3ff66; stroke: #ffffff; }
+.figure .bones.lit path, .figure .bones.lit line, .figure .bones.lit circle, .figure .bones.lit rect { opacity: 1; stroke: #ffffff; }
+.figure .skin.lit .shell { stroke: #ffffff; stroke-width: 1.4; fill: #6fe3ff33; }
+.figure [data-region="halo"].lit .halo { stroke: var(--holo); stroke-dasharray: 2 4; animation: spin-halo 12s linear infinite; transform-origin: 100px 32px; }
+.stage.focused .figure .region:not(.lit):not(.skin) { opacity: .35; }
+
+.figure .ring-line { fill: none; stroke: var(--holo); stroke-width: 1; }
+.figure .ring-line.faint { opacity: .4; }
+.figure .ring-dots { fill: none; stroke: #bff4ff; stroke-width: 1.6; stroke-dasharray: .1 6; stroke-linecap: round; animation: ring-run 18s linear infinite; }
+.figure .scan { fill: #bff4ff; opacity: .35; animation: scan 5s ease-in-out infinite alternate; }
+
+/* entrance: outline draws, inside fades in */
+.body-module .figure .shell { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.body-module.ready .figure .shell { animation: draw 2.4s ease-out forwards; }
+.body-module .figure .bones, .body-module .figure .organ { opacity: 0; }
+.body-module.ready .figure .bones { animation: fade-in .8s ease-out 1.2s forwards; }
+.body-module.ready .figure .organ { animation: fade-in .8s ease-out 1.7s forwards; }
+.body-module .links, .body-module .sys { opacity: 0; }
+.body-module.ready .links { animation: fade-in .8s ease-out 2.2s forwards; }
+.body-module.ready .sys { animation: fade-in .6s ease-out 2.3s forwards; }
+
+/* ---- connectors and controls ---- */
+.links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.link path { fill: none; stroke: #6fe3ff55; stroke-width: 1; transition: stroke .3s; }
+.link .node { fill: var(--holo); opacity: .7; }
+.link.on path { stroke: #ffffff; stroke-width: 1.4; stroke-dasharray: 4 3; animation: flow 1.2s linear infinite; }
+.link.on .node { fill: #ffffff; animation: node-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+.sys {
+  position: absolute; transform: translate(-50%, -24px); width: 76px; padding: 0; border: 0; background: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--ink);
+}
+.sys-dot {
+  width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+  background: #0b1824; border: 1px solid #6fe3ff66; color: var(--holo);
+  box-shadow: 0 0 0 4px #6fe3ff0d; transition: background .25s, color .25s, box-shadow .25s, border-color .25s;
+}
+.sys-name { font-size: 11px; line-height: 1.2; text-align: center; color: var(--ink-2); }
+.sys:hover .sys-dot { border-color: var(--holo); box-shadow: 0 0 0 5px #6fe3ff1f; }
+.sys.on .sys-dot { background: var(--holo); color: var(--beacon-ink); border-color: var(--holo); box-shadow: 0 0 18px #6fe3ff99; }
+.sys.on .sys-name { color: var(--ink); }
+.sys:focus-visible { outline: none; }
+.sys:focus-visible .sys-dot { outline: 2px solid #ffffff; outline-offset: 3px; }
+
+/* ---- panel ---- */
+.system-panel h2 { margin: 6px 0 8px; font-weight: 400; font-size: 26px; }
+.system-panel h3 { margin: 22px 0 10px; font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.system-panel .lede { color: var(--ink-2); line-height: 1.55; margin: 0 0 18px; }
+.system-panel .note { color: var(--ink-3); font-size: 14px; line-height: 1.5; }
+.system-panel a { color: var(--beacon); }
+.panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 6px; border-radius: 11px; background: #6fe3ff22; color: var(--holo); font-size: 11px; letter-spacing: 0; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 14px; font-size: 13px; border: 1px solid currentColor; }
+.tone-normal { color: var(--tone-normal); }
+.tone-watch { color: var(--tone-watch); }
+.tone-act { color: var(--tone-act); }
+.tone-again { color: var(--tone-again); }
+.tone-none { color: var(--tone-none); }
+
+.tally { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; margin: 0 0 18px; }
+.tally li { padding: 14px 12px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam); }
+.tally strong { display: block; font-size: 30px; font-weight: 300; color: var(--holo); }
+.tally span { font-size: 12px; color: var(--ink-3); }
+
+.facts, .risks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.fact { padding: 14px 16px; border-radius: 14px; background: #0b1824; border: 1px solid #6fe3ff33; }
+.fact blockquote { margin: 0 0 8px; font-size: 16px; line-height: 1.5; color: var(--ink); }
+.fact a, .risk a { font-size: 13px; }
+.risk { padding: 14px 16px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam); }
+.risk h4 { margin: 0 0 6px; font-size: 15px; font-weight: 600; }
+.risk p { margin: 0 0 8px; color: var(--ink-2); line-height: 1.5; font-size: 14px; }
+.system-panel .fine { margin-top: 18px; font-size: 12px; line-height: 1.5; color: var(--ink-3); }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade-in { to { opacity: 1; } }
+@keyframes scan { from { transform: translateY(0); } to { transform: translateY(440px); } }
+@keyframes ring-run { to { stroke-dashoffset: -120; } }
+@keyframes flow { to { stroke-dashoffset: -14; } }
+@keyframes node-pulse { 50% { transform: scale(1.8); } }
+@keyframes spin-halo { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .body-module .figure .shell { stroke-dasharray: none; stroke-dashoffset: 0; }
+  .body-module .figure .bones, .body-module .figure .organ, .body-module .links, .body-module .sys { opacity: 1; }
+  .figure .scan { display: none; }
+}
