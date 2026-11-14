@@ -26,7 +26,7 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `js/today.js` | Main dashboard ("Today"): the Cupola (mockup option A) with six windows; each opens its system in the hologram |
 | `css/log.css` | Module 3 styles |
 | `js/log-core.js` | Daily log rules, tested: fields, typo limits and jump detection (app rules), entry building, CSV export, JSON backup and restore with merge |
-| `js/log.js` | Module 3 screen: numbered check-in checklist with live ticks, Measure again messages, save summary, data card (export, backup, restore), recent days with edit |
+| `js/log.js` | Module 3 screen, styled as a flight procedure: three sequences (Vitals, Recovery, Countermeasures) of instrument modules with glowing digital readouts, − / + nudges, last reading and live delta, live jump warning, completion ring and segment bar, "Transmit to log" with a telemetry receipt, data vault (export, backup, restore) and recent days |
 | `css/mission.css` | Module 4 styles |
 | `js/mission-core.js` | Mission rules, tested: NASA exercise goal (90 min, 6 days/week, quoted), streaks, week, habit achievements, adherence |
 | `js/mission.js` | Module 4 screen (`#mission`): exercise ring, check-in streak, self-drawing week chart with goal line, mission patches |
