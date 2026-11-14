@@ -1,6 +1,6 @@
 # Geosfera — build plan
 
-Public copy of the team's plan for the NASA Space Apps Challenge 2026 (14–15 November). The team works from a private Jira board; the keys (SCRUM-n) match it. Times are Colombia time (UTC−5). Last updated: Saturday 14 November, 10:30.
+Public copy of the team's plan for the NASA Space Apps Challenge 2026 (14–15 November). The team works from a private Jira board; the keys (SCRUM-n) match it. Times are Colombia time (UTC−5). Last updated: Saturday 14 November, 10:45.
 
 **Deadline:** code freeze Sunday 20:00 · submission by Sunday 23:00 (official close 23:59 local event time).
 
@@ -17,6 +17,7 @@ Status: ✅ done · 🔍 in review · ⏳ to do
 | SCRUM-9 | 10–12 | Module 1: test code and fingerprint on Android and iPhone | Dev 3 | ⏳ |
 | SCRUM-10 | 10–15 | Module 2: realistic human figure with skeleton, organs and ring of light | Dev 1 | 🔍 |
 | SCRUM-11 | 15–20 | Module 2: body-system icons, connector lines and NASA risk panel | Dev 1 | 🔍 |
+| SCRUM-25 | 10:40 | Main dashboard: the ISS Cupola (mockup option A), dock navigation | Dev 1 | 🔍 |
 | SCRUM-12 | 10–14 | Module 3: daily log — data model, on-device storage, entry form | Dev 2 | ⏳ |
 | SCRUM-13 | 14–20 | Module 3: health rules with tests (impossible values, jumps, ranges) | Dev 2 | ⏳ |
 | SCRUM-14 | 12–20 | Module 4: gamification — daily exercise ring, streaks, achievements | Dev 3 | ⏳ |
