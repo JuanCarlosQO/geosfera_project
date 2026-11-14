@@ -138,5 +138,6 @@ export const STATUS = {
   watch: { word: "Watch", shape: "▲", tone: "watch" },
   act: { word: "Act now", shape: "⯃", tone: "act" },
   again: { word: "Measure again", shape: "◌", tone: "again" },
+  pending: { word: "Pending check", shape: "◇", tone: "none" },
   none: { word: "No data", shape: "—", tone: "none" }
 };

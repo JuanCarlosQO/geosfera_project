@@ -1,0 +1,54 @@
+/* Main dashboard (the Cupola) and the bottom dock. */
+
+.station { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+.today { max-width: 460px; margin: 0 auto; }
+.today h1 { margin: 6px 0 6px; font-weight: 300; font-size: clamp(26px, 7vw, 32px); line-height: 1.15; outline: none; }
+.today-line { margin: 0 0 14px; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+
+.cupola { position: relative; width: 100%; aspect-ratio: 390 / 360; }
+.cupola svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cupola .frame { fill: #151b22; stroke: var(--seam-hi); stroke-width: 1.5; }
+.cupola .pane { fill: url(#glass); stroke-width: 1.6; transition: filter .3s; }
+.cupola .hub { fill: #10151b; stroke: var(--seam-hi); stroke-width: 1.5; }
+.cupola .hub-ring { fill: none; stroke: var(--beacon); stroke-dasharray: 2 5; animation: hub-glow 4s ease-in-out infinite; }
+.cupola .rivets circle { fill: #4b5664; }
+
+.pane-label {
+  position: absolute; transform: translate(-50%, -50%); width: 27%; min-height: 64px; padding: 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: 0; border-radius: 12px; color: var(--ink); cursor: pointer; text-align: center;
+}
+.pane-label:hover { background: #6fe3ff12; }
+.pl-name { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-2); }
+.pl-value { font-size: clamp(16px, 5vw, 21px); line-height: 1.1; }
+.pl-value small { font-size: 12px; color: var(--ink-2); }
+.pl-status { font-size: 11px; white-space: nowrap; }
+
+.hub-label { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.hub-num { font-size: clamp(26px, 8vw, 34px); font-weight: 300; line-height: 1; }
+.hub-num small { font-size: 18px; color: var(--ink-2); }
+.hub-word { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; }
+
+.cta-wide {
+  display: grid; place-items: center; min-height: 56px; margin: 18px 0 14px; border-radius: 14px;
+  background: var(--beacon); color: var(--beacon-ink); font-weight: 600; font-size: 17px; text-decoration: none;
+}
+.cta-wide:hover { filter: brightness(1.08); }
+.mission-card { padding: 16px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam); }
+.mc-row { display: flex; justify-content: space-between; align-items: baseline; }
+.mission-card .fine { margin: 8px 0 0; line-height: 1.5; }
+.textlink { display: inline-block; }
+
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  display: flex; justify-content: space-around; align-items: center;
+  height: calc(72px + env(safe-area-inset-bottom)); padding: 0 12px env(safe-area-inset-bottom);
+  background: #06090dee; border-top: 1px solid #1c232b; backdrop-filter: blur(8px);
+}
+.dock a { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; padding: 8px 0; color: var(--ink-3); text-decoration: none; font-size: 11px; }
+.dock a[aria-current="page"] { color: var(--beacon); }
+.dock a:hover { color: var(--ink); }
+
+@keyframes hub-glow { 50% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .cupola .hub-ring { animation: none; } }

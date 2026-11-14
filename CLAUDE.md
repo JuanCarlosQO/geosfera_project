@@ -18,9 +18,12 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `index.html` | Shell: masthead (mark, UTC clock, lock), station area, hatch root |
 | `css/base.css` | Tokens, shell and shared controls |
 | `css/hatch.css` | Module 1 styles |
-| `js/app.js` | Boot, UTC clock, lock button |
+| `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`) and bottom dock |
 | `js/access-core.js` | Pure access rules, tested: code shape, guessable codes, PBKDF2 record, wrong-code waits, WebAuthn assertion check |
 | `js/hatch.js` | Module 1 screen: hatch with a ring of digits 0–9, four bolts, ISS in the porthole, fingerprint/face, forgot code, opening animation |
+| `css/today.css` | Main dashboard and bottom dock styles |
+| `js/today-core.js` | Dashboard rules, tested: six Cupola windows, worst-status per window, honest headline, mission day, Cupola geometry |
+| `js/today.js` | Main dashboard ("Today"): the Cupola (mockup option A) with six windows; each opens its system in the hologram |
 | `css/body.css` | Module 2 styles |
 | `js/anatomy.js` | Our own anatomical figure (SVG): outline, surface contours, skeleton, organs; every part has a `data-region` |
 | `js/body.js` | Module 2 screen: figure on a ring of light, seven body-system controls joined by lines, panel with NASA risks and facts |
@@ -32,6 +35,7 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 
 1. **Crew access — done.** Airlock design (mockup option A). Code kept only as a salted PBKDF2 hash; wrong-code waits; optional fingerprint/face (WebAuthn platform authenticator, signature checked in the app); "Forgot your code?" erases the device. It is a device lock, not encryption: say so honestly. Fingerprint needs https and a phone with a reader.
 2. **Body hologram — done (Jira SCRUM-10, SCRUM-11).** Our own SVG figure (8-head proportions, anatomical position) with skeleton and organs on a ring of light, a scan line, seven body-system controls joined by lines. Tapping a system lights its organs and opens NASA's risks (exact text and links) and verified facts. Every system shows "No data" until the daily log exists. Tests check that all 17 risks are placed once and that every fact is quoted word for word in `docs/SOURCES.md`.
+- **Main dashboard — the Cupola (Juan Carlos: "this goes on the main dashboard").** First screen after the hatch. Six windows (Heart, Lungs, Metabolism, Radiation, Body, Mind) around "N/6 measured". Readings come from `localStorage["geosfera.log"][YYYY-MM-DD]`, written by the daily log. Without a reading: "No data"; with a reading but no approved range: "Pending check" (◇). Tapping a window opens `#body/<system>`.
 3. Next modules follow the Jira plan (project SCRUM at juancarlosquesadaome.atlassian.net), announced before starting.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
