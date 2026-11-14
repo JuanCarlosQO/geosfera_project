@@ -11,6 +11,7 @@ Built one at a time during the hackathon (14–15 November 2026).
 2. **Body hologram.** A human figure drawn for Geosfera stands on a ring of light with its skeleton and organs visible. Seven body systems surround it; tap one to light it up and read NASA's own words about the risks of spaceflight for that system, with links to nasa.gov.
 
 3. **Daily check-in.** A numbered checklist for heart rate, blood pressure, temperature, blood oxygen, blood sugar, sleep, exercise, radiation dose and mood. Each value is checked as you type; impossible values and sudden jumps ask you to measure again instead of raising an alarm. Export to CSV, save a backup and restore it on another device. Data never leaves the device.
+4. **Mission.** An exercise ring against NASA's 1.5 hours a day, a check-in streak, a week of exercise that draws itself and mission patches that reward checking in and doing the countermeasures, never what a reading says.
 
 ## Plan
 

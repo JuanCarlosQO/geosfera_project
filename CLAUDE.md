@@ -18,7 +18,7 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `index.html` | Shell: masthead (mark, UTC clock, lock), station area, hatch root |
 | `css/base.css` | Tokens, shell and shared controls |
 | `css/hatch.css` | Module 1 styles |
-| `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`, `#log/<YYYY-MM-DD>`) and bottom dock |
+| `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`, `#log/<YYYY-MM-DD>`, `#mission`) and bottom dock |
 | `js/access-core.js` | Pure access rules, tested: code shape, guessable codes, PBKDF2 record, wrong-code waits, WebAuthn assertion check |
 | `js/hatch.js` | Module 1 screen: hatch with a ring of digits 0–9, four bolts, ISS in the porthole, fingerprint/face, forgot code, opening animation |
 | `css/today.css` | Main dashboard and bottom dock styles |
@@ -27,6 +27,9 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `css/log.css` | Module 3 styles |
 | `js/log-core.js` | Daily log rules, tested: fields, typo limits and jump detection (app rules), entry building, CSV export, JSON backup and restore with merge |
 | `js/log.js` | Module 3 screen: numbered check-in checklist with live ticks, Measure again messages, save summary, data card (export, backup, restore), recent days with edit |
+| `css/mission.css` | Module 4 styles |
+| `js/mission-core.js` | Mission rules, tested: NASA exercise goal (90 min, 6 days/week, quoted), streaks, week, habit achievements, adherence |
+| `js/mission.js` | Module 4 screen (`#mission`): exercise ring, check-in streak, self-drawing week chart with goal line, mission patches |
 | `css/body.css` | Module 2 styles |
 | `js/anatomy.js` | Our own anatomical figure (SVG): outline, surface contours, skeleton, organs; every part has a `data-region` |
 | `js/body.js` | Module 2 screen: figure on a ring of light, seven body-system controls joined by lines, panel with NASA risks and facts |
@@ -41,7 +44,8 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 - **Main dashboard — the Cupola (Juan Carlos: "this goes on the main dashboard").** First screen after the hatch. Six windows (Heart, Lungs, Metabolism, Radiation, Body, Mind) around "N/6 measured". Readings come from `localStorage["geosfera.log"][YYYY-MM-DD]`, written by the daily log. Without a reading: "No data"; with a reading but no approved range: "Pending check" (◇). Tapping a window opens `#body/<system>`.
 3. **Daily check-in — done.** Like CrewCheck's check-in: numbered steps 3.01–3.09 (heart rate, blood pressure, temperature, blood oxygen, glucose, sleep, exercise, radiation dose, mood 1–5), a tick when a value is in, empty steps allowed, comma or point decimals. Impossible values (app-rule limits) block saving with "Measure again"; a jump from the last reading saves with flag "again", which the Cupola shows as ◌ Measure again. Other readings are "Pending check" until ranges have an approved source. Past days can be corrected.
 4. **Data storage — decided: A + B.** Everything stays on the device (`localStorage`, keys `geosfera.*`). B: CSV export, JSON backup and restore (restored values are checked again; days already on the device are never overwritten). "Forgot your code?" erases only `geosfera.*` keys. Deployment target: Vercel (own domain, so storage is not shared with other apps).
-5. Next modules are announced to Juan Carlos before starting. Jira and the Excel board are no longer used.
+5. **Mission (gamification) — done.** Exercise ring against NASA's 1.5 hours a day; check-in streak and best run; week of exercise bars that draw themselves with a 90-minute goal line; eight mission patches (first check-in, full checklist, 3- and 7-day streaks, 90 minutes, NASA week = 6 of 7 days, dosimeter on 5 days, second look after Measure again). A test proves no badge depends on a vital-sign value.
+6. Next modules are announced to Juan Carlos before starting. Jira and the Excel board are no longer used.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
 

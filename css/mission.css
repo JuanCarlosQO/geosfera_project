@@ -1,0 +1,66 @@
+/* Module 4: mission progress and gamification. */
+
+.mission { max-width: 720px; margin: 0 auto; }
+.mission h1 { margin: 6px 0 6px; font-weight: 300; font-size: clamp(26px, 7vw, 34px); outline: none; }
+.mission .lede { margin: 0 0 18px; color: var(--ink-2); line-height: 1.5; }
+.mission h2 { margin: 0; font-weight: 400; font-size: 19px; }
+
+.mi-top { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+.ring-card, .streak-card, .week-card { padding: 18px; border-radius: 16px; background: var(--hull); border: 1px solid var(--seam); }
+.ring-card { position: relative; flex: 1 1 220px; margin: 0; display: flex; flex-direction: column; align-items: center; }
+.ring-card svg { width: 180px; height: 180px; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: #1f262f; stroke-width: 14; }
+.ring-fill { fill: none; stroke: var(--beacon); stroke-width: 14; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 0 6px #6fe3ff88); }
+.mission.ready .ring-fill { stroke-dashoffset: var(--to); transition: stroke-dashoffset 1.4s cubic-bezier(.3, 0, .2, 1); }
+.ring-text { position: absolute; top: 18px; left: 0; right: 0; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-text strong { font-size: 40px; font-weight: 300; line-height: 1; }
+.ring-text span { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.ring-card figcaption { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+
+.streak-card { flex: 1 1 260px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.streak-card p { margin: 0; }
+.streak-num strong { font-size: 56px; font-weight: 300; line-height: 1; color: var(--beacon); }
+.streak-num span { font-size: 18px; color: var(--ink-2); }
+.dots { list-style: none; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; }
+.dots li { height: 10px; border-radius: 5px; background: #1f262f; }
+.dots li.on { background: var(--beacon); box-shadow: 0 0 8px #6fe3ff66; }
+
+.week-card { margin-bottom: 22px; }
+.wk-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 14px; }
+.wk-head .mono { font-size: 12px; color: var(--ink-3); }
+.bars { position: relative; height: 170px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; padding-bottom: 22px; }
+.bar-col { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.bar { width: 100%; max-width: 36px; min-height: 2px; border-radius: 6px 6px 2px 2px; background: #3b4a5c; transform-origin: bottom; transform: scaleY(0); }
+.bar.hit { background: var(--beacon); box-shadow: 0 0 10px #6fe3ff55; }
+.bar.empty { background: #252c35; }
+.mission.ready .bar { transform: scaleY(1); transition: transform .8s cubic-bezier(.3, 0, .2, 1) calc(var(--i) * 70ms); }
+.bar-day { position: absolute; bottom: -22px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.bar-day.today { color: var(--beacon); }
+.goal-line { position: absolute; left: 0; right: 0; margin-bottom: 22px; border-top: 1px dashed #ffffff66; pointer-events: none; }
+.goal-line span { position: absolute; right: 0; top: -18px; font-family: var(--mono); font-size: 10px; color: var(--ink-2); }
+.week-card .source { margin: 16px 0 0; line-height: 1.5; }
+.week-card .source a { color: var(--beacon); }
+
+.badges { list-style: none; margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.badge { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam); }
+.patch { position: relative; flex: none; width: 56px; height: 56px; color: var(--ink-3); }
+.patch svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.patch svg:first-child { transform: rotate(-90deg); }
+.p-track { fill: #0b1219; stroke: #1f262f; stroke-width: 3; }
+.p-fill { fill: none; stroke: #4b5a6b; stroke-width: 3; stroke-dasharray: 100; stroke-linecap: round; }
+.p-icon { inset: 16px !important; width: 24px !important; height: 24px !important; }
+.badge.won { border-color: #6fe3ff55; }
+.badge.won .patch { color: var(--beacon-ink); }
+.badge.won .p-track { fill: var(--beacon); stroke: var(--beacon); }
+.badge.won .p-fill { stroke: #ffffff; }
+.badge.won .patch { filter: drop-shadow(0 0 8px #6fe3ff88); }
+.b-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.b-text strong { font-weight: 600; font-size: 15px; }
+.b-text small { color: var(--ink-3); font-size: 12px; line-height: 1.4; }
+.b-state { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.badge.won .b-state { color: var(--tone-normal); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-fill { stroke-dashoffset: var(--to); }
+  .bar { transform: none; }
+}
