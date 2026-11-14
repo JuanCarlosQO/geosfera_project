@@ -121,11 +121,88 @@ describe("the log on the device", () => {
   });
   it("exports the log as CSV with the kit category and what it was for", () => {
     const csv = M.toCsv([dose("sleepB", 3, 1, { reason: "Sleep", outcome: { worked: "partly", effects: ["Drowsiness"] } })], KIT);
-    assert.equal(csv.split("\n")[0], "taken_at_utc,medication,kit_category,units,unit,what_for,worked,side_effects");
-    assert.match(csv.split("\n")[1], /,Sleep B,Sleep,1,tablet,Sleep,partly,Drowsiness$/);
+    assert.equal(csv.split("\n")[0], "taken_at_utc,medication,kit_category,units,unit,what_for,worked,side_effects,side_effect_strength,logged");
+    assert.match(csv.split("\n")[1], /,Sleep B,Sleep,1,tablet,Sleep,partly,Drowsiness,,at the time$/);
   });
   it("writes waits in hours and minutes", () => {
     assert.equal(M.spanWords(NOW, ago(-3.5)), "3 h 30 min");
     assert.equal(M.spanWords(NOW, ago(1)), "now");
+  });
+});
+
+describe("Dose Tracker 1: the weekly question", () => {
+  it("asks when nothing was answered in the last 7 days", () => {
+    assert.equal(M.weeklyDue(M.emptyStore(), NOW), true);
+    const s = M.answerWeekly(M.emptyStore(), "none", new Date(NOW.getTime() - 6 * 86400000));
+    assert.equal(M.weeklyDue(s, NOW), false);
+    assert.equal(M.weeklyDue(s, new Date(NOW.getTime() + 86400000)), true);
+    assert.equal(M.answerWeekly(M.emptyStore(), "maybe", NOW).weekly.length, 0);
+  });
+  it("records a dose remembered later at midday of that day, marked as remembered", () => {
+    const w = M.whenToAt("2", NOW);
+    assert.equal(w.recalled, true);
+    assert.equal(M.dayOf(w.at), "2026-11-13");
+    assert.equal(w.at.getHours(), 12);
+    assert.equal(M.whenToAt("0", NOW).recalled, false);
+    const r = M.logDose(M.emptyStore(), KIT, { medId: "painA", ...w });
+    assert.equal(r.store.doses[0].recalled, true);
+    assert.equal(M.cleanStore(r.store, KIT).doses[0].recalled, true);
+  });
+});
+
+describe("Dose Tracker 2: own and every-day medications", () => {
+  const ids = ["a1", "b2", "c3"];
+  const next = () => ids.shift();
+  let s = M.addOwn(M.emptyStore(), { name: "  Allergy  tablet ", unit: "tablet" }, next).store;
+  s = M.addOwn(s, { name: "Thyroid pill", unit: "tablet", daily: true }, next).store;
+  it("adds them with a clean name, refuses duplicates and bad units", () => {
+    assert.deepEqual(s.own.map((o) => o.name), ["Allergy tablet", "Thyroid pill"]);
+    assert.equal(M.addOwn(s, { name: "allergy tablet" }).ok, false);
+    assert.equal(M.addOwn(s, { name: "X" }).ok, false);
+    assert.equal(M.addOwn(s, { name: "Cream", unit: "jar" }).ok, false);
+  });
+  it("logs them like kit medications and keeps them after a reload", () => {
+    const list = M.medList(KIT, s);
+    const r = M.logDose(s, list, { medId: "own-a1", at: NOW });
+    assert.equal(r.ok, true);
+    const back = M.cleanStore(JSON.parse(JSON.stringify(r.store)), KIT);
+    assert.equal(back.doses.length, 1);
+    assert.equal(back.own.length, 2);
+  });
+  it("offers one tap for an every-day medication and does not ask whether it worked", () => {
+    const today = M.dayOf(NOW);
+    assert.deepEqual(M.scheduledToday(s, today).map((x) => [x.own.name, x.taken]), [["Thyroid pill", false]]);
+    const r = M.logDose(s, M.medList(KIT, s), { medId: "own-b2", at: NOW, scheduled: true, reason: "As scheduled" });
+    assert.equal(M.scheduledToday(r.store, today)[0].taken, true);
+    assert.equal(M.followUps(r.store.doses, M.medList(KIT, r.store), new Date(NOW.getTime() + 5 * 3600000)).due.length, 0);
+    assert.equal(M.patterns(M.emptyStore(), M.medList(KIT, s), NOW).length, 0);
+  });
+  it("never raises an every-day medication as a repeat pattern", () => {
+    let t = s;
+    for (const h of [0, 24, 48, 72]) t = M.logDose(t, M.medList(KIT, t), { medId: "own-b2", at: new Date(NOW.getTime() - h * 3600000), scheduled: true }).store;
+    assert.equal(M.patterns(t, M.medList(KIT, t), NOW).length, 0);
+  });
+  it("keeps a removed one for the history but off the list", () => {
+    const r = M.removeOwn(s, "own-a1");
+    assert.equal(r.own.find((o) => o.id === "own-a1").removed, true);
+    assert.equal(M.scheduledToday(M.removeOwn(s, "own-b2"), M.dayOf(NOW)).length, 0);
+  });
+});
+
+describe("Dose Tracker 3: how strong the side effect was", () => {
+  it("saves the strength only when there was a side effect", () => {
+    let s = store([dose("painA", 5), dose("painA", 4)]);
+    s = M.setOutcome(s, "painA-5", { worked: "yes", effects: ["Dizziness"], severity: "moderate", at: NOW }).store;
+    assert.equal(s.doses[0].outcome.severity, "moderate");
+    s = M.setOutcome(s, "painA-4", { worked: "yes", effects: ["Nothing"], severity: "severe", at: NOW }).store;
+    assert.equal(s.doses[1].outcome.severity, undefined);
+    assert.equal(M.setOutcome(s, "painA-4", { worked: "yes", effects: ["Dizziness"], severity: "awful" }).ok, false);
+  });
+  it("raises a severe side effect from the last week with the crew medical officer (illustrative)", () => {
+    const s = store([dose("painA", 30, 1, { outcome: { worked: "yes", effects: ["Dizziness"], severity: "severe" } })]);
+    const p = M.patterns(M.cleanStore(s, KIT), KIT, NOW);
+    assert.equal(p[0].level, "talk");
+    assert.match(p[0].text, /Severe side effect after pain a .*: dizziness\./);
+    assert.equal(p[0].illustrative, true);
   });
 });

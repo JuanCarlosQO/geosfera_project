@@ -20,6 +20,8 @@ const label = (setId) => `https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?set
 const N_SAS = "NASA OCHMO-MTB-004";
 const N_KIT = "NASA ISS medical kit list";
 const N_PHARM = "NASA OCHMO-MTB-012";
+const DOSE_TRACKER = "https://ntrs.nasa.gov/citations/20150014490";
+const N_DOSE = "NASA Dose Tracker, ISS Increment 45/46 Science Symposium (2015)";
 
 
 // App rule: with any of these the module steps aside and sends the crew member to a person.
@@ -204,6 +206,26 @@ export const KIT_FACTS = {
   expired: {
     quote: "it remains unclear whether spaceflight has any measurable effect on pharmaceutical stability",
     url: STABILITY, source: "NASA HRP evidence report, 2023"
+  },
+  weekly: {
+    quote: "Asking crewmembers to recall medication use from weeks before questioning made getting complete and accurate information virtually impossible.",
+    url: DOSE_TRACKER, source: N_DOSE
+  },
+  weeklyAsk: {
+    quote: "a question will appear for that week asking you if you have taken any medications for that week.",
+    url: DOSE_TRACKER, source: N_DOSE
+  },
+  own: {
+    quote: "can include a list of personal medications",
+    url: DOSE_TRACKER, source: N_DOSE
+  },
+  scheduled: {
+    quote: "can pre-program entries for scheduled medication uses (pre-populated automatic pop-up window that only requires a single click if you took your medication as scheduled)",
+    url: DOSE_TRACKER, source: N_DOSE
+  },
+  severity: {
+    quote: "including side effect qualities, frequencies and severities",
+    url: DOSE_TRACKER, source: N_DOSE
   },
   record: {
     text: "Ergosphere keeps the record NASA's Dose Tracker study asked crews for:",

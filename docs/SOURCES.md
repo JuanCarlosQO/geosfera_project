@@ -118,6 +118,20 @@ Read on 14 November 2026. Official NASA, NIH and FDA documents. The module **doe
 
 When "Did it work?" is asked after each medication · the same kit category logged on 3 days in a row → "Include it in the next downlink to Earth" · a medication that did not work twice in a row → "Talk it over with your crew medical officer" · the body zones that say what a dose was for · the alarm-sign list. Warnings that quote the kit list: more than its 24-hour limit, more days in a row than it allows, and sleep medications combined within 24 hours.
 
+### Dose Tracker (NASA's medication app for ISS crews)
+
+NASA Dose Tracker, ISS Increment 45/46 Science Symposium, July 2015 — https://ntrs.nasa.gov/citations/20150014490 (results: Wotring and Smith, Aerospace Medicine and Human Performance, 2020 — https://www.pubmed.gov/31852573/). NASA never published the app or its code; Ergosphere takes only the ideas below, in its own design.
+
+| Used for | Quote |
+| --- | --- |
+| Weekly question | "Asking crewmembers to recall medication use from weeks before questioning made getting complete and accurate information virtually impossible." |
+| Weekly question | "a question will appear for that week asking you if you have taken any medications for that week." |
+| Own medications | "can include a list of personal medications" |
+| Every-day medications, one tap | "can pre-program entries for scheduled medication uses (pre-populated automatic pop-up window that only requires a single click if you took your medication as scheduled)" |
+| Side-effect strength | "including side effect qualities, frequencies and severities" |
+
+**App choices (not NASA rules, pending the pharmacist's review):** the three strength words (Mild "noticed it, carried on", Moderate "it got in the way", Severe "could not work normally"); a severe side effect stays under "Patterns to raise" for 7 days as "talk it over with your crew medical officer"; a dose remembered later is stored at midday of that day and marked "remembered later"; every-day medications of one's own are not asked "Did it work?" and never count as a repeat pattern; up to 12 own medications.
+
 ## Module 9 — fit for duty
 
 Read on 14 November 2026 in the PDF text of NASA-STD-3001 Volume 1 Revision C (section 4.3, page 35) and NASA's OCHMO technical brief on sleep accommodations. The medication cautions it shows are the NASA kit-list quotes already listed under Module 8.

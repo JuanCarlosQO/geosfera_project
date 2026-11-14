@@ -10,8 +10,28 @@ export const MEDS_KEY = "geosfera.meds";
 export const RULES = {
   dayHours: 24,          // the kit list's "every 24 hours" window
   repeatDays: 3,         // illustrative app rule: same category on this many days in a row
-  noReliefRepeats: 2     // illustrative app rule: this many "did not work" in a row
+  noReliefRepeats: 2,    // illustrative app rule: this many "did not work" in a row
+  weekDays: 7,           // Dose Tracker asked once a week (every 6-8 days)
+  severeDays: 7,         // illustrative app rule: how long a severe side effect stays on the list
+  maxOwn: 12             // app rule: personal medications kept
 };
+
+// Side-effect strength. Dose Tracker recorded "side effect qualities, frequencies and
+// severities"; the three words and their hints are app wording, pending the pharmacist's review.
+export const SEVERITY = [
+  { id: "mild", label: "Mild", hint: "noticed it, carried on" },
+  { id: "moderate", label: "Moderate", hint: "it got in the way" },
+  { id: "severe", label: "Severe", hint: "could not work normally" }
+];
+
+export const OWN_UNITS = ["tablet", "capsule", "dose", "drop", "patch"];
+
+// "When did you take it?" — now, or a day this week for doses remembered later.
+export const WHEN = [
+  { id: "0", label: "Now" },
+  { id: "1", label: "Yesterday" },
+  ...[2, 3, 4, 5, 6].map((n) => ({ id: String(n), label: `${n} days ago` }))
+];
 
 export const OUTCOMES = [
   { id: "yes", label: "It worked" },
@@ -53,19 +73,95 @@ export function spanWords(from, to) {
   return h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
 }
 
-export const emptyStore = () => ({ doses: [], supplements: {} });
+export const emptyStore = () => ({ doses: [], supplements: {}, own: [], weekly: [] });
+
+/* ---------- the crew member's own medications (Dose Tracker: personal and chronic meds) ---------- */
+
+const cleanName = (raw) => String(raw ?? "").replace(/\s+/g, " ").trim().slice(0, 40);
+
+function cleanOwn(raw) {
+  const out = [];
+  for (const o of Array.isArray(raw) ? raw : []) {
+    const name = cleanName(o?.name);
+    if (!/^own-[\w-]+$/.test(String(o?.id)) || name.length < 2 || !OWN_UNITS.includes(o.unit)) continue;
+    if (out.some((x) => x.id === o.id)) continue;
+    out.push({ id: o.id, name, unit: o.unit, daily: o.daily === true, removed: o.removed === true });
+  }
+  return out;
+}
+
+/** The crew member's own medications in the same shape as kit entries, so every rule reads both. */
+export const ownAsMeds = (own) => (own ?? []).map((o) => ({
+  id: o.id, name: o.name, unit: o.unit, strength: o.daily ? "every day" : "my own", category: "Own", ingredient: o.id,
+  own: true, daily: o.daily, removed: o.removed, askAfterHours: 1, form: o.unit === "capsule" ? "caplet" : "tablet", tint: "#8a94a6", tags: []
+}));
+
+/** Kit list plus own medications: pass this wherever a rule takes `kit`. */
+export const medList = (kit, store) => [...kit, ...ownAsMeds(store?.own)];
+
+export function addOwn(store, { name, unit = "tablet", daily = false }, idSource = () => Math.random().toString(36).slice(2, 8)) {
+  const n = cleanName(name);
+  const active = (store.own ?? []).filter((o) => !o.removed);
+  if (n.length < 2) return { ok: false, why: "Write the medication's name." };
+  if (!OWN_UNITS.includes(unit)) return { ok: false, why: "Choose how it comes." };
+  if (active.length >= RULES.maxOwn) return { ok: false, why: `Up to ${RULES.maxOwn} medications of your own.` };
+  if (active.some((o) => o.name.toLowerCase() === n.toLowerCase())) return { ok: false, why: "That one is already on your list." };
+  let id = `own-${idSource()}`;
+  while ((store.own ?? []).some((o) => o.id === id)) id = `own-${idSource()}`;
+  const item = { id, name: n, unit, daily: Boolean(daily), removed: false };
+  return { ok: true, item, store: { ...store, own: [...(store.own ?? []), item] } };
+}
+
+/** Takes it off the list but keeps it, so past doses still read their name. */
+export const removeOwn = (store, id) => ({ ...store, own: (store.own ?? []).map((o) => (o.id === id ? { ...o, removed: true } : o)) });
+
+/** Every-day medications of the crew member's own, with whether today's dose is logged. */
+export function scheduledToday(store, today) {
+  return (store.own ?? []).filter((o) => o.daily && !o.removed).map((o) => ({
+    own: o,
+    taken: store.doses.some((d) => d.medId === o.id && dayOf(d.at) === today)
+  }));
+}
+
+/* ---------- the weekly question (Dose Tracker asked it once a week) ---------- */
+
+/** True when "Did you take any medication this week?" has not been answered in the last 7 days. */
+export function weeklyDue(store, now = new Date()) {
+  const last = (store.weekly ?? []).map((w) => ms(w.at)).sort((a, b) => b - a)[0];
+  return last === undefined || ms(now) - last >= RULES.weekDays * 24 * HOUR;
+}
+
+export function answerWeekly(store, answer, now = new Date()) {
+  if (!["none", "yes"].includes(answer)) return store;
+  return { ...store, weekly: [...(store.weekly ?? []), { at: iso(now), answer }].slice(-20) };
+}
+
+/** The moment to record for a "When?" choice: now, or midday of a day this week (remembered later). */
+export function whenToAt(id, now = new Date()) {
+  const n = Number(id);
+  if (!Number.isInteger(n) || n <= 0) return { at: new Date(now), recalled: false };
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - Math.min(n, RULES.weekDays - 1), 12);
+  return { at: d, recalled: true };
+}
 
 /** Keeps only well-formed data read back from the device. */
 export function cleanStore(raw, kit, supplements = []) {
-  const known = new Set(kit.map((k) => k.id));
   const sup = new Set(supplements.map((s) => s.id));
   const out = emptyStore();
+  out.own = cleanOwn(raw?.own);
+  const known = new Set([...kit.map((k) => k.id), ...out.own.map((o) => o.id)]);
   for (const d of Array.isArray(raw?.doses) ? raw.doses : []) {
     if (!known.has(d?.medId) || !Number.isInteger(d.units) || d.units < 1 || Number.isNaN(ms(d.at))) continue;
     const dose = { id: String(d.id ?? `${d.medId}-${d.at}`), medId: d.medId, units: d.units, at: iso(d.at), reason: d.reason ?? null, outcome: null };
-    if (OUTCOMES.some((o) => o.id === d.outcome?.worked)) dose.outcome = { worked: d.outcome.worked, effects: Array.isArray(d.outcome.effects) ? d.outcome.effects.map(String) : [], at: d.outcome.at ?? null };
+    if (d.recalled === true) dose.recalled = true;
+    if (d.scheduled === true) dose.scheduled = true;
+    if (OUTCOMES.some((o) => o.id === d.outcome?.worked)) {
+      dose.outcome = { worked: d.outcome.worked, effects: Array.isArray(d.outcome.effects) ? d.outcome.effects.map(String) : [], at: d.outcome.at ?? null };
+      if (SEVERITY.some((x) => x.id === d.outcome.severity)) dose.outcome.severity = d.outcome.severity;
+    }
     out.doses.push(dose);
   }
+  out.weekly = (Array.isArray(raw?.weekly) ? raw.weekly : []).filter((w) => ["none", "yes"].includes(w?.answer) && !Number.isNaN(ms(w.at))).map((w) => ({ at: iso(w.at), answer: w.answer })).slice(-20);
   for (const [day, ids] of Object.entries(raw?.supplements ?? {})) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(ids)) continue;
     const ok = ids.filter((id) => !supplements.length || sup.has(id));
@@ -86,30 +182,34 @@ export const inCategories = (kit, categories) => kit.filter((m) => categories.in
 /* ---------- the log ---------- */
 
 /** Records a dose. The record is never refused for being early or large: an honest log matters more. */
-export function logDose(store, kit, { medId, units = 1, reason = null, at = new Date() }) {
+export function logDose(store, kit, { medId, units = 1, reason = null, at = new Date(), recalled = false, scheduled = false }) {
   if (!kit.some((k) => k.id === medId)) return { ok: false, why: "This medication is not in the kit list." };
   if (!Number.isInteger(units) || units < 1) return { ok: false, why: "Choose how many you took." };
   const dose = { id: `${medId}-${ms(at)}`, medId, units, at: iso(at), reason, outcome: null };
+  if (recalled) dose.recalled = true;
+  if (scheduled) dose.scheduled = true;
   return { ok: true, dose, store: { ...store, doses: [...store.doses, dose] } };
 }
 
 /** Doses still waiting for "Did it work?". `due` ones are past the medication's ask-after time (app rule). */
 export function followUps(doses, kit, now = new Date()) {
   const byId = new Map(kit.map((k) => [k.id, k]));
-  const open = doses.filter((d) => !d.outcome && byId.has(d.medId)).map((d) => {
+  // an every-day medication taken as scheduled is not asked about: it is a routine, like a supplement
+  const open = doses.filter((d) => !d.outcome && !d.scheduled && byId.has(d.medId)).map((d) => {
     const askAt = ms(d.at) + (byId.get(d.medId).askAfterHours ?? 1) * HOUR;
     return { dose: d, askAt: iso(askAt), due: ms(now) >= askAt };
   });
   return { due: open.filter((f) => f.due), later: open.filter((f) => !f.due) };
 }
 
-export function setOutcome(store, doseId, { worked, effects = [], at = new Date() }) {
+export function setOutcome(store, doseId, { worked, effects = [], severity = null, at = new Date() }) {
   if (!OUTCOMES.some((o) => o.id === worked)) return { ok: false, why: "Choose how it went." };
   if (!store.doses.some((d) => d.id === doseId)) return { ok: false, why: "That dose is not in the log." };
-  return {
-    ok: true,
-    store: { ...store, doses: store.doses.map((d) => (d.id === doseId ? { ...d, outcome: { worked, effects: [...effects], at: iso(at) } } : d)) }
-  };
+  const real = effects.filter((e) => e !== "Nothing");
+  if (real.length && severity !== null && !SEVERITY.some((x) => x.id === severity)) return { ok: false, why: "Choose how strong it was." };
+  const outcome = { worked, effects: [...effects], at: iso(at) };
+  if (real.length && severity) outcome.severity = severity;
+  return { ok: true, store: { ...store, doses: store.doses.map((d) => (d.id === doseId ? { ...d, outcome } : d)) } };
 }
 
 /** The side effects the app asks about for one medication: the kit list's own words, split. */
@@ -179,7 +279,7 @@ export function patterns(store, kit, now = new Date(), log = {}) {
   }
 
   // 4. The same kind of medication several days in a row (illustrative app rule).
-  for (const category of [...new Set(kit.map((k) => k.category))]) {
+  for (const category of [...new Set(kit.filter((k) => !k.own).map((k) => k.category))]) {
     const n = daysInARow(store.doses, (d) => byId.get(d.medId)?.category === category, today);
     if (n < RULES.repeatDays) continue;
     let text = `A ${category.toLowerCase()} medication logged on ${n} days in a row.`;
@@ -199,6 +299,13 @@ export function patterns(store, kit, now = new Date(), log = {}) {
     if (rated.length === RULES.noReliefRepeats && rated.every((d) => d.outcome.worked === "no")) {
       out.push({ id: `noeffect-${med.id}`, level: "talk", medId: med.id, text: `${med.name} did not work the last ${RULES.noReliefRepeats} times you logged it.`, illustrative: true });
     }
+  }
+
+  // 6. A side effect rated severe in the last week (illustrative app rule).
+  for (const d of store.doses.filter((x) => x.outcome?.severity === "severe" && ms(now) - ms(x.at) < RULES.severeDays * 24 * HOUR && ms(x.at) <= ms(now))) {
+    const med = byId.get(d.medId);
+    const fx = d.outcome.effects.filter((e) => e !== "Nothing").map((e) => e.toLowerCase()).join(", ");
+    out.push({ id: `severe-${d.id}`, level: "talk", medId: d.medId, text: `Severe side effect after ${med?.name.toLowerCase() ?? "a medication"} on ${dayOf(d.at)}${fx ? `: ${fx}` : ""}.`, illustrative: true });
   }
 
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "talk" ? -1 : 1));
@@ -226,7 +333,8 @@ export function toCsv(doses, kit) {
   const byId = new Map(kit.map((k) => [k.id, k]));
   const cell = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replaceAll('"', '""')}"` : String(v));
   const rows = [...doses].sort((a, b) => ms(a.at) - ms(b.at)).map((d) => [
-    d.at, byId.get(d.medId)?.name ?? d.medId, byId.get(d.medId)?.category ?? "", d.units, byId.get(d.medId)?.unit ?? "", d.reason ?? "", d.outcome?.worked ?? "", (d.outcome?.effects ?? []).join(" ")
+    d.at, byId.get(d.medId)?.name ?? d.medId, byId.get(d.medId)?.own ? "Own" : byId.get(d.medId)?.category ?? "", d.units, byId.get(d.medId)?.unit ?? "", d.reason ?? "", d.outcome?.worked ?? "", (d.outcome?.effects ?? []).join(" "), d.outcome?.severity ?? "",
+    d.scheduled ? "as scheduled" : d.recalled ? "remembered later" : "at the time"
   ].map(cell).join(","));
-  return ["taken_at_utc,medication,kit_category,units,unit,what_for,worked,side_effects", ...rows].join("\n") + "\n";
+  return ["taken_at_utc,medication,kit_category,units,unit,what_for,worked,side_effects,side_effect_strength,logged", ...rows].join("\n") + "\n";
 }

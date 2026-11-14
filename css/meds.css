@@ -188,3 +188,19 @@
 .supp-week li.on { background: var(--tone-normal); border-color: var(--tone-normal); color: #ffffff; }
 .supp-why { margin: 0 0 6px; color: var(--ink); line-height: 1.5; }
 .supp .src { margin-top: 6px; }
+
+/* Dose Tracker ideas: weekly question, every-day medications, side-effect strength, own medications */
+.weekly .sp-acts { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px; }
+.weekly .sp-acts .cta { margin: 0; min-height: 48px; }
+.sched { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.sched .fu-top { margin: 0; }
+.sched .cta { margin: 0 !important; }
+.fu-q .mono { font-size: 11px; letter-spacing: .12em; color: var(--beacon); }
+.fu-sev .chip small { color: inherit; opacity: .75; font-weight: 400; }
+.when { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; font-size: 14px; color: var(--ink-2); }
+.when select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--seam-hi); background: transparent; color: var(--ink); font: 15px var(--sans); }
+.own-add-link { margin-top: 10px; }
+.own-form { margin: 8px 0 6px; }
+.own-form .cf-field input, .own-form .cf-field select { background: transparent; border-color: var(--seam-hi); }
+.own-daily { margin-top: 10px; }
+.own-list li { grid-template-columns: 1fr auto; align-items: center; }

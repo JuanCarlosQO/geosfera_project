@@ -41,6 +41,7 @@ const NAMED = {
   "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf": ["NASA OCHMO-TB-004 — Carbon Dioxide", "standard"],
   "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-003-habitable-atmosphere.pdf": ["NASA OCHMO-TB-003 — Habitable Atmosphere", "standard"],
   "https://www.nasa.gov/wp-content/uploads/2023/03/sleep-accomodations-technical-brief-ochmo.pdf": ["NASA OCHMO technical brief — Sleep Accommodations", "standard"],
+  "https://ntrs.nasa.gov/citations/20150014490": ["NASA Dose Tracker — medication app for ISS crews (2015)", "hrp"],
   "https://ntrs.nasa.gov/citations/20230018496": ["NASA HRP evidence report — Risk of Ineffective or Toxic Medications (2023)", "hrp"],
   "https://humanresearchroadmap.nasa.gov/evidence/reports/Nutrition.pdf": ["NASA HRP evidence report — Risk Factor of Inadequate Nutrition (2015)", "hrp"],
   "https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf": ["NASA Lifetime Surveillance of Astronaut Health newsletter, Oct 2023", "hrp"],
