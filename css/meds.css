@@ -152,3 +152,39 @@
   .p3-spin { animation: none; transform: rotateX(-20deg) rotateY(28deg); }
   .zone-dot { animation: none; }
 }
+
+/* ---------- medication log: steps, patterns, supplements ---------- */
+
+.log-step { margin: 0 0 12px; padding: 16px; border-radius: 16px; background: var(--hull); border: 1px solid var(--seam); }
+.step-label { margin: 0 0 6px; color: var(--beacon); letter-spacing: .14em; }
+.log-step .fine { margin: 0 0 12px; }
+.take-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.take-opt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px; border-radius: 14px; border: 1.5px solid var(--seam-hi); text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+.take-opt input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.take-opt strong { font-size: 15px; font-weight: 600; }
+.take-opt .mono { color: var(--ink-3); font-size: 11px; }
+.take-opt:hover { border-color: var(--beacon); }
+.take-opt:has(input:checked) { border-color: var(--beacon); background: color-mix(in srgb, var(--beacon) 10%, var(--hull)); box-shadow: 0 0 0 1px var(--beacon); }
+.take-opt:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+.take-opt .pill3d { pointer-events: none; }
+.log-btn { margin-top: 14px; min-height: 50px; padding: 0 30px; }
+
+.meds-right .data-card { margin-top: 0; }
+.patterns { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pattern { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--tone-watch); background: color-mix(in srgb, var(--tone-watch) 8%, var(--hull)); line-height: 1.5; font-size: 14px; }
+.pattern[data-level="downlink"] { border-color: var(--beacon); background: color-mix(in srgb, var(--beacon) 7%, var(--hull)); }
+.pattern p { margin: 0; }
+.pattern .fine { margin-top: 4px; }
+.pt-head { font-weight: 600; color: var(--tone-watch); margin-bottom: 4px !important; }
+.pattern[data-level="downlink"] .pt-head { color: var(--beacon); }
+.calm-line { margin: 0; color: var(--tone-normal); }
+
+.supp-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.supp-top .mono { margin: 0; color: var(--beacon); letter-spacing: .12em; }
+.data-card .supp-top h3 { margin: 2px 0 0; font-family: var(--sans); font-size: 22px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink); }
+.data-card .supp-top h3::before { content: none; }
+.supp-week { list-style: none; display: flex; gap: 6px; margin: 14px 0; padding: 0; }
+.supp-week li { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--seam-hi); color: var(--ink-3); font-size: 12px; }
+.supp-week li.on { background: var(--tone-normal); border-color: var(--tone-normal); color: #ffffff; }
+.supp-why { margin: 0 0 6px; color: var(--ink); line-height: 1.5; }
+.supp .src { margin-top: 6px; }
