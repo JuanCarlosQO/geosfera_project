@@ -34,6 +34,8 @@ Fingerprint or face unlock needs https (for example GitHub Pages) and a phone wi
 
 ## Privacy and security
 
+**Preview mode is on:** for the hackathon the app starts already unlocked, so anyone with the link can look around. The hatch still works from the lock button in the top bar. To start behind the hatch again, set `START_UNLOCKED` to `false` in `js/app.js`.
+
 Crew access is a **device lock, not encryption**. The code is never stored: only a salted PBKDF2-SHA256 hash stays on the device. After five wrong codes the app makes you wait, doubling each time up to 15 minutes. "Forgot your code?" erases what Geosfera saved on that device. Fingerprints never reach the app: the phone checks them and the app verifies the phone's signed answer.
 
 ## Sources

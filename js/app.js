@@ -58,4 +58,14 @@ document.querySelector('[data-action="lock"]').addEventListener("click", closeHa
 render();
 stampUtc();
 setInterval(stampUtc, 1000);
-closeHatch();
+
+// Preview mode for the hackathon: the app starts already inside the station so anyone with
+// the link can look around at once. The hatch is still there: the lock button closes it and
+// asks for the crew code. Set START_UNLOCKED to false to start behind the hatch again.
+const START_UNLOCKED = true;
+if (START_UNLOCKED) {
+  station.inert = false;
+  nav.inert = false;
+} else {
+  closeHatch();
+}
