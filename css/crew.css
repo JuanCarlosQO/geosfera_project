@@ -66,3 +66,12 @@
 
 @keyframes act-pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .crew-card[data-tone="act"] .silhouette { animation: none; } .cc-spark path { stroke-dashoffset: 0; } }
+
+/* demo crew: offer on the empty station, notice while it is loaded */
+.demo-offer { margin-top: 26px; padding: 16px 18px; border: 1px dashed var(--seam); border-radius: 16px; }
+.demo-offer p { margin: 0 0 12px; color: var(--ink-2); line-height: 1.5; }
+.demo-offer .fine { margin: 10px 0 0; }
+.demo-offer .cta { cursor: pointer; }
+.demo-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--tone-watch); }
+.demo-note p { margin: 0; flex: 1 1 220px; font-size: 14px; color: var(--ink-2); }
+.dn-tag { font-size: 11px; letter-spacing: .08em; padding: 3px 8px; border-radius: 6px; background: var(--tone-watch); color: #111; }

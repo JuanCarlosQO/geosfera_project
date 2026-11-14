@@ -15,6 +15,7 @@ import { RADIATION_LIMITS, REVIEW_NOTE } from "./data/vital-ranges.js";
 import { clinicHero } from "./clinic.js";
 import { MEDS_KEY, cleanStore, followUps } from "./meds-core.js";
 import { KIT } from "./data/med-kit.js";
+import { demoLoaded, loadDemo, removeDemo, demoNoticeHtml, demoOfferHtml } from "./demo.js";
 
 const MISSION_KEY = "geosfera.mission";
 const UNITS = { heartRate: "bpm", bloodOxygen: "%", glucose: "mg/dL", radiationDose: "mSv", temperature: "°C", sleepHours: "h sleep", mood: "/5" };
@@ -98,8 +99,9 @@ function readingRows(log, day, entry) {
 export function mountToday(host, { go }, requested) {
   const crew = S.getCrew();
   if (!crew.members.length) {
-    host.innerHTML = `<section class="today crew-onboard">${crewFormHtml(true)}</section>`;
+    host.innerHTML = `<section class="today crew-onboard">${crewFormHtml(true)}${demoOfferHtml()}</section>`;
     bindCrewForm(host, () => mountToday(host, { go }, requested));
+    host.querySelector('[data-action="load-demo"]').addEventListener("click", () => { loadDemo(); mountToday(host, { go }, requested); });
     host.querySelector("input[name=name]")?.focus();
     return;
   }
@@ -139,6 +141,7 @@ export function mountToday(host, { go }, requested) {
       </div>
     </div>
 
+    ${demoLoaded() ? demoNoticeHtml() : ""}
     ${crewStatusHtml(crew)}
 
     ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, followUps: due, who: member }) : `<div class="hero">
@@ -195,6 +198,9 @@ export function mountToday(host, { go }, requested) {
   </section>`;
 
   const rerender = () => mountToday(host, { go }, requested);
+  host.querySelector('[data-action="remove-demo"]')?.addEventListener("click", () => {
+    if (confirm("Remove the demo crew and its simulated data from this device?")) { removeDemo(); mountToday(host, { go }, undefined); }
+  });
   host.querySelector(".crew-status").addEventListener("click", (e) => {
     const card = e.target.closest("[data-member]");
     if (card) { S.setActive(card.dataset.member); rerender(); return; }

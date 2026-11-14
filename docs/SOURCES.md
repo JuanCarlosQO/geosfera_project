@@ -210,7 +210,11 @@ NASA OCHMO-TB-016 Rev B (Behavioral Health and Performance, 24 Oct 2023) read on
 | Why an app helps on long missions | "For missions beyond 6 months and/or beyond LEO, additional minimally obtrusive measures that objectively evaluate psychological and behavioral states within the mission context should be provided." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
 | Delay to Earth | "Facing a communication delay of up to 20 minutes one way" | https://www.nasa.gov/hrp/hazard-distance-from-earth/ |
 
-**App choices (not NASA rules):** the support and emergency buttons, holding the emergency button 1.5 seconds to send, the list of reasons, showing an unanswered alert on crewmates' screens for 12 hours, and the comfort settings (calm motion, larger text, one thing at a time) for different sensory and attention needs. Alerts reach crewmates' devices only through the team's station sync; delivery to Mission Control is simulated in this prototype and the screen says so.
+**App choices (not NASA rules):** the SOS button (press and hold 2 seconds, one gesture, cancel within 10 seconds if sent by mistake) and the one-tap "talk to someone" button, the list of reasons, showing an unanswered alert on crewmates' screens for 12 hours, and the comfort settings (calm motion, larger text, one thing at a time) for different sensory and attention needs. Alerts reach crewmates' devices only through the team's station sync; delivery to Mission Control is simulated in this prototype and the screen says so.
+
+## Demo crew (simulated)
+
+Valentina Reyes, Tomás Okafor and Amara Lindqvist are fictional. Every reading in the demo is made up by `js/demo-core.js`, kept inside the daily log's input limits, and labelled SIMULATED in the app. The only figure taken from a source is the daily radiation dose, kept between 0.44 and 0.56 mSv around the typical ISS value the team verified ("about 0.5 mSv per day", LSAH bulletin, Oct 2023, in the team document above). No real astronaut's name or data is used: NASA publishes no individual crew health records.
 
 ## Pending
 

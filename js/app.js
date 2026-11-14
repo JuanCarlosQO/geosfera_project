@@ -1,3 +1,4 @@
+import { loadDemo } from "./demo.js";
 import { Hatch } from "./hatch.js";
 import { mountBody } from "./body.js";
 import { mountToday } from "./today.js";
@@ -44,7 +45,7 @@ function render() {
   if (name === "live") mountLive(station);
   if (name === "future") mountFuture(station);
   if (name === "sources") mountSources(station);
-  if (name === "mind") mountMind(station, { openSupport: () => support.open() });
+  if (name === "mind") mountMind(station, { talk: () => support.talk() });
   if (name === "body") {
     const body = mountBody(station);
     if (arg) body.select(arg);
@@ -73,6 +74,11 @@ async function closeHatch() {
   stampUtc();
 }
 
+// a shared link ending in ?demo opens with the demo crew (only on a device with no crew yet)
+if (new URLSearchParams(location.search).has("demo")) {
+  loadDemo();
+  history.replaceState(null, "", location.pathname + location.hash); // so a reload after "Remove demo crew" stays empty
+}
 const support = mountSupport(); // the support button works even with the hatch closed
 window.addEventListener("hashchange", render);
 window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });

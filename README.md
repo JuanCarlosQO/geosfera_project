@@ -22,7 +22,7 @@ Built one at a time during the hackathon (14–15 November 2026).
 
 5. **Future body.** Where the bones are heading on a long mission: NASA's average loss without countermeasures (1–1.5 % a month) against NASA's requirement to keep hip and spine at 95 % or more, on a chart that draws itself and a skeleton that fades month by month, from a 6-month Space Station increment to a three-year Mars mission. Beside it, your own exercise and vitamin D habits.
 
-11. **Mind & support.** A red Support button on every screen, even with the app locked: "I'd like to talk to someone" with one tap, or "Emergency" by holding it. With a station linked, every crewmate's device shows the alert and can answer "I'm on my way"; Mission Control delivery is simulated. The Mind page shows the week's mood and sleep against your own history and offers comfort settings for different sensory and attention needs: calm motion, larger text, one thing at a time.
+11. **Mind & support.** A red SOS button on every screen, even with the app locked: press and hold it for 2 seconds and the emergency is sent — one gesture, hard to trigger by accident, cancellable for 10 seconds. "I'd like to talk to someone" is one tap on the Mind page. With a station linked, every crewmate's device shows the alert and can answer "I'm on my way"; Mission Control delivery is simulated. The Mind page shows the week's mood and sleep against your own history and offers comfort settings for different sensory and attention needs: calm motion, larger text, one thing at a time.
 
 ## Plan
 
@@ -47,6 +47,8 @@ No build step, no dependencies.
 npm start   # http://localhost:8000
 npm test    # unit tests, Node 20+
 ```
+
+**Demo crew.** On an empty station, "Load demo crew" (or a link ending in `?demo`, for example https://juancarlosqo.github.io/geosfera_project/?demo) fills the app with three fictional crew members — Valentina Reyes, Tomás Okafor and Amara Lindqvist — and two weeks of simulated readings. They are not real astronauts: NASA publishes no individual crew health data, so a real name would mean inventing records about a real person. The app marks the demo as SIMULATED, and "Remove demo crew" on the Today screen takes away only what the demo wrote.
 
 Fingerprint or face unlock needs https (for example GitHub Pages) and a phone with a reader.
 
