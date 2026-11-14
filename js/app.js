@@ -7,6 +7,7 @@ import { mountMeds } from "./meds.js";
 import { mountDuty } from "./duty.js";
 import { mountLive } from "./telemetry.js";
 import { mountFuture } from "./future.js";
+import { mountSources } from "./sources.js";
 import { startSync, mountSyncButton } from "./sync.js";
 
 const station = document.getElementById("station");
@@ -34,12 +35,13 @@ applyTheme(savedTheme);
 
 function render() {
   const [view = "today", arg] = location.hash.replace(/^#/, "").split("/");
-  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future"].includes(view) ? view : "today";
+  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources"].includes(view) ? view : "today";
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
   if (name === "live") mountLive(station);
   if (name === "future") mountFuture(station);
+  if (name === "sources") mountSources(station);
   if (name === "body") {
     const body = mountBody(station);
     if (arg) body.select(arg);

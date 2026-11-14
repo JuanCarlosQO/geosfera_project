@@ -1,0 +1,36 @@
+/* In-app sources page. */
+
+.sources { max-width: 860px; margin: 0 auto; }
+.sources h1 { margin: 6px 0 6px; font-weight: 400; font-size: clamp(26px, 7vw, 34px); outline: none; }
+.sources .lede { margin: 0 0 16px; color: var(--ink-2); line-height: 1.5; }
+.src-legend { display: grid; gap: 8px; margin: 0 0 16px; padding: 14px 16px; border-radius: 16px; background: var(--hull); border: 1px solid var(--seam); }
+@media (min-width: 620px) { .src-legend { grid-template-columns: 1fr 1fr; } }
+.src-legend p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.src-legend strong { display: block; color: var(--ink); font-weight: 600; }
+.src-search input { width: 100%; min-height: 48px; padding: 0 16px; border-radius: 24px; border: 1px solid var(--seam-hi); background: var(--hull); color: var(--ink); font: 15px var(--sans); }
+.src-search input:focus { outline: 2px solid var(--beacon); outline-offset: 1px; }
+.src-group { margin-top: 22px; }
+.src-group h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-size: 18px; font-weight: 500; }
+.src-group h2::before { content: none !important; }
+.src-count { min-width: 26px; height: 22px; padding: 0 7px; border-radius: 11px; display: inline-grid; place-items: center; background: color-mix(in srgb, var(--beacon) 14%, var(--hull)); color: var(--beacon); font-size: 12px; font-weight: 600; }
+.src-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.src-doc { padding: 12px 14px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam); }
+.src-title { color: var(--ink) !important; font-weight: 500; text-decoration: none; line-height: 1.4; }
+.src-title:hover { color: var(--beacon) !important; text-decoration: underline; }
+.src-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 0; }
+.src-meta .mono { font-size: 11px; color: var(--ink-3); margin-right: 4px; }
+.src-mod { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 12px; border: 1px solid var(--seam-hi); color: var(--ink-2) !important; font-size: 12px; text-decoration: none; }
+.src-mod:hover { border-color: var(--beacon); color: var(--beacon) !important; }
+.src-doc details { margin-top: 6px; }
+.src-doc summary { min-height: 36px; display: flex; align-items: center; cursor: pointer; color: var(--beacon); font-size: 13px; }
+.src-quotes { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); font-size: 13px; line-height: 1.45; }
+.src-doc .fine { margin: 6px 0 0; }
+.src-btn { min-height: 44px; padding: 0 12px; }
+@media (max-width: 420px) { .src-btn span { display: none; } }
+
+/* five masthead controls on a 360 px phone: sync shows its icon and status dot only */
+@media (max-width: 420px) {
+  .masthead .sync-btn [data-sync-label] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .masthead .sync-btn { padding: 0 10px; }
+  .masthead .mark span { letter-spacing: .12em; }
+}

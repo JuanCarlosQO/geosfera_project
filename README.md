@@ -56,4 +56,6 @@ Crew access is a **device lock, not encryption**. The code is never stored: only
 
 ## Sources
 
+Inside the app, the document button in the top bar opens **Sources**: every document behind a fact the app shows, grouped, with links, the screens that use it and its exact quotes, built from the same data the screens read.
+
 Every health fact Ergosphere shows comes from an official source listed in [docs/SOURCES.md](docs/SOURCES.md).

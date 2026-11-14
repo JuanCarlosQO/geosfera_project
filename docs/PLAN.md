@@ -32,7 +32,7 @@ Status: ✅ done · 🔍 in review · ⏳ to do
 | SCRUM-16 | 08–13 | Module 5: future body — bone density projection with animated chart | Dev 1 · Claude Code | 🔍 |
 | SCRUM-17 | 08–13 | Module 7: trends — self-drawing charts per reading | Dev 2 | ⏳ |
 | SCRUM-18 | 08–13 | Module 6: hazards and radiation | Dev 3 | ⏳ |
-| SCRUM-19 | 13–17 | In-app sources page | Dev 2 | ⏳ |
+| SCRUM-19 | 13–17 | In-app sources page | Dev 2 · Claude Code | ✅ |
 | SCRUM-20 | 13–17 | Offline mode: service worker and self-hosted fonts | Dev 3 | ⏳ |
 | SCRUM-21 | 13–17 | Visual polish and transitions between modules | Dev 1 | ⏳ |
 | SCRUM-22 | 17–20 | Final QA and code freeze at 20:00 | Dev 3 · Team | ⏳ |

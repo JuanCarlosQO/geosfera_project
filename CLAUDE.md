@@ -68,6 +68,9 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/future-core.js` | Future body rules, tested: NASA's 1–1.5 %/month without countermeasures, the 95 % requirement, months to cross it, habits from the log, chart geometry |
 | `js/future.js` | Module 5 screen (`#future`, linked from Mission and Body): mission buttons (ISS 6 months, Mars 36), month slider, fading skeleton, self-drawing chart with the requirement line and the 6-month countermeasure result, exercise and vitamin D habits |
 | `js/data/future.js` | NASA quotes for Future body and the two mission presets |
+| `css/sources.css` | Sources page styles (also compacts the masthead on 360 px phones) |
+| `js/sources-core.js` | Sources index, tested: collects every quoted fact from the data modules, names and groups each document (NASA standards, NASA HRP, real NASA data, partner agencies, Earth references), lists the modules that use it, search filter |
+| `js/sources.js` | In-app sources page (`#sources`, document button in the masthead): legend, search, documents with links, module chips and their exact quotes |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules
