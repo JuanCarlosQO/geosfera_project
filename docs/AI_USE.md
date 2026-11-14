@@ -1,6 +1,28 @@
 # AI use
 
-For the Space Apps submission form.
+For the Space Apps submission form. The summary comes first; the log below lists every AI-assisted change in order.
+
+## Summary
+
+We used **Claude Code** (Anthropic; models Claude Fable 5.2 and Claude Opus 5.5) as a coding and research assistant, and **Gemini Notebook** (Google, with its Deep Research search) to collect sources. AI wrote most of the code and its unit tests, searched official sources (NASA standards and technical briefs, NASA Human Research Program evidence reports, NASA's ISS medical kit list, NASA RadLab and DONKI data, FDA labels) and drafted text.
+
+**How facts were checked.** Every health fact the app shows is quoted word for word in `docs/SOURCES.md` with its link, and automated tests fail if a quote is missing. FDA label quotes were checked by program against openFDA; NASA quotes were read in the original PDF text. Where no source was found, the app says "Pending check" or labels the value an app rule.
+
+**What people decided.** The team chose the idea, the design and the rule "real and verified, never invented", and reviewed every module on real phones. The team's pharmaceutical chemist (Isabel) set the approach of the medication module and proposed the vitamins; an aerospace engineer advising the team asked for human factors, which became the Fit for duty check.
+
+**What the app does not do.** The app contains no AI: it runs fixed, sourced rules in the browser. It does not diagnose or prescribe. Values that are not real crew data are labelled "simulated". The body figure and the 3D medication models are original drawings made in code, not NASA images; no NASA logo or branding is used.
+
+## Work done outside the repository
+
+| Date | Tool | What it did | Human role |
+| --- | --- | --- | --- |
+| 14 Nov 2026 | Gemini Notebook (Google) | Team notebook "Arquitectura de Salud y Monitoreo para Misiones Espaciales": collected 25 sources (challenge page and videos, NASA-STD-3001, OCHMO briefs, RadLab and OSDR APIs, research papers) and a Deep Research report. | The team chose and imported the sources. |
+| 14 Nov 2026, morning (UTC−5) | Claude Code (Anthropic), model Claude Opus 5.5 | Read the challenge text and resources, summarised what it asks, and asked the team the questions to define the project; drafted team roles and questions for an aerospace engineering student. | A team member answered and chose the scope. |
+| 14 Nov 2026, 10:30–11:10 (UTC−5) | Claude Code (Anthropic), model Claude Opus 5.5, with research sub-agents | Researched real values for the dashboard (cabin atmosphere and radiation limits in NASA-STD-3001, vital-sign reference ranges, effects of spaceflight, NASA data sources usable from a browser) and wrote the team document "AstroVital — Datos reales para el dashboard" (PDF). Checked the key figures in the original PDFs and tested the NASA APIs from a browser. | The team used the document to choose ranges; rows marked ○ were left for human review. |
+| 14 Nov 2026, 11:30–14:00 (UTC−5) | Claude Code (Anthropic), model Claude Fable 5.2 | Wrote the pharmacist's verification sheet "Hoja de verificación de medicamentos" (PDF) from the app's own medication data. | For the team's pharmaceutical chemist to review and sign. |
+| 14 Nov 2026, 19:00 (UTC−5) | Claude Code (Anthropic), model Claude Opus 5.5, with a research sub-agent | Checked the pharmacist's vitamin proposal against NASA's nutrition evidence report: vitamin D kept, vitamins C, E and B left out as open questions. | Isabel proposed the vitamins; the team accepted the result. |
+
+## Log of changes in this repository
 
 | Date | Tool | What it did | Human role |
 | --- | --- | --- | --- |
@@ -18,6 +40,5 @@ For the Space Apps submission form.
 | 14 Nov 2026, 17:50 (UTC−5) | Claude Code (Anthropic), model Claude Fable 5.2 | Added a preview mode in `js/app.js` (`START_UNLOCKED`): the app starts unlocked; the hatch still opens from the lock button. Noted it in `README.md` and `CLAUDE.md`. | A team member asked to enter without a code so the team and reviewers can open the link at once. One line turns it back. |
 | 14 Nov 2026 | Claude Code (Anthropic) | Made Ergosphere multi-crew (registration, per-member logs, crew status row with silhouettes) and applied the vital ranges and radiation limits from the team research document, with tests. | The team researched the sources ("AstroVital — Datos reales para el dashboard"); Juan Carlos asked for one registration and summary per astronaut. |
 | 14 Nov 2026, 18:00–19:00 (UTC−5) | Claude Code (Anthropic), model Claude Fable 5.2 / Claude Opus 5.5 | Day look and clinical dashboard: `css/clinic.css`, `js/clinic.js`, `js/clinic-core.js` with tests, day/night switch in `js/app.js`, Outfit font; renamed the visible project name to Ergosphere. Live telemetry: reviewed a team member's prototype (`js/telemetry.js` imported a missing `telemetry-core.js` and was not linked) and rebuilt it as module 10 with `js/telemetry-core.js`, `js/data/telemetry.js`, `css/telemetry.css` and tests; saved real NASA RadLab dose-rate data in `js/data/radlab-iss.js`; read NASA CO2 limits in OCHMO-TB-004. Fixed Fit for duty to read the active crew member's log. | A team member asked for the redesign, the new name and type, and a review of the telemetry code; the team chose the channels in their chat. Not yet published: waiting for the team's review of the preview. |
-| 14 Nov 2026 | Claude Code (Anthropic) | Made Geosfera multi-crew (registration, per-member logs, crew status row with silhouettes) and applied the vital ranges and radiation limits from the team research document, with tests. | The team researched the sources ("AstroVital — Datos reales para el dashboard"); Juan Carlos asked for one registration and summary per astronaut. |
 | 14 Nov 2026 | Claude Code (Anthropic) | Added encrypted station sync across devices (Vercel function on Upstash Redis, client-side AES-GCM, conflict merge) with tests and a two-device browser test. | Juan Carlos chose Upstash on Vercel and station ID + code. |
 | 14 Nov 2026, 19:00 (UTC−5) | Claude Code (Anthropic), model Claude Opus 5.5 | Reworked module 8 into a medication log that does not prescribe: rewrote `js/meds-core.js`, `js/meds.js` and their tests; added kit categories, kit-list side effects and limits to `js/data/med-kit.js`; turned the body zones into "what for"; added `js/data/supplements.js` (vitamin D) after checking NASA's nutrition evidence report, and left vitamins C, E and B out because that report treats them as open questions. | The team pharmacist (Isabel) and a team member set the new approach (log, follow up, flag patterns; never prescribe) and proposed vitamins. Not yet published. |
