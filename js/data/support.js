@@ -10,6 +10,8 @@ export const SUPPORT_FACTS = {
   always: { quote: "current behavioral health support is provided before, during, and after the mission.", url: BH, source: SRC },
   baseline: { quote: "A preflight baseline is obtained for each astronaut and is then compared using a monthly in-flight test.", url: BH, source: SRC },
   longMissions: { quote: "For missions beyond 6 months and/or beyond LEO, additional minimally obtrusive measures that objectively evaluate psychological and behavioral states within the mission context should be provided.", url: BH, source: SRC },
+  familyContact: { quote: "For missions beyond six months and/or beyond LEO, additional resources to support families, significant others, and friends and to facilitate crew-ground communication should be provided.", url: BH, source: SRC },
+  carePackages: { quote: "Crew care packages are one means of keeping astronaut motivation and morale high, especially during long missions.", url: BH, source: SRC },
   delay: { quote: "Facing a communication delay of up to 20 minutes one way", url: DIST, source: "NASA HRP, Distance from Earth" }
 };
 

@@ -6,6 +6,7 @@
 import { buildDemo, DEMO_KEY, isDemoId } from "./demo-core.js";
 import { getCrew, saveCrew, writeLog, deleteMember } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
+import { FAMILY_KEY } from "./family-core.js";
 
 const MISSION_KEY = "geosfera.mission";
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
@@ -22,6 +23,7 @@ export function loadDemo(now = new Date()) {
   for (const [id, log] of Object.entries(d.logs)) writeLog(log, id);
   write(MEDS_KEY, d.meds);
   write(MISSION_KEY, d.mission);
+  write(FAMILY_KEY, { ...read(FAMILY_KEY, {}), ...d.family });
   write(DEMO_KEY, { ...d.marker, doses: d.meds.doses.map((x) => x.id), supplementDays: Object.keys(d.meds.supplements), missionStart: d.mission.start });
   return true;
 }
@@ -37,6 +39,8 @@ export function removeDemo() {
     write(MEDS_KEY, { ...meds, doses: (meds.doses ?? []).filter((x) => !doseIds.has(x.id)), supplements });
   }
   if (marker.missionStart && read(MISSION_KEY, {}).start === marker.missionStart) drop(MISSION_KEY);
+  const fam = read(FAMILY_KEY, null);
+  if (fam) { for (const id of Object.keys(fam)) if (isDemoId(id)) delete fam[id]; write(FAMILY_KEY, fam); }
   drop(DEMO_KEY);
 }
 

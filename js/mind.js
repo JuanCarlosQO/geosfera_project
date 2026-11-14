@@ -7,6 +7,7 @@ import * as P from "./support-core.js";
 import { SUPPORT_FACTS, LEVELS, COMFORT, REASONS } from "./data/support.js";
 import { getAlerts, saveAlerts, applyComfort } from "./support.js";
 import { current, readLog } from "./store.js";
+import { familyWaiting } from "./family.js";
 import { dateKey, fieldByKey } from "./log-core.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -49,6 +50,8 @@ export function mountMind(host, { talk }) {
       <button type="button" class="mind-help" data-mind="talk"><span aria-hidden="true">♥</span><strong>${LEVELS.talk.label}</strong><small>One tap. Not urgent: your crew medical officer reaches you and books a private conference with Earth.</small></button>
       <div class="mind-sos"><span class="mind-sos-dot" aria-hidden="true">SOS</span><p><strong>Emergency?</strong> Press and hold the red SOS button for 2 seconds, on any screen, even with the app locked. One gesture, no second step; you can cancel for 10 seconds if it was a mistake.</p></div>
     </div>
+
+    <a class="duty-link mind-family" href="#family"><span>✉ Family channel<small>${((n) => (n ? `${n} ${n === 1 ? "message" : "messages"} from home, sealed. Open ${n === 1 ? "it" : "them"} whenever you like.` : "Messages from home arrive sealed, and you choose when to open them."))(familyWaiting())}</small></span><span>Open →</span></a>
 
     <section class="data-card" aria-labelledby="mi-a">
       <h2 id="mi-a">Requests</h2>

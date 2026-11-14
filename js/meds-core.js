@@ -73,7 +73,7 @@ export function spanWords(from, to) {
   return h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
 }
 
-export const emptyStore = () => ({ doses: [], supplements: {}, own: [], weekly: [] });
+export const emptyStore = () => ({ doses: [], supplements: {}, own: [], weekly: [], raised: {} });
 
 /* ---------- the crew member's own medications (Dose Tracker: personal and chronic meds) ---------- */
 
@@ -161,6 +161,7 @@ export function cleanStore(raw, kit, supplements = []) {
     }
     out.doses.push(dose);
   }
+  for (const [id, at] of Object.entries(raw?.raised ?? {}).slice(-60)) if (!Number.isNaN(ms(at))) out.raised[String(id)] = iso(at);
   out.weekly = (Array.isArray(raw?.weekly) ? raw.weekly : []).filter((w) => ["none", "yes"].includes(w?.answer) && !Number.isNaN(ms(w.at))).map((w) => ({ at: iso(w.at), answer: w.answer })).slice(-20);
   for (const [day, ids] of Object.entries(raw?.supplements ?? {})) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(ids)) continue;
@@ -315,6 +316,28 @@ export function patterns(store, kit, now = new Date(), log = {}) {
   }
 
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "talk" ? -1 : 1));
+}
+
+/* ---------- follow-up alerts and reminders ---------- */
+
+/** Remembers that a pattern was sent to the crew medical officer, so it is not sent twice. */
+export const markRaised = (store, patternId, at = new Date()) => ({ ...store, raised: { ...(store.raised ?? {}), [patternId]: iso(at) } });
+
+/** What to send for one pattern: a short note with the medication log's own words. */
+export const patternNote = (p) => `Medication log: ${p.text}${p.quote ? ` NASA's kit list: "${p.quote}"` : ""}`.slice(0, 280);
+
+/**
+ * Reminders for today, most pressing first: doses waiting for "Did it work?", every-day
+ * medications and plan supplements not logged yet, and the weekly question once there is a log.
+ */
+export function reminders(store, kit, supplements = [], now = new Date()) {
+  const today = dayOf(now), out = [];
+  const byId = new Map(kit.map((k) => [k.id, k]));
+  for (const { dose } of followUps(store.doses, kit, now).due) out.push({ id: `fu-${dose.id}`, kind: "followup", text: `Did ${byId.get(dose.medId).name.toLowerCase()} work? Not answered yet.` });
+  for (const { own, taken } of scheduledToday(store, today)) if (!taken) out.push({ id: `sched-${own.id}`, kind: "scheduled", text: `${own.name}: today's dose is not logged.` });
+  for (const s of supplements) if (!store.supplements?.[today]?.includes(s.id)) out.push({ id: `supp-${s.id}`, kind: "supplement", text: `${s.name}: not marked as taken today.` });
+  if ((store.doses.length || (store.weekly ?? []).length) && weeklyDue(store, now)) out.push({ id: "weekly", kind: "weekly", text: "Weekly question: anything taken that is not in your log?" });
+  return out;
 }
 
 /* ---------- supplements: taken or not, never "did it work?" ---------- */

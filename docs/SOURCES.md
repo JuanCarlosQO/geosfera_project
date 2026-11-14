@@ -118,6 +118,17 @@ Read on 14 November 2026. Official NASA, NIH and FDA documents. The module **doe
 
 When "Did it work?" is asked after each medication · the same kit category logged on 3 days in a row → "Include it in the next downlink to Earth" · a medication that did not work twice in a row → "Talk it over with your crew medical officer" · the body zones that say what a dose was for · the alarm-sign list. Warnings that quote the kit list: more than its 24-hour limit, more days in a row than it allows, and sleep medications combined within 24 hours.
 
+### Follow-up alerts and reminders
+
+Asked for by the team's health mentor (follow-up alert to the crew medical officer, reaction alerts, reminders). NASA OCHMO-TB-043 Rev A, Longitudinal Health Surveillance — https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-043-longitudinal-health-surveillance.pdf
+
+| Used for | Quote |
+| --- | --- |
+| Why follow up early | "By taking a prevention approach rather than a reactionary approach, total onboard resources and required mission capabilities can be lessened." |
+| What health surveillance is | "includes the medical procedures and actions taken to ensure the in-mission and long-term health of the astronaut" |
+
+**App choices (not NASA rules):** every "talk it over" pattern has a "Tell the crew medical officer" button that sends the pattern's own words as a non-urgent support request to the linked crew devices, once per pattern; a severe side effect points to that button; the Today screen lists today's reminders (doses waiting for "Did it work?", every-day medications and vitamin D not logged yet, the weekly question). Delivery to Mission Control is simulated.
+
 ### Pharmacist review (team)
 
 Isabel, the team's pharmaceutical chemist, reviewed nine of the ten kit medications in her document of 14 Nov 2026 (in Spanish; her references: NASA ISS Medical Checklist 3.001, OCHMO-MTB-012 / OCHMO-TB-006, OCHMO-TB-043, the Orion Medical Kit Contents, Eyal & Derendorf 2022, Diaz et al. 2024, Blue et al. 2019). Bisacodyl is not in her document and stays unreviewed. These values are her professional review, shown in the app as "pharmacist review", never as NASA's words:
@@ -200,6 +211,12 @@ Quotes read on 14 November 2026 in the PDF text of NASA OCHMO-TB-004 Rev D (CO2)
 | pressure | "between 34.5 kPa < pressure ≤ 103 kPa (5 psia < pressure ≤ 15.0 psia)" | https://standards.nasa.gov/system/files/tmp/NASA-STD-3001%20Vol%202%20Rev%20F.pdf |
 | pressureIss | "pressure is typically maintained at 14.7 psia with 21% O2, which is equivalent to sea level" | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-003-habitable-atmosphere.pdf |
 | doseIss | "receive doses in the order of 0.5 mSv/day" | https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf |
+| radKinds | "Space radiation is made up of three kinds of radiation: particles trapped in the Earth’s magnetic field; particles shot into space during solar flares (solar particle events); and galactic cosmic rays, which are high-energy protons and heavy ions from outside our solar system." | https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/ |
+| radSolar | "Occasionally, giant explosions, called solar flares, occur on the surface of the Sun and release massive amounts of energy out into space in the form of x-rays, gamma rays, and streams of protons and electrons." | https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/ |
+| shelter | "create a shelter using the stowage bags on board" | https://www.nasa.gov/missions/artemis/orion/scientists-and-engineers-evaluate-orion-radiation-protection-plan/ |
+| shelterBags | "Using the stowage bags on board that will contain supplies, food and water" | same page |
+| shelterTime | "If the warning were to sound, the crew would create the shelter within an hour and in some cases would need to stay inside for as long as 24 hours." | same page |
+| shelterWhy | "The method protects the crew by increasing mass directly surrounding them" | same page |
 | doseEvent | "than an effective dose of 250 mSv." | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
 | exercise | "Six to seven days a week … resistance training and aerobic exercises for 1.5 hours per day" | https://www.nasa.gov/reference/risk-of-reduced-cardiorespiratory-and-musculoskeletal-fitness/ |
 
@@ -241,6 +258,10 @@ NASA OCHMO-TB-016 Rev B (Behavioral Health and Performance, 24 Oct 2023) read on
 | Each astronaut's own baseline | "A preflight baseline is obtained for each astronaut and is then compared using a monthly in-flight test." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
 | Why an app helps on long missions | "For missions beyond 6 months and/or beyond LEO, additional minimally obtrusive measures that objectively evaluate psychological and behavioral states within the mission context should be provided." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
 | Delay to Earth | "Facing a communication delay of up to 20 minutes one way" | https://www.nasa.gov/hrp/hazard-distance-from-earth/ |
+| Family and crew-ground contact | "For missions beyond six months and/or beyond LEO, additional resources to support families, significant others, and friends and to facilitate crew-ground communication should be provided." | NASA OCHMO-TB-016 Rev B — https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
+| Morale | "Crew care packages are one means of keeping astronaut motivation and morale high, especially during long missions." | same brief |
+
+**Family channel (app idea, not a NASA system):** a family member writes a short text message that travels inside a link; on the crew member's device it arrives sealed, showing only who it is from and what kind it is; the crew member opens it, sets it aside or deletes it, and nothing is marked overdue or reported back. Messages stay on the device (never synced to other crew devices), are text only and capped at 600 characters. The demo crew has two messages marked SIMULATED. Serious or urgent news is out of scope: families go through the mission's support team.
 
 **App choices (not NASA rules):** the SOS button (press and hold 2 seconds, one gesture, cancel within 10 seconds if sent by mistake) and the one-tap "talk to someone" button, the list of reasons, showing an unanswered alert on crewmates' screens for 12 hours, and the comfort settings (calm motion, larger text, one thing at a time) for different sensory and attention needs. Alerts reach crewmates' devices only through the team's station sync; delivery to Mission Control is simulated in this prototype and the screen says so.
 

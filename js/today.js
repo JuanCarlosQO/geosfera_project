@@ -14,7 +14,9 @@ import * as S from "./store.js";
 import { crewStatusHtml, crewFormHtml, manageHtml, bindCrewForm } from "./crew.js";
 import { RADIATION_LIMITS, REVIEW_NOTE } from "./data/vital-ranges.js";
 import { clinicHero } from "./clinic.js";
-import { MEDS_KEY, cleanStore, followUps } from "./meds-core.js";
+import { MEDS_KEY, cleanStore, medList, reminders } from "./meds-core.js";
+import { SUPPLEMENTS } from "./data/supplements.js";
+import { familyWaiting } from "./family.js";
 import { KIT } from "./data/med-kit.js";
 import { demoLoaded, loadDemo, removeDemo, demoNoticeHtml, demoOfferHtml } from "./demo.js";
 
@@ -125,7 +127,8 @@ export function mountToday(host, { go }, requested) {
   const isToday = day === today;
   // Day theme: the clinical overview around the Cupola. Night theme: the Cupola with the check-in strip.
   const day_theme = document.documentElement.dataset.theme !== "night";
-  const due = followUps(cleanStore(readJson(MEDS_KEY, null), KIT).doses, KIT).due.length;
+  const medStore = cleanStore(readJson(MEDS_KEY, null), KIT, SUPPLEMENTS);
+  const rem = reminders(medStore, medList(KIT, medStore), SUPPLEMENTS);
 
   host.innerHTML = `
   <section class="today" aria-labelledby="today-title">
@@ -145,7 +148,7 @@ export function mountToday(host, { go }, requested) {
     ${demoLoaded() ? demoNoticeHtml() : ""}
     ${crewStatusHtml(crew)}
 
-    ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, followUps: due, who: member, stage: cupola(summary, entry) }) : `<div class="hero">
+    ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, reminders: rem, family: familyWaiting(member.id), who: member, stage: cupola(summary, entry) }) : `<div class="hero">
       ${cupola(summary, entry)}
       <div class="hero-side">
         <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>

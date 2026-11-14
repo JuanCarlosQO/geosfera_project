@@ -29,6 +29,9 @@ const CARDS = {
   pressure: { name: "Cabin pressure", unit: "kPa", group: "cabin" },
   dose: { name: "Radiation dose rate", unit: "µGy/h", group: "rad" }
 };
+const BASIS = { nasa: "NASA limit", team: "Team reference (Earth clinical ranges)", app: "App rule" };
+const fact = (k) => `<small class="src">“${LIMIT_FACTS[k].quote}” <a href="${LIMIT_FACTS[k].url}" target="_blank" rel="noopener">${LIMIT_FACTS[k].source}</a></small>`;
+const factInline = (k) => `“${LIMIT_FACTS[k].quote}”`;
 const LIMIT_TEXT = {
   heartRate: "Team reference 60–100 bpm",
   bloodPressure: "Team reference: CDC categories",
@@ -122,6 +125,28 @@ export function mountLive(host) {
     <ul class="tm-grid tm-one">${card("dose")}</ul>
     <p class="fine">Replay of NASA OSDR RadLab, ISS DosTel1, ${RADLAB_ISS.from.slice(0, 10)} ${RADLAB_ISS.from.slice(11, 16)}–${RADLAB_ISS.to.slice(11, 16)} UTC, one reading per second. <a href="${RADLAB_ISS.docs}" target="_blank" rel="noopener">RadLab</a>. For scale, NASA reports ISS crews ${src(LIMIT_FACTS.doseIss)}</p>
     <div class="tm-weather" data-ref="weather"><p class="fine">Asking NASA's DONKI service for real space weather…</p></div>
+
+    <section class="tm-info" aria-labelledby="tm-rad-h">
+      <h2 class="tm-h" id="tm-rad-h">Space radiation: where it comes from, what the crew does</h2>
+      <div class="tm-kinds">
+        <div><p class="mono">ALWAYS THERE</p><h3>Galactic cosmic rays</h3><p>High-energy protons and heavy ions from outside the solar system. The dose-rate replay above is mostly this, plus the particles trapped in Earth's magnetic field.</p></div>
+        <div><p class="mono">IN BURSTS</p><h3>Solar particle events</h3><p>Particles shot out by the Sun during a flare. The “Solar particle event” button simulates one; the real flare list above comes from NASA.</p></div>
+      </div>
+      ${fact("radKinds")}${fact("radSolar")}
+      <h3 class="tm-h3">During a solar particle event: take shelter</h3>
+      <p>NASA's plan for Orion uses what is already on board as shielding: the crew will ${factInline("shelter")}. Those bags hold the mission's own cargo: ${factInline("shelterBags")}.</p>
+      ${fact("shelterTime")}${fact("shelterWhy")}
+      <p class="fine">This is NASA's 2016 plan for the Orion spacecraft, not an ISS procedure. On any vehicle the crew follows its own flight rules.</p>
+    </section>
+
+    <section class="tm-info" aria-labelledby="tm-cond-h">
+      <h2 class="tm-h" id="tm-cond-h">Exactly when an alert fires</h2>
+      <div class="tm-table" role="table" aria-label="Alert conditions">
+        <div class="tm-tr tm-th" role="row"><span role="columnheader">Channel</span><span role="columnheader">${STATUS.watch.shape} Watch when</span><span role="columnheader">${STATUS.act.shape} Act now when</span><span role="columnheader">Based on</span></div>
+        ${T.conditions(TYPICAL_DOSE).map((c) => `<div class="tm-tr" role="row"><span role="cell"><strong>${CARDS[c.key].name}</strong></span><span role="cell">${c.watch ?? "—"}</span><span role="cell">${c.act ?? "—"}</span><span role="cell">${BASIS[c.basis]}${[...new Map(c.facts.map((f) => [LIMIT_FACTS[f].source, LIMIT_FACTS[f]])).values()].map((f) => ` <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`).join(",")}</span></div>`).join("")}
+      </div>
+      <p class="fine">NASA's CO₂ limit is a 1-hour average. The simulator compares the current value so the demo reacts in seconds; a real detector would average over the hour. Crew vital signs are judged on a ${T.RULES.smoothSeconds}-second average so one noisy reading raises nothing.</p>
+    </section>
 
     <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. "Your usual range", the movement reminder and the dose-rate alert are app rules. Sources: docs/SOURCES.md.</p>
   </section>`;

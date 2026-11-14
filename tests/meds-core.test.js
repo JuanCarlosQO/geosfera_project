@@ -220,3 +220,29 @@ describe("pharmacist review: day limits", () => {
     assert.match(p[0].text, /8 days in a row\. Pharmacist review: Stop it after 7 to 10 days\./);
   });
 });
+
+describe("follow-up alerts and reminders", () => {
+  const SUPP = [{ id: "vitD", name: "Vitamin D" }];
+  it("lists today's reminders: unanswered doses, every-day medications, supplements, the weekly question", () => {
+    let s = M.addOwn(M.emptyStore(), { name: "Thyroid pill", daily: true }, () => "t1").store;
+    const list = M.medList(KIT, s);
+    s = M.logDose(s, list, { medId: "painA", at: new Date(NOW.getTime() - 3 * 3600000) }).store;
+    const r = M.reminders(s, list, SUPP, NOW);
+    assert.deepEqual(r.map((x) => x.kind), ["followup", "scheduled", "supplement", "weekly"]);
+    assert.match(r[0].text, /^Did pain a work\?/);
+    s = M.markSupplement(s, "vitD", M.dayOf(NOW), true);
+    s = M.logDose(s, list, { medId: "own-t1", at: NOW, scheduled: true }).store;
+    s = M.answerWeekly(s, "none", NOW);
+    assert.deepEqual(M.reminders(s, list, SUPP, NOW).map((x) => x.kind), ["followup"]);
+  });
+  it("does not nag an empty log with the weekly question", () => {
+    assert.deepEqual(M.reminders(M.emptyStore(), KIT, [], NOW), []);
+  });
+  it("remembers a pattern sent to the crew medical officer, and writes a short note for it", () => {
+    const s = M.cleanStore(M.markRaised(M.emptyStore(), "limit-painA", NOW), KIT);
+    assert.equal(s.raised["limit-painA"], NOW.toISOString());
+    const note = M.patternNote({ text: "9 tablets of pain a logged in the last 24 hours. NASA's kit list says:", quote: "No more than 8 tablets every 24 hours." });
+    assert.match(note, /^Medication log: 9 tablets.*"No more than 8 tablets every 24 hours\."$/);
+    assert.ok(M.patternNote({ text: "x".repeat(400) }).length <= 280);
+  });
+});

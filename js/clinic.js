@@ -60,7 +60,7 @@ function chartCard(title, key, kind, log, day, entry) {
 /**
  * props: { log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps, who: { name, role } }
  */
-export function clinicHero({ log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps = 0, who = {}, stage = "" }) {
+export function clinicHero({ log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps = 0, reminders = [], family = 0, who = {}, stage = "" }) {
   const name = esc(who.name || "Crew member");
   const role = esc(who.role || "Crew");
   const done = completion(entry);
@@ -91,7 +91,8 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
             <span>Next step</span>
             <strong>${next ? next.title : "Nothing to do"}</strong>
             <small>${next ? next.text : "Keep your routine: exercise, meals and sleep on schedule."}</small>
-            ${followUps ? `<a href="#meds">${followUps} ${followUps === 1 ? "dose is" : "doses are"} waiting for “Did it work?”</a>` : ""}
+            ${reminders.length ? `<a class="cl-rem" href="#meds"><b>${reminders.length} ${reminders.length === 1 ? "reminder" : "reminders"}</b>${reminders.slice(0, 3).map((r) => `<span>${esc(r.text)}</span>`).join("")}${reminders.length > 3 ? `<span>and ${reminders.length - 3} more</span>` : ""}</a>` : ""}
+            ${family ? `<a class="cl-fam" href="#family">✉ ${family} ${family === 1 ? "message" : "messages"} from home, sealed. Open whenever you like.</a>` : ""}
           </div>
         </div>
         <a class="cl-cta" href="${checkIn}">${isToday ? (done.filled ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>

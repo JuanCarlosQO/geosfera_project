@@ -124,3 +124,17 @@ describe("live telemetry: sources", () => {
     assert.ok(RADLAB_ISS.values.length > 400 && RADLAB_ISS.values.every((v) => v > 0));
   });
 });
+
+describe("exact alert conditions", () => {
+  it("writes each condition from the numbers the judges use", () => {
+    const c = Object.fromEntries(T.conditions(5).map((x) => [x.key, x]));
+    assert.match(c.co2.watch, /^above 3 mmHg \(3947 ppm\)$/);
+    assert.match(c.co2.act, /^above 4\.5 mmHg/);
+    assert.equal(T.judgeCo2(3), "normal"); assert.equal(T.judgeCo2(3.1), "watch"); assert.equal(T.judgeCo2(4.6), "act");
+    assert.equal(c.pressure.act, "34.5 kPa or less, or above 103 kPa");
+    assert.equal(T.judgePressure(34.5), "act"); assert.equal(T.judgePressure(103), "normal");
+    assert.match(c.dose.watch, /^10 times the replay's median or more \(50 µGy\/h\)$/);
+    assert.match(c.still.watch, /^60 minutes/);
+    for (const x of T.conditions()) for (const f of x.facts) assert.ok(LIMIT_FACTS[f], `${x.key}: ${f}`);
+  });
+});

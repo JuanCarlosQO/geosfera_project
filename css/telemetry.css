@@ -61,3 +61,25 @@
 
 /* six dock items must fit a 360 px phone */
 @media (max-width: 420px) { .dock { padding: 0 4px env(safe-area-inset-bottom); } .dock a { min-width: 0; flex: 1; font-size: 10.5px; } }
+
+/* radiation explainer and exact alert conditions */
+.tm-info { margin: 26px 0 0; }
+.tm-info > p { line-height: 1.55; margin: 8px 0; }
+.tm-kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 10px 0 12px; }
+.tm-kinds > div { padding: 16px; border-radius: 16px; background: var(--hull); border: 1px solid var(--seam); }
+.tm-kinds .mono { margin: 0 0 4px; font-size: 11px; letter-spacing: .14em; color: var(--beacon); }
+.tm-kinds h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+.tm-kinds p { margin: 0; color: var(--ink-2); line-height: 1.5; font-size: 14px; }
+.tm-h3 { margin: 18px 0 4px; font-size: 17px; font-weight: 600; }
+.tm-info .src { display: block; margin: 6px 0; }
+.tm-table { border: 1px solid var(--seam); border-radius: 16px; overflow: hidden; background: var(--hull); }
+.tm-tr { display: grid; grid-template-columns: 1.1fr 1.6fr 1.3fr 1.6fr; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--seam); font-size: 14px; line-height: 1.4; }
+.tm-tr:first-child { border-top: 0; }
+.tm-th { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+@media (max-width: 640px) {
+  .tm-th { display: none; }
+  .tm-tr { grid-template-columns: 1fr; gap: 4px; }
+  .tm-tr span:nth-child(2)::before { content: "▲ Watch: "; color: var(--tone-watch); font-weight: 600; }
+  .tm-tr span:nth-child(3)::before { content: "⯃ Act now: "; color: var(--tone-act); font-weight: 600; }
+  .tm-tr span:nth-child(4) { color: var(--ink-3); font-size: 13px; }
+}

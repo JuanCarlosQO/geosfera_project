@@ -132,6 +132,13 @@ export function buildDemo(now = new Date()) {
     logs,
     meds: { doses, supplements },
     mission: { start: days[0] },
+    // two messages from home waiting sealed for Valentina (family channel), 20 minutes in transit
+    family: {
+      [DEMO_CREW[0].id]: [
+        { v: 1, id: "fm-demo-1", to: "Valentina Reyes", from: "Dad", rel: "Parent", kind: "hello", text: "The mango tree you planted gave fruit this week. I am saving the best ones for when you are back. Sleep well up there.", at: at(days[days.length - 3], 18, 10).toISOString(), arrivedAt: at(days[days.length - 3], 18, 30).toISOString(), state: "sealed", openedAt: null, simulated: true },
+        { v: 1, id: "fm-demo-2", to: "Valentina Reyes", from: "Camila", rel: "Sibling", kind: "news", text: "Mateo took his first steps today. He walked straight to your photo on the shelf. We are all fine, and so proud of you.", at: at(days[days.length - 1], 6, 5).toISOString(), arrivedAt: at(days[days.length - 1], 6, 25).toISOString(), state: "sealed", openedAt: null, simulated: true }
+      ]
+    },
     marker: { loadedAt: now.toISOString(), ids: DEMO_CREW.map((m) => m.id), note: DEMO_NOTE }
   };
 }

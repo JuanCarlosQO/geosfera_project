@@ -206,3 +206,5 @@
 .own-list li { grid-template-columns: 1fr auto; align-items: center; }
 .before-take { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--tone-watch); font-size: 14px; line-height: 1.45; }
 .before-take .fine { display: block; margin-top: 4px; }
+.pt-send { margin: 10px 0 0; min-height: 44px; }
+.pt-sent { margin: 8px 0 0; font-size: 13px; color: var(--tone-normal); }

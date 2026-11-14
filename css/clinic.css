@@ -289,3 +289,7 @@
 }
 [data-theme="day"] .cl-stage-cupola .pane-label:hover { background: #6fe3ff1f; }
 .cl-stage-cupola .cl-plate { position: static; transform: none; margin: 16px auto 0; }
+.cl-rem { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--seam); text-decoration: none; color: inherit; }
+.cl-rem b { font-size: 13px; font-weight: 600; color: var(--beacon); }
+.cl-rem span { font-size: 13px; color: var(--ink-2); }
+.cl-rem span::before { content: "• "; color: var(--tone-watch); }

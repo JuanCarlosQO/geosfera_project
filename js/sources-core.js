@@ -44,6 +44,9 @@ const NAMED = {
   "https://ntrs.nasa.gov/citations/20150014490": ["NASA Dose Tracker — medication app for ISS crews (2015)", "hrp"],
   "https://ntrs.nasa.gov/citations/20230018496": ["NASA HRP evidence report — Risk of Ineffective or Toxic Medications (2023)", "hrp"],
   "https://humanresearchroadmap.nasa.gov/evidence/reports/Nutrition.pdf": ["NASA HRP evidence report — Risk Factor of Inadequate Nutrition (2015)", "hrp"],
+  "https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/": ["NASA — Why Space Radiation Matters", "hrp"],
+  "https://www.nasa.gov/missions/artemis/orion/scientists-and-engineers-evaluate-orion-radiation-protection-plan/": ["NASA — Scientists and Engineers Evaluate Orion Radiation Protection Plan (2016)", "hrp"],
+  "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-043-longitudinal-health-surveillance.pdf": ["NASA OCHMO-TB-043 — Longitudinal Health Surveillance", "standard"],
   "https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf": ["NASA Lifetime Surveillance of Astronaut Health newsletter, Oct 2023", "hrp"],
   "https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp": ["Canadian Space Agency — Monitoring radiation for astronaut health", "partner"],
   "https://www.nccih.nih.gov/health/melatonin-what-you-need-to-know": ["NIH NCCIH — Melatonin: what you need to know", "earth"]

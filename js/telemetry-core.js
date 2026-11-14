@@ -170,6 +170,24 @@ export const judgeStill = (min) => (min >= RULES.stillAct ? "act" : min >= RULES
 export const judgeDose = (rate, typical) => (rate != null && typical > 0 && rate >= typical * RULES.radiationSpike ? "watch" : "normal");
 export const co2Ppm = (mmHg) => Math.round(mmHg * LIMITS.co2PpmPerMmHg);
 
+/**
+ * The exact condition behind every alert, written from the same numbers the judges use.
+ * basis: "nasa" (quoted limit), "team" (Earth clinical reference) or "app" (app rule).
+ */
+export function conditions(typicalDose = 0) {
+  const L = LIMITS, R = RULES;
+  return [
+    { key: "co2", basis: "nasa", watch: `above ${L.co2Standard} mmHg (${co2Ppm(L.co2Standard)} ppm)`, act: `above ${L.co2Symptoms} mmHg (${co2Ppm(L.co2Symptoms)} ppm)`, facts: ["co2Standard", "co2Above"] },
+    { key: "temperature", basis: "nasa", watch: `outside ${L.tempComfort[0]}–${L.tempComfort[1]} °C`, act: `outside ${L.tempHealth[0]}–${L.tempHealth[1]} °C`, facts: ["comfort", "temperature"] },
+    { key: "humidity", basis: "nasa", watch: `outside ${L.rhComfort[0]}–${L.rhComfort[1]} %`, act: `outside ${L.rhHealth[0]}–${L.rhHealth[1]} %`, facts: ["comfort", "humidity"] },
+    { key: "pressure", basis: "nasa", watch: null, act: `${L.pressure[0]} kPa or less, or above ${L.pressure[1]} kPa`, facts: ["pressure"] },
+    { key: "dose", basis: "app", watch: `${R.radiationSpike} times the replay's median or more${typicalDose ? ` (${round(typicalDose * R.radiationSpike, 1)} µGy/h)` : ""}`, act: null, facts: [] },
+    { key: "still", basis: "app", watch: `${R.stillWatch} minutes or more`, act: `${R.stillAct} minutes or more`, facts: [] },
+    { key: "heartRate", basis: "team", watch: `outside 60–100 bpm, or outside your usual range, on the ${R.smoothSeconds}-second average`, act: null, facts: [] },
+    { key: "bloodPressure", basis: "team", watch: `top number 120 or more, bottom 80 or more, or outside your usual range, on the ${R.smoothSeconds}-second average`, act: "140/90 or more", facts: [] }
+  ];
+}
+
 /** Vital sign: the team's reference range first; the personal band can raise it to "watch". */
 export function judgeVital(key, value, band) {
   const ref = RANGES[key] ? judgeReading(key, { value }) : "pending";

@@ -16,6 +16,7 @@ import { STATUS } from "./data/body-systems.js";
 import { figureSvg } from "./anatomy.js";
 import { pill3d, enableDrag } from "./pill3d.js";
 import { readLog } from "./store.js";
+import { sendAlert } from "./support.js";
 
 const WORKED = {
   yes: { ...STATUS.normal, word: "It worked" },
@@ -161,6 +162,9 @@ function patternsHtml(store, now) {
     <p class="pt-head">${p.level === "talk" ? `${STATUS.watch.shape} ${M.LEVELS.talk}` : `↗ ${M.LEVELS.downlink}`}</p>
     <p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, "NASA kit list")}` : ""}</p>
     ${p.illustrative ? `<p class="fine">Illustrative app rule, not a NASA limit.</p>` : ""}
+    ${p.level === "talk" ? (store.raised?.[p.id]
+      ? `<p class="pt-sent">${STATUS.logged.shape} Sent to your crew medical officer · ${new Date(store.raised[p.id]).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`
+      : `<button type="button" class="cta pt-send" data-raise="${p.id}">Tell the crew medical officer</button>`) : ""}
     ${p.reviewed ? `<p class="fine">From the team pharmacist's review (${typeof p.reviewed === "string" ? p.reviewed : "team"}), not a NASA quote.</p>` : ""}
   </li>`).join("")}</ul>`;
 }
@@ -239,6 +243,7 @@ export function mountMeds(host) {
         <section class="data-card" aria-labelledby="pt-h">
           <h2 id="pt-h">Patterns to raise</h2>
           <div data-ref="patterns"></div>
+          <p class="fine">Why follow up early: ${quote(KIT_FACTS.surveillance)}</p>
         </section>
       </div>
     </div>
@@ -336,6 +341,13 @@ export function mountMeds(host) {
   root.addEventListener("click", (e) => {
     const z = e.target.closest("[data-zone]");
     if (z) { if (open === z.dataset.zone) closeZone(); else openZone(z.dataset.zone); return; }
+    const rz = e.target.closest("[data-raise]");
+    if (rz) {
+      const p = M.patterns(store, LIST, new Date(), readLog()).find((x) => x.id === rz.dataset.raise);
+      const sent = p && sendAlert("talk", { reasons: ["body"], note: M.patternNote(p) });
+      if (sent) { store = M.markRaised(store, p.id); save(store); paint(true); $("msg").textContent = "Sent. Linked crew devices show it now; your crew medical officer is asked to reach you."; }
+      return;
+    }
     const sc = e.target.closest("[data-sched]");
     if (sc) {
       const r = M.logDose(store, LIST, { medId: sc.dataset.sched, units: 1, reason: "As scheduled", scheduled: true });
@@ -413,7 +425,7 @@ export function mountMeds(host) {
     store = r.store;
     save(store);
     paint();
-    $("msg").textContent = "Answer saved to your log.";
+    $("msg").textContent = severity === "severe" ? "Answer saved. A severe side effect is now under “Patterns to raise”: you can send it to your crew medical officer from there." : "Answer saved to your log.";
   });
 
   enableDrag(root);

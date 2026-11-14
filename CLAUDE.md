@@ -76,6 +76,7 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/support.js` | The red SOS button on every screen (also over the hatch): hold 2 s to send, ring fills while holding, a tap only shows a hint; after sending, add details or cancel within 10 s. Banners with "I'm on my way" on other crew devices; comfort settings applied to the page |
 | `js/mind.js` | Mind & support page (`#mind`, linked from Body and the sheet): ask for support, requests and answers, mood and sleep week, comfort settings, NASA's behavioral-health practice |
 | `js/data/support.js` | NASA behavioral-health quotes, reasons, alert levels and comfort settings |
+| `js/family-core.js`, `js/family.js` | Family channel, tested: message inside a link (`#family/write` → `#family/in/<data>`), sealed inbox per crew member (`#family`), open / set aside / delete; kept on the device (sync `LOCAL_ONLY`), text only, escaped |
 | `js/ask.js` | In-page "Yes / Cancel" confirmation next to the button; use it instead of the browser's confirm(), which some in-app browsers block silently |
 | `js/demo-core.js`, `js/demo.js` | Demo crew, tested: three fictional members with 14 days of simulated readings, Valentina's short-sleep story, melatonin doses and vitamin D days; load on an empty station (button or `?demo`), remove only what the demo wrote |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |

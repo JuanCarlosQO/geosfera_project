@@ -23,6 +23,7 @@ const label = (setId) => `https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?set
 const N_SAS = "NASA OCHMO-MTB-004";
 const N_KIT = "NASA ISS medical kit list";
 const N_PHARM = "NASA OCHMO-MTB-012";
+const LHS = "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-043-longitudinal-health-surveillance.pdf";
 const DOSE_TRACKER = "https://ntrs.nasa.gov/citations/20150014490";
 const N_DOSE = "NASA Dose Tracker, ISS Increment 45/46 Science Symposium (2015)";
 
@@ -209,6 +210,14 @@ export const KIT_FACTS = {
   expired: {
     quote: "it remains unclear whether spaceflight has any measurable effect on pharmaceutical stability",
     url: STABILITY, source: "NASA HRP evidence report, 2023"
+  },
+  surveillance: {
+    quote: "By taking a prevention approach rather than a reactionary approach, total onboard resources and required mission capabilities can be lessened.",
+    url: LHS, source: "NASA OCHMO-TB-043, Longitudinal Health Surveillance"
+  },
+  surveillanceWhat: {
+    quote: "includes the medical procedures and actions taken to ensure the in-mission and long-term health of the astronaut",
+    url: LHS, source: "NASA OCHMO-TB-043, Longitudinal Health Surveillance"
   },
   weekly: {
     quote: "Asking crewmembers to recall medication use from weeks before questioning made getting complete and accurate information virtually impossible.",
