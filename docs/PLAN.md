@@ -1,4 +1,4 @@
-# Geosfera — build plan
+# Ergosphere — build plan
 
 Public copy of the team's plan for the NASA Space Apps Challenge 2026 (14–15 November). The team works from a private Jira board; the keys (SCRUM-n) match it. Times are Colombia time (UTC−5). Last updated: Saturday 14 November, 10:45.
 

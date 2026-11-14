@@ -162,7 +162,7 @@ export const KIT = [
       { head: "Label: do not use", quote: "with any other drug containing acetaminophen (prescription or nonprescription)", url: label("01f41fae-4abb-4b96-ab09-a7d3dfc286cd") },
       kitSays("comments", "No more than 12 tablets every 24 hours.")
     ],
-    note: "The label limit (10 in 24 hours) is lower than the kit list's (12). Geosfera follows the lower one.",
+    note: "The label limit (10 in 24 hours) is lower than the kit list's (12). Ergosphere follows the lower one.",
     askAfterHours: 1, reviewedBy: null, demo: { stock: 40, expiresInDays: 310 }
   },
   {
@@ -314,7 +314,7 @@ export const KIT_FACTS = {
     url: STABILITY, source: "NASA HRP evidence report, 2023"
   },
   record: {
-    text: "Geosfera keeps the record NASA's Dose Tracker study asked crews for:",
+    text: "Ergosphere keeps the record NASA's Dose Tracker study asked crews for:",
     quote: "how well it seemed to work, how frequently doses were repeated, and if the medication seemed to cause side effects",
     url: PHARM, source: N_PHARM
   }

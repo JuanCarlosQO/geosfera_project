@@ -1,5 +1,5 @@
 // Module 8 — Onboard medications. The crew member taps on the body where it bothers; the
-// zone lights up and, right there, Geosfera lists the common in-flight complaints that
+// zone lights up and, right there, Ergosphere lists the common in-flight complaints that
 // fit, what to try first and what the kit holds, each medication as a 3D model with the
 // label's own words. Then it keeps the record NASA's Dose Tracker kept: what was taken
 // and whether it worked. It never diagnoses. Rules: meds-core.js. Facts: docs/SOURCES.md.
@@ -91,7 +91,7 @@ function followUpHtml(store, now) {
       <p class="step-msg" role="status" aria-live="polite"></p>
     </form>`;
   }).join("");
-  const waiting = later.map(({ dose, askAt }) => `<p class="fine">Geosfera will ask whether ${med(dose.medId).name.toLowerCase()} worked in ${M.spanWords(now, askAt)}.</p>`).join("");
+  const waiting = later.map(({ dose, askAt }) => `<p class="fine">Ergosphere will ask whether ${med(dose.medId).name.toLowerCase()} worked in ${M.spanWords(now, askAt)}.</p>`).join("");
   return cards + waiting;
 }
 
@@ -160,7 +160,7 @@ function conditionCard(match, store, now) {
     <h3><span class="step-n">1</span> Try this first</h3>
     <ol class="first">${c.first.map((s) => `<li>${s.text}${quote(s)}</li>`).join("")}</ol>
     <h3><span class="step-n">2</span> From the kit</h3>
-    ${opts.length ? `<ul class="opts">${opts.map((o) => optionRow(o, c, now)).join("")}</ul>` : `<p class="fine">No kit medication is listed for this in Geosfera's sources.</p>`}
+    ${opts.length ? `<ul class="opts">${opts.map((o) => optionRow(o, c, now)).join("")}</ul>` : `<p class="fine">No kit medication is listed for this in Ergosphere's sources.</p>`}
     <h3><span class="step-n">3</span> When to tell the medical officer</h3>
     <p class="cond-officer">${c.officer.text}${quote(c.officer)}</p>
   </article>`;
@@ -169,11 +169,11 @@ function conditionCard(match, store, now) {
 function answerHtml(picked, store, now) {
   const flags = M.redFlags(RED_FLAGS, picked);
   if (flags.length) {
-    return `<div class="result act"><p><strong>${STATUS.act.shape} ${STATUS.act.word}.</strong> ${flags.map((f) => f.label).join(", ")}: talk to your crew medical officer or the flight surgeon now. Geosfera does not handle this.</p></div>`;
+    return `<div class="result act"><p><strong>${STATUS.act.shape} ${STATUS.act.word}.</strong> ${flags.map((f) => f.label).join(", ")}: talk to your crew medical officer or the flight surgeon now. Ergosphere does not handle this.</p></div>`;
   }
   if (!picked.length) return "";
   const matches = M.matchConditions(CONDITIONS, picked).slice(0, 3);
-  if (!matches.length) return `<div class="result warn"><p>These symptoms do not fit the common in-flight complaints Geosfera knows. Tell your crew medical officer.</p></div>`;
+  if (!matches.length) return `<div class="result warn"><p>These symptoms do not fit the common in-flight complaints Ergosphere knows. Tell your crew medical officer.</p></div>`;
   return matches.map((m) => conditionCard(m, store, now)).join("");
 }
 
@@ -223,7 +223,7 @@ export function mountMeds(host) {
   <section class="meds" aria-labelledby="md-title">
     <p class="eyebrow">Module 8 · Onboard medications</p>
     <h1 id="md-title" tabindex="-1">Where does it bother you?</h1>
-    <p class="lede">Tap the place on the body. Geosfera shows what it could be, what to try first and what the kit holds. It does not diagnose.</p>
+    <p class="lede">Tap the place on the body. Ergosphere shows what it could be, what to try first and what the kit holds. It does not diagnose.</p>
 
     <div data-ref="due" aria-live="polite"></div>
 
@@ -256,7 +256,7 @@ export function mountMeds(host) {
       <div class="data-btns"><button type="button" class="cta" data-med-act="csv">Export CSV</button></div>
     </section>
 
-    <p class="fine rule-note">Geosfera does not diagnose or prescribe. Doses, intervals and limits are quoted from the official labels; waiting times before "Did it work?", the 30-day "Use first" notice and the two-doses rule are app rules, and so are the body zones and the "Any of these?" list. NASA's technical briefs describe practice; they are not medical advice for one person. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Ergosphere does not diagnose or prescribe. Doses, intervals and limits are quoted from the official labels; waiting times before "Did it work?", the 30-day "Use first" notice and the two-doses rule are app rules, and so are the body zones and the "Any of these?" list. NASA's technical briefs describe practice; they are not medical advice for one person. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".meds");
@@ -322,7 +322,7 @@ export function mountMeds(host) {
     const t = e.target.closest("[data-med-act]");
     if (!t) return;
     if (t.dataset.medAct === "close") { closeZone(); stage.scrollIntoView({ block: "nearest" }); return; }
-    if (t.dataset.medAct === "csv") { download(`geosfera-medications-${M.dayOf()}.csv`, M.toCsv(store.doses, KIT), "text/csv"); return; }
+    if (t.dataset.medAct === "csv") { download(`ergosphere-medications-${M.dayOf()}.csv`, M.toCsv(store.doses, KIT), "text/csv"); return; }
     if (t.dataset.medAct === "reset") {
       store = M.seedKit(M.emptyStore(), KIT);
       save(store);
@@ -338,7 +338,7 @@ export function mountMeds(host) {
       store = r.store;
       if (!save(store)) { $("msg").textContent = "This browser blocked saving. The dose was not stored."; return; }
       paint(true);
-      $("msg").textContent = `Recorded: ${m.name}, ${units(m, n)}. Geosfera will ask whether it worked in ${M.spanWords(new Date(), new Date(Date.now() + m.askAfterHours * 3600000))}.`;
+      $("msg").textContent = `Recorded: ${m.name}, ${units(m, n)}. Ergosphere will ask whether it worked in ${M.spanWords(new Date(), new Date(Date.now() + m.askAfterHours * 3600000))}.`;
     }
   });
 

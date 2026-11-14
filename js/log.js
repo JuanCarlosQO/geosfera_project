@@ -234,8 +234,8 @@ export function mountLog(host, { go }, day = L.dateKey()) {
     const t = e.target.closest("[data-edit],[data-do]");
     if (!t) return;
     if (t.dataset.edit) { go(t.dataset.edit === today ? "log" : `log/${t.dataset.edit}`); return; }
-    if (t.dataset.do === "csv") download(`geosfera-log-${member.name.replace(/\s+/g, "-").toLowerCase()}-${today}.csv`, L.toCsv(log), "text/csv");
-    if (t.dataset.do === "backup") download(`geosfera-backup-${member.name.replace(/\s+/g, "-").toLowerCase()}-${today}.json`, L.toBackup(log), "application/json");
+    if (t.dataset.do === "csv") download(`ergosphere-log-${member.name.replace(/\s+/g, "-").toLowerCase()}-${today}.csv`, L.toCsv(log), "text/csv");
+    if (t.dataset.do === "backup") download(`ergosphere-backup-${member.name.replace(/\s+/g, "-").toLowerCase()}-${today}.json`, L.toBackup(log), "application/json");
   });
 
   host.querySelector('[data-do="restore"]').addEventListener("change", async (e) => {

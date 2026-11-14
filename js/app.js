@@ -5,6 +5,7 @@ import { mountLog } from "./log.js";
 import { mountMission } from "./mission.js";
 import { mountMeds } from "./meds.js";
 import { mountDuty } from "./duty.js";
+import { mountLive } from "./telemetry.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -19,12 +20,23 @@ function stampUtc() {
 
 const go = (route) => { location.hash = route; };
 
+// Look: "day" (clinical, the default) or "night" (the original low-orbit look with the Cupola).
+const THEME_KEY = "geosfera.theme";
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme === "night" ? "night" : "day";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "night" ? "#05070a" : "#eef2f8");
+}
+let savedTheme = null;
+try { savedTheme = localStorage.getItem(THEME_KEY); } catch { /* storage blocked */ }
+applyTheme(savedTheme);
+
 function render() {
   const [view = "today", arg] = location.hash.replace(/^#/, "").split("/");
-  const name = ["today", "body", "log", "mission", "meds", "duty"].includes(view) ? view : "today";
+  const name = ["today", "body", "log", "mission", "meds", "duty", "live"].includes(view) ? view : "today";
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
+  if (name === "live") mountLive(station);
   if (name === "body") {
     const body = mountBody(station);
     if (arg) body.select(arg);
@@ -55,6 +67,12 @@ async function closeHatch() {
 
 window.addEventListener("hashchange", render);
 document.querySelector('[data-action="lock"]').addEventListener("click", closeHatch);
+document.querySelector('[data-action="theme"]').addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "night" ? "day" : "night";
+  applyTheme(next);
+  try { localStorage.setItem(THEME_KEY, next); } catch { /* storage blocked */ }
+  render();
+});
 render();
 stampUtc();
 setInterval(stampUtc, 1000);

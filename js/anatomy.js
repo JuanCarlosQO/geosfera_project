@@ -1,4 +1,4 @@
-// Module 2 — Geosfera's own anatomical figure, drawn for this project (no third-party artwork).
+// Module 2 — Ergosphere's own anatomical figure, drawn for this project (no third-party artwork).
 // Front view, anatomical position, about eight heads tall. The person's left is on the viewer's right.
 // Every region has a data-region so a body system can light it.
 

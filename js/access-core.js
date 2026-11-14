@@ -1,4 +1,4 @@
-// Geosfera crew access: the rules behind the hatch, with no DOM so Node can test them.
+// Ergosphere crew access: the rules behind the hatch, with no DOM so Node can test them.
 // Honest scope: this is a device lock, not encryption.
 
 export const DIGITS = 4;
@@ -91,7 +91,7 @@ export const msLeft = (state, now) => Math.max(0, (state?.until ?? 0) - now);
 export const attemptsRemaining = (state) => Math.max(0, GRACE_TRIES - (state?.misses ?? 0));
 export const cleanSlate = () => ({ misses: 0, until: 0 });
 
-/** Storage keys that belong to Geosfera. Other apps on the same domain are never touched. */
+/** Storage keys that belong to Ergosphere. Other apps on the same domain are never touched. */
 export const appKeys = (keys) => keys.filter((k) => k.startsWith("geosfera."));
 
 /* ---------------- fingerprint / face (WebAuthn) ---------------- */

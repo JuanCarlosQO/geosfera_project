@@ -104,7 +104,7 @@ describe("fingerprint answer", () => {
 });
 
 describe("forgot-code reset", () => {
-  it("erases only Geosfera's own keys", () => {
+  it("erases only Ergosphere's own keys", () => {
     assert.deepEqual(core.appKeys(["geosfera.log", "crewcheck.v1", "geosfera.crew-access", "other"]), ["geosfera.log", "geosfera.crew-access"]);
   });
 });

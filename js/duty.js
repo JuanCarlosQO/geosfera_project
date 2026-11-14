@@ -1,13 +1,14 @@
 // Module 9 — Fit for duty. Before a critical task the crew member sees, on one screen, what
 // they already logged that is worth mentioning to a crewmate: short sleep, low mood, a
-// medication NASA cautions about, or a heavy workload right now. Geosfera never says "fit"
+// medication NASA cautions about, or a heavy workload right now. Ergosphere never says "fit"
 // or "unfit"; people decide. Rules live in duty-core.js; facts are in docs/SOURCES.md.
 
 import * as D from "./duty-core.js";
 import { TASKS, WORKLOAD, LEVELS, DUTY_FACTS } from "./data/duty.js";
 import { KIT } from "./data/med-kit.js";
 import { MEDS_KEY, cleanStore, dayOf, spanWords } from "./meds-core.js";
-import { LOG_KEY, fieldByKey } from "./log-core.js";
+import { fieldByKey } from "./log-core.js";
+import { readLog } from "./store.js";
 import { STATUS } from "./data/body-systems.js";
 
 const TONE = {
@@ -76,7 +77,7 @@ export function mountDuty(host) {
   <section class="duty meds" aria-labelledby="du-title">
     <p class="eyebrow">Module 9 · Fit for duty</p>
     <h1 id="du-title" tabindex="-1">Before a critical task</h1>
-    <p class="lede">One minute to see what you already logged that is worth telling a crewmate. Geosfera does not decide whether you are fit: it lists what to mention.</p>
+    <p class="lede">One minute to see what you already logged that is worth telling a crewmate. Ergosphere does not decide whether you are fit: it lists what to mention.</p>
 
     <form data-ref="form" novalidate autocomplete="off">
       <fieldset class="sym-group"><legend>The task</legend>
@@ -116,7 +117,7 @@ export function mountDuty(host) {
   function paint() {
     const now = new Date();
     const doses = cleanStore(read(MEDS_KEY), KIT).doses;
-    result = D.assess({ log: read(LOG_KEY) ?? {}, day: dayOf(now), doses, kit: KIT, workload: answers(), now });
+    result = D.assess({ log: readLog(), day: dayOf(now), doses, kit: KIT, workload: answers(), now });
     const by = Object.fromEntries(result.checks.map((c) => [c.id, c]));
     const h = HEAD[result.headline];
     $("head").innerHTML = `<div class="duty-verdict" data-headline="${result.headline}"><p class="tone-${h.tone}"><strong>${h.shape} ${h.title}</strong></p><p>${h.text}</p></div>`;

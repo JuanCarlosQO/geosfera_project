@@ -1,6 +1,6 @@
 // The five hazards of human spaceflight, word for word from NASA's Human Research Program.
 // Source: https://www.nasa.gov/hrp/hazards/ (read 14 Nov 2026). "systems" links each hazard to
-// the hologram's body systems: that link is a Geosfera choice, not NASA's.
+// the hologram's body systems: that link is a Ergosphere choice, not NASA's.
 
 export const HAZARDS_SOURCE = { label: "NASA Human Research Program — 5 Hazards of Human Spaceflight", url: "https://www.nasa.gov/hrp/hazards/" };
 

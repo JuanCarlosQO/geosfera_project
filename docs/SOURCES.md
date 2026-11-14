@@ -1,6 +1,6 @@
 # Sources
 
-Official sources behind every fact Geosfera may show. Read on the pages themselves on 14 November 2026; quotes are exact. The challenge resources are the three NASA Human Research Program pages and the two Canadian Space Agency pages listed on the Space Apps challenge page.
+Official sources behind every fact Ergosphere may show. Read on the pages themselves on 14 November 2026; quotes are exact. The challenge resources are the three NASA Human Research Program pages and the two Canadian Space Agency pages listed on the Space Apps challenge page.
 
 | Fact | Exact words | Source |
 | --- | --- | --- |
@@ -169,6 +169,33 @@ App rules in this module (not NASA limits): the 1–5 scale for the three worklo
 | Body temperature in flight | about +1 °C at rest (11 astronauts) | Stahn et al. 2017, Sci. Rep. — https://pmc.ncbi.nlm.nih.gov/articles/PMC5701078/ | ○ |
 
 MedlinePlus and ADA texts are copyrighted: the app uses only their numbers, never their wording. NASA publishes no vital-sign thresholds.
+
+## Module 10 — live telemetry
+
+Quotes read on 14 November 2026 in the PDF text of NASA OCHMO-TB-004 Rev D (CO2), OCHMO-TB-003, NASA-STD-3001 Vol. 1 Rev C and Vol. 2 Rev F, NASA's LSAH bulletin (Oct 2023) and the NASA HRP exercise page.
+
+| Limit | Exact words | Source |
+| --- | --- | --- |
+| co2Standard | "limits the average 1-hour CO2 partial pressure (ppCO2) in the habitat volume to no more than 3 mmHg" | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf |
+| co2Headache | "Headaches at levels between 2.8-4.5 mmHg" | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf |
+| co2Above | "Fatigue malaise, decreased sleep, and nausea reported at levels above 4.5 mmHg." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf |
+| co2Ppm | "0.5% CO2 = 3.8 mmHg CO2." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf |
+| temperature | "anchored at 18°C and 75% humidity on the upper left corner and 27 °C and 25% humidity" | https://standards.nasa.gov/system/files/tmp/NASA-STD-3001%20Vol%202%20Rev%20F.pdf |
+| comfort | "these atmospheric parameters (20°C - 25°C and 30-60% humidity) to support human comfort and performance" | https://standards.nasa.gov/system/files/tmp/NASA-STD-3001%20Vol%202%20Rev%20F.pdf |
+| humidity | "25% < RH ≤ 75% (nominal range" | https://standards.nasa.gov/system/files/tmp/NASA-STD-3001%20Vol%202%20Rev%20F.pdf |
+| pressure | "between 34.5 kPa < pressure ≤ 103 kPa (5 psia < pressure ≤ 15.0 psia)" | https://standards.nasa.gov/system/files/tmp/NASA-STD-3001%20Vol%202%20Rev%20F.pdf |
+| pressureIss | "pressure is typically maintained at 14.7 psia with 21% O2, which is equivalent to sea level" | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-003-habitable-atmosphere.pdf |
+| doseIss | "receive doses in the order of 0.5 mSv/day" | https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf |
+| doseEvent | "than an effective dose of 250 mSv." | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
+| exercise | "Six to seven days a week … resistance training and aerobic exercises for 1.5 hours per day" | https://www.nasa.gov/reference/risk-of-reduced-cardiorespiratory-and-musculoskeletal-fitness/ |
+
+**Real NASA data in the app:** absorbed dose rate from the DosTel1 detector on the ISS, 1 June 2024 00:00–12:00 UTC, 505 readings in µGy/hour, saved in `js/data/radlab-iss.js` from NASA OSDR RadLab: https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument_id=DosTel1&timestamp%3E=2024-06-01T00:00&timestamp%3C2024-06-01T12:00&absorbed_dose_rate&format=json (unit from https://visualization.osdr.nasa.gov/radlab/gui/data-api/). The Live screen replays it one reading per second; the "Solar particle event" scenario multiplies it and is labelled simulated. Absorbed dose (µGy) is not converted to effective dose (mSv).
+
+**Real-time space weather:** the Live screen asks NASA's DONKI service (CCMC, https://ccmc.gsfc.nasa.gov/DONKI-API/get/FLR) for the latest solar flares when it opens and says when it cannot reach it.
+
+**Simulated, and labelled so on screen:** heart rate, blood pressure, minutes without moving, cabin CO2, temperature, humidity and pressure. The CO2 ppm figure uses NASA's "0.5% CO2 = 3.8 mmHg CO2."
+
+**App rules (not NASA limits):** "your usual range" = mean ± 2 standard deviations of the crew member's last 14 days, shown after 5 readings and never narrower than ±3 % · minutes without moving: reminder at 60, "move now" at 120 · dose rate at 10 times the replay's median raises "Watch" · heart rate and blood pressure are judged on their 10-second average · the response steps under each alert, except the quoted ones.
 
 ## Pending
 

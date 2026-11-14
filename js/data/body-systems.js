@@ -1,4 +1,4 @@
-// Module 2 — how Geosfera groups the body for the hologram.
+// Module 2 — how Ergosphere groups the body for the hologram.
 // The grouping is an app choice; every risk name and every fact comes from an official
 // source (js/data/nasa-risks.js and docs/SOURCES.md). Quotes are exact.
 

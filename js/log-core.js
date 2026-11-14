@@ -141,8 +141,8 @@ export function toBackup(log) {
 /** Reads a backup made by toBackup. Every value is checked again; bad ones are dropped and counted. */
 export function fromBackup(text) {
   let data;
-  try { data = JSON.parse(text); } catch { return { ok: false, why: "This file is not a Geosfera backup." }; }
-  if (data?.app !== "geosfera" || data?.kind !== "daily-log" || typeof data.log !== "object") return { ok: false, why: "This file is not a Geosfera backup." };
+  try { data = JSON.parse(text); } catch { return { ok: false, why: "This file is not a Ergosphere backup." }; }
+  if (data?.app !== "geosfera" || data?.kind !== "daily-log" || typeof data.log !== "object") return { ok: false, why: "This file is not a Ergosphere backup." };
   const log = {};
   let dropped = 0;
   for (const [day, e] of Object.entries(data.log)) {

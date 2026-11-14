@@ -12,6 +12,9 @@ import { currentStreak } from "./mission-core.js";
 import * as S from "./store.js";
 import { crewStatusHtml, crewFormHtml, manageHtml, bindCrewForm } from "./crew.js";
 import { RADIATION_LIMITS, REVIEW_NOTE } from "./data/vital-ranges.js";
+import { clinicHero } from "./clinic.js";
+import { MEDS_KEY, cleanStore, followUps } from "./meds-core.js";
+import { KIT } from "./data/med-kit.js";
 
 const MISSION_KEY = "geosfera.mission";
 const UNITS = { heartRate: "bpm", bloodOxygen: "%", glucose: "mg/dL", radiationDose: "mSv", temperature: "°C", sleepHours: "h sleep", mood: "/5" };
@@ -117,6 +120,9 @@ export function mountToday(host, { go }, requested) {
   const actions = actionsFor(entry);
   const rad = radiationTotals(log, day);
   const isToday = day === today;
+  // Day theme: the clinical overview. Night theme: the Cupola.
+  const day_theme = document.documentElement.dataset.theme !== "night";
+  const due = followUps(cleanStore(readJson(MEDS_KEY, null), KIT).doses, KIT).due.length;
 
   host.innerHTML = `
   <section class="today" aria-labelledby="today-title">
@@ -135,7 +141,7 @@ export function mountToday(host, { go }, requested) {
 
     ${crewStatusHtml(crew)}
 
-    <div class="hero">
+    ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, followUps: due, who: member }) : `<div class="hero">
       ${cupola(summary, entry)}
       <div class="hero-side">
         <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
@@ -145,7 +151,7 @@ export function mountToday(host, { go }, requested) {
           <span class="strip-text"><strong>${streak} ${streak === 1 ? "day" : "days"}</strong><small>Check-in streak</small></span>
         </a>
       </div>
-    </div>
+    </div>`}
 
     <section class="hazards" aria-labelledby="hz-h">
       <h2 id="hz-h">The five hazards</h2>
@@ -162,7 +168,7 @@ export function mountToday(host, { go }, requested) {
         <h2 id="todo-h">What to do now</h2>
         ${actions.length ? `<ol class="todo">${actions.map((a) => `<li class="tone-${a.tone}"><strong>${a.tone === "again" ? "◌ " : ""}${a.title}</strong><span>${a.text}</span></li>`).join("")}</ol>`
           : `<p class="calm">● Nothing to do. Keep your routine: exercise, meals and sleep on schedule.</p>`}
-        <p class="fine">Measuring steps only. Geosfera does not give medical advice; follow your flight surgeon.</p>
+        <p class="fine">Measuring steps only. Ergosphere does not give medical advice; follow your flight surgeon.</p>
       </section>
       <section class="panel" aria-labelledby="rad-h">
         <h2 id="rad-h">Radiation</h2>
@@ -207,8 +213,8 @@ export function mountToday(host, { go }, requested) {
       });
     }
   });
-  host.querySelector(".cupola").addEventListener("click", (e) => {
-    const b = e.target.closest(".pane-label");
+  host.querySelector(".cupola, .cl-callouts").addEventListener("click", (e) => {
+    const b = e.target.closest(".pane-label, .cl-callout");
     if (b) go(`body/${b.dataset.body}`);
   });
   host.querySelector(".stepper").addEventListener("click", (e) => {

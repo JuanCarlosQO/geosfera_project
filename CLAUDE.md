@@ -1,10 +1,12 @@
-# Geosfera — project context for Claude Code
+# Ergosphere — project context for Claude Code
 
-Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challenge *Create Health Monitoring Software for Astronauts on Space Missions* (resources: https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/?tab=resources). The challenge started at 09:00 Colombia time on 14 November 2026; every file in this repository was written after that. Submission closes Sunday 15 November, 11:59 p.m. local event time.
+Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, challenge *Create Health Monitoring Software for Astronauts on Space Missions* (resources: https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/?tab=resources). The challenge started at 09:00 Colombia time on 14 November 2026; every file in this repository was written after that. Submission closes Sunday 15 November, 11:59 p.m. local event time.
 
 - App UI, submission form and demo video: **English**.
 - The developer, Juan Carlos, speaks Spanish: **talk to him in Spanish**.
 - `main` is the published branch (GitHub Pages). Juan Carlos authorised pushing straight to `main`.
+
+**Name:** the project is **Ergosphere** (Spanish: Ergosfera). It was first called Geosfera; device storage keys (`geosfera.*`), the backup file's `app: "geosfera"` tag and the repository name keep the old word so saved data and links keep working.
 
 ## How to run
 
@@ -51,6 +53,11 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `js/duty-core.js` | Fit-for-duty rules, tested: sleep against NASA's 7-9 hours, low mood, recent medication with a NASA performance caution, three workload answers, honest headline (talk / gaps / ready), saved checks |
 | `js/duty.js` | Module 9 screen (`#duty`, opened from Meds): task, three workload scales, live result with reasons and sources, recent checks |
 | `js/data/duty.js` | Tasks, workload questions and the NASA quotes Fit for duty shows |
+| `css/telemetry.css` | Module 10 styles |
+| `js/telemetry-core.js` | Live telemetry rules, tested: repeatable simulated stream (seeded), scenarios (nominal, CO2 scrubber fault, solar particle event, long time still), NASA cabin limits, personal baseline band (mean ± 2 SD of the last 14 days), 10-second averaging for vitals, alerts worst first |
+| `js/telemetry.js` | Module 10 screen (`#live`): status bar, scenario buttons, alerts with response steps, crew / cabin / radiation cards with 60-second sparklines, latest real solar flare from NASA DONKI. Rebuilt from a team member's prototype |
+| `js/data/telemetry.js` | NASA quotes for each limit and the response steps per alert |
+| `js/data/radlab-iss.js` | REAL NASA data: 505 dose-rate readings (µGy/h) from ISS DosTel1, 1 June 2024, saved from RadLab (no CORS, so it cannot be read live) |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules
@@ -66,6 +73,8 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 8. **Onboard medications — in review (branch `meds-module`, built by a second team member with Claude Code).** Never a diagnosis: the crew member picks symptoms, the app lists common in-flight complaints that fit ("Could be"), NASA's non-drug steps first, then the ISS-kit medications with the label's own directions. It follows the label interval and daily limit, flags a past date, an empty pouch or a combination a source warns about, records each dose and later asks "Did it work?" (NASA's Dose Tracker idea). Two doses in a row that did not work send the crew member to the medical officer. Every medication shows "Pending check" until the team pharmacist fills `reviewedBy`. Demo stock and dates are simulated and labelled. Data key: `geosfera.meds`. Open points for the pharmacist are listed in `docs/SOURCES.md`.
 9. **Fit for duty — in review (same branch).** The human-factors check an aerospace engineer advising the team asked for. Before a critical task it shows what the crew member already logged that is worth telling a crewmate: sleep under the 7-9 hours NASA cites, mood 1-2, a medication recorded in the last 8 hours that NASA's kit list cautions about ("May cause sedation and impair performance."), or a high answer to NASA-STD-3001's three workload parts (time-stress, mental effort, frustration). It never says fit or unfit: headline is "Talk it over", "Nothing flagged, but some checks have no data" or "Nothing to mention". Reads `geosfera.log` and `geosfera.meds`; saves checks in `geosfera.duty`.
 10. Next modules are announced to Juan Carlos before starting. Jira and the Excel board are no longer used.
+
+10. **Live telemetry — in review (branch `clinic-style`).** A second-by-second feed: crew heart rate, blood pressure and minutes still; cabin CO2 (mmHg and ppm), temperature, humidity and pressure, all SIMULATED and labelled; radiation dose rate is REAL RadLab data replayed. Scenario buttons show emergencies; each alert lists what to do. Vitals are compared with the team ranges and with the crew member's own baseline. The latest real solar flare comes live from NASA DONKI (CCMC), with an offline message. The timer stops when the screen is left.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
 

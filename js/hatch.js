@@ -46,7 +46,7 @@ function markup() {
   <div class="sky" aria-hidden="true"></div>
   <div class="hs-fade">
     <div class="hs-top">
-      <span class="mark"><img src="assets/mark.svg" width="22" height="22" alt=""><span>GEOSFERA</span></span>
+      <span class="mark"><img src="assets/mark.svg" width="22" height="22" alt=""><span>ERGOSPHERE</span></span>
       <time class="utc" data-utc>--:-- UTC</time>
     </div>
     <div class="hs-title">
@@ -93,7 +93,7 @@ function markup() {
   <div class="veil" data-ref="veil" hidden>
     <div class="sheet" role="alertdialog" aria-labelledby="fg-h" aria-describedby="fg-p">
       <h2 id="fg-h">Forgot your code?</h2>
-      <p id="fg-p">It cannot be recovered. Resetting erases everything Geosfera saved on this device, including your daily log, and then you choose a new code. Save a backup first if you can still get in on another device.</p>
+      <p id="fg-p">It cannot be recovered. Resetting erases everything Ergosphere saved on this device, including your daily log, and then you choose a new code. Save a backup first if you can still get in on another device.</p>
       <div class="pair" style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="cta" data-do="keep">Keep trying</button>
         <button type="button" class="cta stop" data-do="erase">Erase and reset</button>
@@ -131,7 +131,7 @@ async function enrolBiometric() {
   const cred = await navigator.credentials.create({
     publicKey: {
       challenge: core.freshBytes(32),
-      rp: { name: "Geosfera", id: location.hostname },
+      rp: { name: "Ergosphere", id: location.hostname },
       user: { id: core.freshBytes(16), name: "crew-member", displayName: "Crew member" },
       pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
       authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "discouraged" },
@@ -140,7 +140,7 @@ async function enrolBiometric() {
     }
   });
   const spki = cred.response.getPublicKey?.();
-  if (!spki) throw new Error("This browser cannot keep a fingerprint for Geosfera.");
+  if (!spki) throw new Error("This browser cannot keep a fingerprint for Ergosphere.");
   return { id: core.b64u(cred.rawId), key: core.b64u(spki), alg: cred.response.getPublicKeyAlgorithm() };
 }
 

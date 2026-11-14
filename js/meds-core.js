@@ -1,5 +1,5 @@
 // Module 8 — onboard medications. Rules with no DOM so Node can test them.
-// Geosfera never diagnoses. It matches the crew member's own symptoms to common in-flight
+// Ergosphere never diagnoses. It matches the crew member's own symptoms to common in-flight
 // complaints, shows what the official label says, and keeps a record of what was taken and
 // whether it worked. Doses, intervals and daily limits come only from the label data in
 // js/data/med-kit.js. The windows below are APP RULES and the app labels them that way.

@@ -1,4 +1,4 @@
-// Crew roster rules, with no DOM so Node can test them. Geosfera serves a whole crew on a
+// Crew roster rules, with no DOM so Node can test them. Ergosphere serves a whole crew on a
 // shared station device: each member has a profile and their own daily log.
 
 export const CREW_KEY = "geosfera.crew";

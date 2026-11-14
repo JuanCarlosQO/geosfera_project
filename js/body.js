@@ -109,7 +109,7 @@ function detail(system) {
     ${facts ? `<h3>Key facts</h3><ul class="facts">${facts}</ul>` : ""}
     <h3>NASA risks <span class="count">${system.risks.length}</span></h3>
     <ul class="risks">${risks}</ul>
-    <p class="fine">How systems are grouped is a Geosfera choice. Risk names and texts are NASA's own words from <a href="${RISKS_SOURCE.url}" target="_blank" rel="noopener">${RISKS_SOURCE.label}</a>.</p>
+    <p class="fine">How systems are grouped is a Ergosphere choice. Risk names and texts are NASA's own words from <a href="${RISKS_SOURCE.url}" target="_blank" rel="noopener">${RISKS_SOURCE.label}</a>.</p>
     <button type="button" class="textlink" data-action="overview">Back to all systems</button>`;
 }
 

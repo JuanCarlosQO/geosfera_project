@@ -54,7 +54,7 @@ function names(wins) {
   return n.length <= 1 ? n.join("") : `${n.slice(0, -1).join(", ")} and ${n.at(-1)}`;
 }
 
-/** Mission day counted from the first day the crew member used Geosfera (day 1). */
+/** Mission day counted from the first day the crew member used Ergosphere (day 1). */
 export function missionDay(startIso, now = new Date()) {
   const start = new Date(`${startIso}T00:00:00`);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
