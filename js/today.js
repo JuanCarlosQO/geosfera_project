@@ -4,9 +4,10 @@
 
 import { WINDOWS, summarise, headline, missionDay, cupolaGeometry } from "./today-core.js";
 import { STATUS } from "./data/body-systems.js";
+import { judgeReading, LOG_KEY as LOG_STORE } from "./log-core.js";
 
 const MISSION_KEY = "geosfera.mission";
-const LOG_KEY = "geosfera.log";
+const LOG_KEY = LOG_STORE;
 
 function missionStart() {
   try {
@@ -38,14 +39,16 @@ const UNITS = { heartRate: "bpm", bloodOxygen: "%", glucose: "mg/dL", radiationD
 function mainValue(win, readings) {
   const key = win.readings.find((k) => readings[k] != null);
   if (!key) return { value: "—", unit: "" };
-  return { value: String(readings[key].value), unit: UNITS[key] ?? "" };
+  const v = readings[key].value;
+  if (key === "bloodPressure") return { value: `${v[0]}/${v[1]}`, unit: "" };
+  return { value: String(v), unit: UNITS[key] ?? "" };
 }
 
 const poly = (pts) => pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
 
 export function mountToday(host, { go }) {
   const readings = todaysReadings();
-  const summary = summarise(readings);
+  const summary = summarise(readings, judgeReading);
   const head = headline(summary);
   const geo = cupolaGeometry();
   const start = missionStart();
@@ -103,7 +106,7 @@ export function mountToday(host, { go }) {
       </div>
     </div>
 
-    <a class="cta-wide" href="#log">Start today's check-in</a>
+    <a class="cta-wide" href="#log">${summary.measured ? "Continue today's check-in" : "Start today's check-in"}</a>
 
     <div class="mission-card">
       <div class="mc-row"><span class="eyebrow">Mission</span><span>${day ? `Day ${day}` : "Day —"}</span></div>

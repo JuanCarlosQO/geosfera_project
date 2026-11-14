@@ -1,6 +1,7 @@
 import { Hatch } from "./hatch.js";
 import { mountBody } from "./body.js";
 import { mountToday } from "./today.js";
+import { mountLog } from "./log.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -13,17 +14,6 @@ function stampUtc() {
   for (const el of document.querySelectorAll("[data-utc]")) el.textContent = `${hh}:${mm} UTC`;
 }
 
-function mountLog(host) {
-  host.innerHTML = `
-  <section class="intro" aria-labelledby="log-title">
-    <p class="eyebrow">Module 3 · In progress</p>
-    <h1 id="log-title" tabindex="-1">Daily log</h1>
-    <p>This is where you will record heart rate, blood pressure, temperature, blood oxygen, sleep and exercise. Each reading will light up its window in the Cupola.</p>
-    <p class="fine">Being built now. Until it is ready, every window shows "No data".</p>
-    <a class="textlink" href="#today">Back to today</a>
-  </section>`;
-}
-
 const go = (route) => { location.hash = route; };
 
 function render() {
@@ -34,7 +24,7 @@ function render() {
     const body = mountBody(station);
     if (arg) body.select(arg);
   }
-  if (name === "log") mountLog(station);
+  if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   for (const a of nav.querySelectorAll("a")) {
     if (a.dataset.view === name) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");

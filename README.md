@@ -10,6 +10,8 @@ Built one at a time during the hackathon (14–15 November 2026).
 - **Today (main dashboard).** After the hatch you look out of the ISS Cupola: six windows show today's state of the heart, lungs, metabolism, radiation, body and mind around a count of what you measured. Tap a window to open that system in the body hologram.
 2. **Body hologram.** A human figure drawn for Geosfera stands on a ring of light with its skeleton and organs visible. Seven body systems surround it; tap one to light it up and read NASA's own words about the risks of spaceflight for that system, with links to nasa.gov.
 
+3. **Daily check-in.** A numbered checklist for heart rate, blood pressure, temperature, blood oxygen, blood sugar, sleep, exercise, radiation dose and mood. Each value is checked as you type; impossible values and sudden jumps ask you to measure again instead of raising an alarm. Export to CSV, save a backup and restore it on another device. Data never leaves the device.
+
 ## Plan
 
 The build plan, with every task and its status, is public in [docs/PLAN.md](docs/PLAN.md).

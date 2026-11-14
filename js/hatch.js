@@ -93,7 +93,7 @@ function markup() {
   <div class="veil" data-ref="veil" hidden>
     <div class="sheet" role="alertdialog" aria-labelledby="fg-h" aria-describedby="fg-p">
       <h2 id="fg-h">Forgot your code?</h2>
-      <p id="fg-p">It cannot be recovered. Resetting erases everything Geosfera saved on this device, and then you choose a new code.</p>
+      <p id="fg-p">It cannot be recovered. Resetting erases everything Geosfera saved on this device, including your daily log, and then you choose a new code. Save a backup first if you can still get in on another device.</p>
       <div class="pair" style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="cta" data-do="keep">Keep trying</button>
         <button type="button" class="cta stop" data-do="erase">Erase and reset</button>
@@ -112,7 +112,10 @@ function writeStore(value) {
   try { localStorage.setItem(STORE, JSON.stringify(value)); } catch { /* storage blocked: lock lasts for this visit */ }
 }
 function eraseDevice() {
-  try { localStorage.clear(); } catch { /* nothing to erase */ }
+  try {
+    const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i));
+    for (const k of core.appKeys(keys)) localStorage.removeItem(k);
+  } catch { /* nothing to erase */ }
 }
 
 /* ---------- platform authenticator ---------- */
