@@ -60,7 +60,7 @@ function chartCard(title, key, kind, log, day, entry) {
 /**
  * props: { log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps, who: { name, role } }
  */
-export function clinicHero({ log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps = 0, who = {} }) {
+export function clinicHero({ log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps = 0, who = {}, stage = "" }) {
   const name = esc(who.name || "Crew member");
   const role = esc(who.role || "Crew");
   const done = completion(entry);
@@ -69,9 +69,9 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
   const next = actions[0];
   const checkIn = isToday ? "#log" : `#log/${day}`;
   return `<div class="clinic">
-    <div class="cl-stage">
-      <div class="cl-figure" aria-hidden="true">${figureSvg()}</div>
-      <div class="cl-callouts">${CALLOUTS.map((id) => callout(id, summary, entry)).join("")}</div>
+    <div class="cl-stage${stage ? " cl-stage-cupola" : ""}">
+      ${stage || `<div class="cl-figure" aria-hidden="true">${figureSvg()}</div>
+      <div class="cl-callouts">${CALLOUTS.map((id) => callout(id, summary, entry)).join("")}</div>`}
       <p class="cl-plate">${name} · Mission day ${mday}</p>
     </div>
 

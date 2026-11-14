@@ -268,7 +268,7 @@
 [data-theme="day"] .r-init { background: #eaf0ff; }
 [data-theme="day"] .who-pill { background: #ffffff; border-color: var(--seam-hi); }
 [data-theme="day"] .who-pill:hover { border-color: var(--beacon); }
-[data-theme="day"] .who-pill.on, [data-theme="day"] .who-pill[aria-pressed="true"] { color: #ffffff; }
+[data-theme="day"] .who-pill.on, [data-theme="day"] .who-pill[aria-pressed="true"] { color: #ffffff; background: var(--beacon); border-color: var(--beacon); }
 [data-theme="day"] .limit-bar span { background: var(--beacon); box-shadow: none; }
 
 /* ---------- type (day look): one friendly geometric family ---------- */
@@ -277,3 +277,15 @@
 [data-theme="day"] .eyebrow { font-weight: 500; letter-spacing: .12em; }
 [data-theme="day"] .fine { font-size: 12.5px; line-height: 1.5; }
 [data-theme="day"] .mark span { font-weight: 600; letter-spacing: .18em; }
+
+/* The Cupola stays the same in the day theme (team decision, 14 Nov): instead of the body
+   silhouette, the day dashboard shows the six-window Cupola with its own night palette. */
+.cl-stage-cupola { aspect-ratio: auto !important; }
+[data-theme="day"] .cl-stage-cupola .cupola {
+  --ink: #e7ecf1; --ink-2: #c4cdd7; --ink-3: #8d99a8; --seam: #2a333d; --seam-hi: #3b4550; --beacon: #6fe3ff;
+  --tone-normal: #8fd8c4; --tone-watch: #ff9f5a; --tone-act: #ff7b6b; --tone-again: #8fb4ff; --tone-none: #8d99a8;
+  color: var(--ink); border-radius: 28px; background: radial-gradient(120% 100% at 50% 45%, #121c2a 0%, #070a0f 70%);
+  box-shadow: var(--card-shadow);
+}
+[data-theme="day"] .cl-stage-cupola .pane-label:hover { background: #6fe3ff1f; }
+.cl-stage-cupola .cl-plate { position: static; transform: none; margin: 16px auto 0; }

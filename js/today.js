@@ -123,7 +123,7 @@ export function mountToday(host, { go }, requested) {
   const actions = actionsFor(entry);
   const rad = radiationTotals(log, day);
   const isToday = day === today;
-  // Day theme: the clinical overview. Night theme: the Cupola.
+  // Day theme: the clinical overview around the Cupola. Night theme: the Cupola with the check-in strip.
   const day_theme = document.documentElement.dataset.theme !== "night";
   const due = followUps(cleanStore(readJson(MEDS_KEY, null), KIT).doses, KIT).due.length;
 
@@ -145,7 +145,7 @@ export function mountToday(host, { go }, requested) {
     ${demoLoaded() ? demoNoticeHtml() : ""}
     ${crewStatusHtml(crew)}
 
-    ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, followUps: due, who: member }) : `<div class="hero">
+    ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, followUps: due, who: member, stage: cupola(summary, entry) }) : `<div class="hero">
       ${cupola(summary, entry)}
       <div class="hero-side">
         <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
