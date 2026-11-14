@@ -43,6 +43,22 @@ describe("support alerts", () => {
   });
 });
 
+describe("SOS: one gesture, details and undo after", () => {
+  it("adds reasons and a note after sending, without duplicates", () => {
+    let list = [send("emergency", ana, 0)];
+    list = P.addDetails(list, "a-emergency-0", { reasons: ["anxious", "anxious"], note: " node 2 " });
+    list = P.addDetails(list, "a-emergency-0", { reasons: ["sleep"] });
+    assert.deepEqual(list[0].reasons, ["anxious", "sleep"]);
+    assert.equal(list[0].note, "node 2");
+  });
+  it("can be closed as sent by mistake, and then nobody is asked to come", () => {
+    const list = P.closeAlert([send("emergency", ana, 0)], "a-emergency-0", NOW, "mistake");
+    assert.equal(list[0].closedWhy, "mistake");
+    assert.deepEqual(P.forMe(list, ben, NOW), []);
+    assert.ok(P.HOLD_MS >= 1500 && P.UNDO_S > 0);
+  });
+});
+
 describe("mind trend and comfort", () => {
   it("reads mood and sleep from the daily log", () => {
     const t = P.mindTrend({ "2026-11-15": { mood: { value: 2 }, sleepHours: { value: 5.5 } }, "2026-11-13": { mood: { value: 4 } } }, "2026-11-15", 3);

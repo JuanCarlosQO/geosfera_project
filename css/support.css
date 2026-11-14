@@ -2,15 +2,24 @@
    and the comfort settings. */
 
 .sp-fab {
-  position: fixed; right: 16px; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 40;
-  display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 20px 0 16px;
-  border: 0; border-radius: 26px; background: #e5484d; color: #ffffff; font: 600 15px var(--sans);
-  box-shadow: 0 12px 30px -10px rgba(229, 72, 77, .7); cursor: pointer;
+  position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 40;
+  width: 68px; height: 68px; padding: 0; border: 0; border-radius: 50%;
+  display: grid; place-items: center; background: #e5484d; color: #ffffff; cursor: pointer;
+  box-shadow: 0 12px 30px -8px rgba(229, 72, 77, .75); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
-.sp-fab span:first-child { font-size: 18px; }
-.sp-fab:hover { filter: brightness(1.06); }
-.sp-fab:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-@media (min-width: 1040px) { [data-theme="day"] .sp-fab { bottom: 24px; } }
+.sp-fab-in { display: flex; flex-direction: column; align-items: center; line-height: 1; pointer-events: none; }
+.sp-fab-in b { font: 700 17px var(--sans); letter-spacing: .06em; }
+.sp-fab-in small { margin-top: 3px; font: 600 9px var(--sans); letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
+.sp-ring { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); transform: rotate(-90deg); pointer-events: none; }
+.sp-ring circle { fill: none; stroke: #e5484d; stroke-width: 4; stroke-dasharray: 1; stroke-dashoffset: 1; stroke-linecap: round; }
+.sp-fab.holding { transform: scale(.94); background: #c4363b; }
+.sp-fab.holding .sp-ring circle { stroke-dashoffset: 0; transition: stroke-dashoffset 2s linear; }
+html.comfort-calm .sp-fab.holding .sp-ring circle { transition: stroke-dashoffset 2s linear !important; }
+.sp-fab:focus-visible { outline: 3px solid var(--ink); outline-offset: 6px; }
+.sp-tip { position: fixed; right: 16px; bottom: calc(162px + env(safe-area-inset-bottom)); z-index: 41; max-width: min(320px, calc(100vw - 32px)); margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--ink); color: var(--hull); font-size: 13px; line-height: 1.4; opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .2s, transform .2s; }
+.sp-tip.on { opacity: 1; transform: none; }
+@media (min-width: 1040px) { [data-theme="day"] .sp-tip { bottom: 104px; } }
+@media (min-width: 1040px) { [data-theme="day"] .sp-fab { bottom: 28px; } }
 
 .sp-veil { position: fixed; inset: 0; z-index: 50; display: grid; place-items: end center; padding: 12px; background: rgba(8, 12, 20, .55); }
 @media (min-width: 620px) { .sp-veil { place-items: center; } }
@@ -80,3 +89,16 @@ html.comfort-focus .rule-note { opacity: .8; }
 
 /* leave room under the last card so the Support button never hides content */
 .station { padding-bottom: calc(170px + env(safe-area-inset-bottom)); }
+
+.sp-sent { margin: auto; }
+.sp-veil > .sp-sheet { width: min(560px, 100%); }
+.sp-sub { margin: 14px 0 8px; font-weight: 500; }
+.sp-details .sp-acts { margin-top: 12px; }
+.sp-undo { width: 100%; min-height: 48px; margin: 4px 0 10px; border-radius: 14px; border: 1.5px dashed var(--seam-hi); background: none; color: var(--ink-2); font: 600 14px var(--sans); cursor: pointer; }
+.sp-undo:hover { border-color: #e5484d; color: #e5484d; }
+.mind-actions { display: grid; gap: 12px; }
+.mind-help { background: var(--beacon); }
+.mind-sos { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #e5484d; background: color-mix(in srgb, #e5484d 7%, var(--hull)); }
+.mind-sos p { margin: 0; line-height: 1.45; font-size: 14px; color: var(--ink-2); }
+.mind-sos strong { color: var(--ink); }
+.mind-sos-dot { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: #e5484d; color: #ffffff; font: 700 13px var(--sans); }

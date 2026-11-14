@@ -24,6 +24,7 @@ function trendHtml(trend) {
 
 function alertRow(a, me) {
   const lv = LEVELS[a.level];
+  if (a.closedWhy === "mistake") return `<li class="mind-alert" data-level="${a.level}"><p><strong>${lv.short}</strong> · ${a.from.id === me?.id ? "you" : esc(a.from.name)} · ${P.ago(a.at)} · cancelled, sent by mistake</p></li>`;
   const acks = a.acks.length ? a.acks.map((k) => `${esc(k.name)} ${k.kind === "coming" ? "is on the way" : "saw it"}`).join(" · ") : "No answer yet";
   return `<li class="mind-alert" data-level="${a.level}">
     <p><strong>${a.level === "emergency" ? "⯃" : "●"} ${lv.short}</strong> · ${a.from.id === me?.id ? "you" : esc(a.from.name)} · ${P.ago(a.at)}${a.closed ? " · closed" : ""}</p>
@@ -33,7 +34,7 @@ function alertRow(a, me) {
   </li>`;
 }
 
-export function mountMind(host, { openSupport }) {
+export function mountMind(host, { talk }) {
   const me = current();
   const trend = P.mindTrend(readLog(), dateKey(), 7);
   const comfort = P.cleanComfort(read(P.COMFORT_KEY, {}));
@@ -44,7 +45,10 @@ export function mountMind(host, { openSupport }) {
     <h1 id="mi-h" tabindex="-1">The mind matters as much as the body</h1>
     <p class="lede">Isolation, confinement and distance weigh on everyone, differently. Ergosphere compares you with yourself, never with an average, and makes asking for help one tap away.</p>
 
-    <button type="button" class="mind-help" data-mind="support"><span aria-hidden="true">♥</span><strong>Ask for support</strong><small>Talk to someone, or raise an emergency</small></button>
+    <div class="mind-actions">
+      <button type="button" class="mind-help" data-mind="talk"><span aria-hidden="true">♥</span><strong>${LEVELS.talk.label}</strong><small>One tap. Not urgent: your crew medical officer reaches you and books a private conference with Earth.</small></button>
+      <div class="mind-sos"><span class="mind-sos-dot" aria-hidden="true">SOS</span><p><strong>Emergency?</strong> Press and hold the red SOS button for 2 seconds, on any screen, even with the app locked. One gesture, no second step; you can cancel for 10 seconds if it was a mistake.</p></div>
+    </div>
 
     <section class="data-card" aria-labelledby="mi-a">
       <h2 id="mi-a">Requests</h2>
@@ -82,7 +86,7 @@ export function mountMind(host, { openSupport }) {
     root.querySelector('[data-ref="alerts"]').innerHTML = list.length ? `<ul class="mind-alerts">${list.map((a) => alertRow(a, me)).join("")}</ul>` : `<p class="fine">No requests yet. Asking early is part of the job, not a failure.</p>`;
   };
   root.addEventListener("click", (e) => {
-    if (e.target.closest('[data-mind="support"]')) { openSupport(); return; }
+    if (e.target.closest('[data-mind="talk"]')) { talk(); return; }
     const c = e.target.closest("[data-close]");
     if (c) { saveAlerts(P.closeAlert(getAlerts(), c.dataset.close)); paint(); document.dispatchEvent(new CustomEvent("ergosphere:alerts")); }
   });

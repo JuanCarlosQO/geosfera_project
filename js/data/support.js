@@ -13,7 +13,7 @@ export const SUPPORT_FACTS = {
   delay: { quote: "Facing a communication delay of up to 20 minutes one way", url: DIST, source: "NASA HRP, Distance from Earth" }
 };
 
-// What the crew member can tick when asking for support (optional, app choice).
+// What the crew member can tick after asking for support (optional, never before an SOS; app choice).
 export const REASONS = [
   { id: "anxious", label: "Anxious or panicky" },
   { id: "low", label: "Low or overwhelmed" },
@@ -27,7 +27,7 @@ export const REASONS = [
 
 export const LEVELS = {
   talk: { label: "I'd like to talk to someone", short: "Wants to talk", note: "Not urgent. Your crew medical officer is asked to reach you and to book a private conference with Earth." },
-  emergency: { label: "Emergency — I need help now", short: "EMERGENCY", note: "Urgent. Every linked crew device shows it at once, and the alert is queued for Mission Control." }
+  emergency: { label: "SOS — I need help now", short: "SOS", note: "Urgent. Every linked crew device shows it at once, and the alert is queued for Mission Control." }
 };
 
 // Comfort settings for different sensory and attention needs (neuro-inclusive design; app choices).

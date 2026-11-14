@@ -6,7 +6,8 @@
 export const ALERTS_KEY = "geosfera.alerts";
 export const COMFORT_KEY = "geosfera.comfort";
 export const KEEP = 50;
-export const HOLD_MS = 1500;          // app rule: hold the emergency button this long to send
+export const HOLD_MS = 2000;          // app rule: hold the SOS button this long to send (one gesture, no second step)
+export const UNDO_S = 10;            // app rule: seconds to cancel an SOS sent by mistake
 export const ACTIVE_HOURS = 12;       // app rule: an unanswered alert stays on other screens this long
 
 const ms = (t) => new Date(t).getTime();
@@ -37,7 +38,12 @@ export function acknowledge(list, alertId, by, kind = "coming", at = new Date())
   return list.map((a) => (a.id !== alertId || a.acks.some((k) => k.id === by.id) ? a : { ...a, acks: [...a.acks, { id: by.id ?? null, name: by.name ?? "Crewmate", kind, at: iso(at) }] }));
 }
 
-export const closeAlert = (list, alertId, at = new Date()) => list.map((a) => (a.id === alertId && !a.closed ? { ...a, closed: iso(at) } : a));
+export const closeAlert = (list, alertId, at = new Date(), why = "ok") => list.map((a) => (a.id === alertId && !a.closed ? { ...a, closed: iso(at), closedWhy: why } : a));
+
+/** Adds what is going on after an SOS was sent (the SOS itself never waits for it). */
+export function addDetails(list, alertId, { reasons = [], note = "" } = {}) {
+  return list.map((a) => (a.id !== alertId ? a : { ...a, reasons: [...new Set([...a.reasons, ...reasons])].slice(0, 8), note: String(note ?? "").trim().slice(0, 280) || a.note }));
+}
 
 /** Alerts from other crew members that are open, recent and not yet answered by `me`. */
 export function forMe(list, me, now = new Date()) {
