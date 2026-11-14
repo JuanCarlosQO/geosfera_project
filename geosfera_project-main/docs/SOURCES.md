@@ -150,26 +150,7 @@ Read on 14 November 2026 in the PDF text of NASA-STD-3001 Volume 1 Revision C (s
 | Monitoring through the mission | "cognitive state will be assessed and monitored through all mission phases" | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
 
 App rules in this module (not NASA limits): the 1–5 scale for the three workload questions and flagging 4 or 5 · flagging mood 1 or 2 · counting a cautioned medication for 8 hours after the dose · the list of tasks. The check never says "fit" or "unfit"; it lists what to mention and the crew decides.
-## From the team research document "AstroVital — Datos reales para el dashboard" (14 Nov 2026)
-
-✔ = checked in the original text of the source · ○ = found with source and quote, pending team review.
-
-| Fact | Value | Source | Status |
-| --- | --- | --- | --- |
-| Career radiation limit | less than 600 mSv, same for all ages and sexes | NASA-STD-3001 Vol. 1 Rev. C, §4.8.2 [V1 4030], p. 40 — https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf | ✔ |
-| Solar event radiation limit | less than 250 mSv per event | NASA-STD-3001 Vol. 1 Rev. C, [V1 4031], p. 42 | ✔ |
-| Typical ISS dose | about 0.5 mSv per day | LSAH bulletin, Oct 2023, Vol. 28(2), p. 6 — https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf | ✔ |
-| Blood pressure | normal < 120/80 · elevated 120–129 and < 80 · stage 1 130–139 or 80–89 · stage 2 ≥ 140 or ≥ 90 · severe > 180 or > 120 mmHg | CDC, About High Blood Pressure — https://www.cdc.gov/high-blood-pressure/about/index.html | ○ |
-| Fasting glucose | normal < 100 · prediabetes 100–125 · diabetes ≥ 126 mg/dL | American Diabetes Association — https://diabetes.org/about-diabetes/diagnosis | ○ |
-| Resting heart rate | 60–100 beats per minute | MedlinePlus, Vital signs — https://medlineplus.gov/ency/article/002341.htm | ○ |
-| Body temperature | normal 36.5–37.3 °C · fever ≥ 38 °C | MedlinePlus; CDC — https://www.cdc.gov/quarantine/maritime/definitions-signs-symptoms-conditions-ill-travelers.html | ○ |
-| Blood oxygen (SpO2) | normal 95–100 % · consult if ≤ 92 % · urgent if ≤ 88 % | MedlinePlus, Pulse Oximetry — https://medlineplus.gov/lab-tests/pulse-oximetry/ | ○ |
-| Sleep | adults 18–60: 7 hours or more | CDC, About Sleep — https://www.cdc.gov/sleep/about/index.html | ○ |
-| Blood pressure in flight | 24-hour average about 8 mmHg lower; pulse unchanged | Norsk et al. 2015, J. Physiol. — https://doi.org/10.1113/jphysiol.2014.284869 | ○ |
-| Body temperature in flight | about +1 °C at rest (11 astronauts) | Stahn et al. 2017, Sci. Rep. — https://pmc.ncbi.nlm.nih.gov/articles/PMC5701078/ | ○ |
-
-MedlinePlus and ADA texts are copyrighted: the app uses only their numbers, never their wording. NASA publishes no vital-sign thresholds.
 
 ## Pending
 
-Vital-sign ranges now come from the team document above (Earth clinical references, pending team review). The app labels them that way and warns that in flight blood pressure runs lower and temperature higher.
+Normal ranges for heart rate, blood pressure, body temperature, blood oxygen, glucose and sleep hours are not in the challenge resources. Until an official source is approved, the app shows them as "Pending check".

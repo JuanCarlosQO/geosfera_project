@@ -152,7 +152,7 @@ const kitSays = (head, quote) => ({ head: `NASA kit list: ${head}`, quote, url: 
 
 export const KIT = [
   {
-    id: "acetaminophen", form: "tablet", tint: "#f2f4f7", name: "Acetaminophen", strength: "325 mg", unit: "tablet", ingredient: "acetaminophen", tags: ["pain"],
+    id: "acetaminophen", name: "Acetaminophen", strength: "325 mg", unit: "tablet", ingredient: "acetaminophen", tags: ["pain"],
     labelName: "TYLENOL Regular Strength, 325 mg (Kenvue)",
     use: { quote: "temporarily relieves minor aches and pains due to: headache muscular aches backache", url: label("01f41fae-4abb-4b96-ab09-a7d3dfc286cd") },
     directions: { quote: "take 2 caplets every 4 to 6 hours while symptoms last do not take more than 10 caplets in 24 hours, unless directed by a doctor", url: label("01f41fae-4abb-4b96-ab09-a7d3dfc286cd") },
@@ -166,7 +166,7 @@ export const KIT = [
     askAfterHours: 1, reviewedBy: null, demo: { stock: 40, expiresInDays: 310 }
   },
   {
-    id: "ibuprofen", form: "caplet", tint: "#e8845c", name: "Ibuprofen", strength: "400 mg", unit: "tablet", ingredient: "ibuprofen", tags: ["pain"], rx: true,
+    id: "ibuprofen", name: "Ibuprofen", strength: "400 mg", unit: "tablet", ingredient: "ibuprofen", tags: ["pain"], rx: true,
     labelName: "Ibuprofen Tablets USP, 400 mg (Aurobindo)",
     use: { quote: "indicated for relief of mild to moderate pain", url: label("00872852-680a-41b3-901b-b991b12a176d") },
     directions: { quote: "Mild to moderate pain: 400 mg every 4 to 6 hours as necessary for relief of pain", url: label("00872852-680a-41b3-901b-b991b12a176d") },
@@ -179,7 +179,7 @@ export const KIT = [
     askAfterHours: 1, reviewedBy: null, demo: { stock: 60, expiresInDays: 420 }
   },
   {
-    id: "meclizine", form: "tablet", tint: "#f3d36b", name: "Meclizine", strength: "25 mg", unit: "tablet", ingredient: "meclizine", tags: ["drowsy"],
+    id: "meclizine", name: "Meclizine", strength: "25 mg", unit: "tablet", ingredient: "meclizine", tags: ["drowsy"],
     labelName: "Dramamine Chewable, meclizine 25 mg (Medtech)",
     use: { quote: "prevention and treatment of these symptoms associated with motion sickness: nausea vomiting dizziness", url: label("30387e63-278d-412a-bcad-7965c7c0aea7") },
     directions: { quote: "1 to 2 tablets once daily, or as directed by a doctor", url: label("30387e63-278d-412a-bcad-7965c7c0aea7") },
@@ -194,7 +194,7 @@ export const KIT = [
     askAfterHours: 2, reviewedBy: null, demo: { stock: 12, expiresInDays: 200 }
   },
   {
-    id: "promethazine", form: "tablet", tint: "#9ad0f5", name: "Promethazine", strength: "25 mg", unit: "tablet", ingredient: "promethazine", tags: ["drowsy"], rx: true,
+    id: "promethazine", name: "Promethazine", strength: "25 mg", unit: "tablet", ingredient: "promethazine", tags: ["drowsy"], rx: true,
     labelName: "Promethazine Hydrochloride Tablets (Coupler)",
     use: { quote: "Active and prophylactic treatment of motion sickness", url: label("2d996287-9eed-265a-e063-6294a90a6969") },
     directions: { quote: "The average adult dose is 25 mg taken twice daily", url: label("2d996287-9eed-265a-e063-6294a90a6969") },
@@ -209,7 +209,7 @@ export const KIT = [
     askAfterHours: 2, reviewedBy: null, demo: { stock: 16, expiresInDays: -40 }
   },
   {
-    id: "oxymetazoline", form: "spray", tint: "#7fd6c2", name: "Oxymetazoline nasal spray", strength: "0.05 %", unit: "dose", ingredient: "oxymetazoline", tags: ["decongestant"],
+    id: "oxymetazoline", name: "Oxymetazoline nasal spray", strength: "0.05 %", unit: "dose", ingredient: "oxymetazoline", tags: ["decongestant"],
     labelName: "Afrin Original Pump Mist (Bayer)",
     use: { quote: "temporarily relieves sinus congestion and pressure", url: label("0f5ec576-f788-40aa-9088-0dd672e3cc7c") },
     directions: { quote: "2 or 3 sprays in each nostril not more often than every 10 to 12 hours. Do not exceed 2 doses in any 24-hour period.", url: label("0f5ec576-f788-40aa-9088-0dd672e3cc7c") },
@@ -221,7 +221,7 @@ export const KIT = [
     askAfterHours: 1, reviewedBy: null, demo: { stock: 30, expiresInDays: 24 }
   },
   {
-    id: "pseudoephedrine", form: "caplet", tint: "#e2616b", name: "Pseudoephedrine 12-hour", strength: "120 mg", unit: "tablet", ingredient: "pseudoephedrine", tags: ["decongestant"],
+    id: "pseudoephedrine", name: "Pseudoephedrine 12-hour", strength: "120 mg", unit: "tablet", ingredient: "pseudoephedrine", tags: ["decongestant"],
     labelName: "Pseudoephedrine HCl 120 mg, 12-hour (Kroger)",
     use: { quote: "temporarily relieves nasal congestion due to the common cold, hay fever or other upper respiratory allergies", url: label("00a8327b-41f0-4498-ad13-331256b539f9") },
     directions: { quote: "take 1 tablet every 12 hours do not take more than 2 tablets in 24 hours", url: label("00a8327b-41f0-4498-ad13-331256b539f9") },
@@ -235,7 +235,7 @@ export const KIT = [
     askAfterHours: 2, reviewedBy: null, demo: { stock: 20, expiresInDays: 150 }
   },
   {
-    id: "melatonin", form: "tablet", tint: "#b9a5f0", name: "Melatonin", strength: "3 mg", unit: "tablet", ingredient: "melatonin", tags: ["sleep"], noLabel: true,
+    id: "melatonin", name: "Melatonin", strength: "3 mg", unit: "tablet", ingredient: "melatonin", tags: ["sleep"], noLabel: true,
     labelName: "No FDA label: NIH NCCIH fact sheet",
     use: { quote: "In the United States, melatonin is considered a dietary supplement.", url: NCCIH },
     directions: { quote: "Short-term use of melatonin supplements appears to be safe for most people, but information on the long-term safety of supplementing with melatonin is lacking.", url: NCCIH },
@@ -252,7 +252,7 @@ export const KIT = [
     askAfterHours: 9, reviewedBy: null, demo: { stock: 20, expiresInDays: 12 }
   },
   {
-    id: "zolpidem", form: "caplet", tint: "#f4f1ea", name: "Zolpidem", strength: "10 mg", unit: "tablet", ingredient: "zolpidem", tags: ["sleep"], rx: true,
+    id: "zolpidem", name: "Zolpidem", strength: "10 mg", unit: "tablet", ingredient: "zolpidem", tags: ["sleep"], rx: true,
     labelName: "Ambien (Cosette)",
     use: { quote: "short-term treatment of insomnia characterized by difficulties with sleep initiation", url: label("747949c5-2c91-4909-8a07-71b6826f8e97") },
     directions: { quote: "recommended initial dose is 5 mg for women and either 5 or 10 mg for men", url: label("747949c5-2c91-4909-8a07-71b6826f8e97") },
@@ -272,7 +272,7 @@ export const KIT = [
     askAfterHours: 9, reviewedBy: null, demo: { stock: 14, expiresInDays: 260 }
   },
   {
-    id: "hydrocortisone", form: "packet", tint: "#dfe7f2", name: "Hydrocortisone cream", strength: "1 %", unit: "application", ingredient: "hydrocortisone", tags: [],
+    id: "hydrocortisone", name: "Hydrocortisone cream", strength: "1 %", unit: "application", ingredient: "hydrocortisone", tags: [],
     labelName: "Hydrocortisone Cream 1 % (Veridian)",
     use: { quote: "temporarily relieves itching associated with minor skin irritations, inflammation, and rashes", url: label("01cb7b47-2c3c-707d-e063-6294a90a5d97") },
     directions: { quote: "apply to affected area not more than 3 to 4 times daily", url: label("01cb7b47-2c3c-707d-e063-6294a90a5d97") },
@@ -284,7 +284,7 @@ export const KIT = [
     askAfterHours: 24, reviewedBy: null, demo: { stock: 30, expiresInDays: 500 }
   },
   {
-    id: "bisacodyl", form: "tablet", tint: "#f0a65a", name: "Bisacodyl", strength: "5 mg", unit: "tablet", ingredient: "bisacodyl", tags: [],
+    id: "bisacodyl", name: "Bisacodyl", strength: "5 mg", unit: "tablet", ingredient: "bisacodyl", tags: [],
     labelName: "Bisacodyl 5 mg laxative tablets (Bi-Mart)",
     use: { quote: "for temporary relief of occasional constipation and irregularity", url: label("02358772-6724-4f1a-b3d8-bc36e58b5cfc") },
     directions: { quote: "take 1 to 3 tablets in a single daily dose", url: label("02358772-6724-4f1a-b3d8-bc36e58b5cfc") },

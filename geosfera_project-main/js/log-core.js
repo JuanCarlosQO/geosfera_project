@@ -3,8 +3,6 @@
 // one, becomes "Measure again". Limits here are APP RULES to catch typos and bad sensor
 // contact; they are not clinical ranges and the app labels them that way.
 
-import { RANGES } from "./data/vital-ranges.js";
-
 export const LOG_KEY = "geosfera.log";
 
 export const FIELDS = [
@@ -102,19 +100,11 @@ export function saveDay(log, day, entry) {
 /** Status for the dashboard: "again" for a flagged jump, otherwise "pending" until ranges are approved. */
 export function judgeReading(key, reading) {
   if (reading?.flag === "again") return "again";
-  if (HABITS.includes(key)) return "logged";
-  if (RANGES[key] && reading?.value != null) return RANGES[key].judge(reading.value).status;
-  return "pending";
-}
-
-/** The range band and its source for a reading, or null when no range applies. */
-export function bandFor(key, reading) {
-  if (!RANGES[key] || reading?.value == null) return null;
-  return { band: RANGES[key].judge(reading.value).band, source: RANGES[key].source, url: RANGES[key].url };
+  return HABITS.includes(key) ? "logged" : "pending";
 }
 
 /** Habits and self-reports: no medical range applies, so they are simply "Logged". */
-export const HABITS = ["exerciseMinutes", "mood", "radiationDose"];
+export const HABITS = ["exerciseMinutes", "mood"];
 
 export function countFilled(entry) {
   return FIELDS.filter((f) => entry?.[f.key]?.value != null).length;

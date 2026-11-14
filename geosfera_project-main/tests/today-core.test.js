@@ -39,8 +39,8 @@ describe("headline", () => {
     const judge = (k) => (k === "temperature" ? "again" : "watch");
     assert.match(headline(summarise({ temperature: { value: 1 }, glucose: { value: 1 } }, judge)).title, /Measure again/);
   });
-  it("says when everything measured is in range", () => {
-    assert.match(headline(summarise({ heartRate: { value: 64 } }, () => "normal")).line, /normal range/);
+  it("does not judge readings without an approved range", () => {
+    assert.match(headline(summarise({ heartRate: { value: 64 } })).line, /pending an approved official source/);
   });
 });
 
@@ -82,8 +82,7 @@ describe("full dashboard", () => {
     assert.equal(sparkPath([null, null]), "");
   });
   it("explains every status honestly", () => {
-    assert.match(reasonFor("heartRate", { value: 64 }), /60–100 bpm · MedlinePlus/);
-    assert.match(reasonFor("glucose", undefined), /Not measured/);
+    assert.match(reasonFor("heartRate", { value: 60 }), /Pending check/);
     assert.match(reasonFor("heartRate", { value: 131, flag: "again" }), /app rule/);
     assert.match(reasonFor("heartRate", undefined), /Not measured/);
   });

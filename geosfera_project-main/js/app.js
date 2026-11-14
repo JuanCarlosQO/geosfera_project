@@ -5,6 +5,7 @@ import { mountLog } from "./log.js";
 import { mountMission } from "./mission.js";
 import { mountMeds } from "./meds.js";
 import { mountDuty } from "./duty.js";
+import { initTelemetryView } from "./telemetry.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -21,7 +22,7 @@ const go = (route) => { location.hash = route; };
 
 function render() {
   const [view = "today", arg] = location.hash.replace(/^#/, "").split("/");
-  const name = ["today", "body", "log", "mission", "meds", "duty"].includes(view) ? view : "today";
+  const name = ["today", "body", "log", "mission", "meds", "duty", "telemetry"].includes(view) ? view : "today";
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
@@ -31,6 +32,7 @@ function render() {
   }
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
+  if (name === "telemetry") initTelemetryView(station);
   for (const a of nav.querySelectorAll("a")) {
     if (a.dataset.view === (name === "duty" ? "meds" : name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
@@ -58,14 +60,4 @@ document.querySelector('[data-action="lock"]').addEventListener("click", closeHa
 render();
 stampUtc();
 setInterval(stampUtc, 1000);
-
-// Preview mode for the hackathon: the app starts already inside the station so anyone with
-// the link can look around at once. The hatch is still there: the lock button closes it and
-// asks for the crew code. Set START_UNLOCKED to false to start behind the hatch again.
-const START_UNLOCKED = true;
-if (START_UNLOCKED) {
-  station.inert = false;
-  nav.inert = false;
-} else {
-  closeHatch();
-}
+closeHatch();

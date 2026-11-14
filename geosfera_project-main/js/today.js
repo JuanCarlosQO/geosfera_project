@@ -9,9 +9,6 @@ import { STATUS, SYSTEMS } from "./data/body-systems.js";
 import { HAZARDS, HAZARDS_SOURCE } from "./data/hazards.js";
 import { FIELDS, LOG_KEY, judgeReading, dateKey } from "./log-core.js";
 import { currentStreak } from "./mission-core.js";
-import * as S from "./store.js";
-import { crewStatusHtml, crewFormHtml, manageHtml, bindCrewForm } from "./crew.js";
-import { RADIATION_LIMITS, REVIEW_NOTE } from "./data/vital-ranges.js";
 
 const MISSION_KEY = "geosfera.mission";
 const UNITS = { heartRate: "bpm", bloodOxygen: "%", glucose: "mg/dL", radiationDose: "mSv", temperature: "°C", sleepHours: "h sleep", mood: "/5" };
@@ -93,18 +90,9 @@ function readingRows(log, day, entry) {
 }
 
 export function mountToday(host, { go }, requested) {
-  const crew = S.getCrew();
-  if (!crew.members.length) {
-    host.innerHTML = `<section class="today crew-onboard">${crewFormHtml(true)}</section>`;
-    bindCrewForm(host, () => mountToday(host, { go }, requested));
-    host.querySelector("input[name=name]")?.focus();
-    return;
-  }
-  const member = S.current();
-  const first = member.name.split(" ")[0];
   const today = dateKey();
   const day = requested && requested <= today ? requested : today;
-  const log = S.readLog(member.id);
+  const log = readJson(LOG_KEY, {});
   const entry = log[day] ?? {};
   const summary = summarise(entry, judgeReading);
   const head = headline(summary);
@@ -123,7 +111,7 @@ export function mountToday(host, { go }, requested) {
     <div class="today-head">
       <div>
         <p class="eyebrow">${isToday ? "Today" : "Looking back"} · Mission day ${mday}</p>
-        <h1 id="today-title" tabindex="-1">${isToday ? head.title.replace("Commander", first) : `${member.name} · ${nice(day)}.`}</h1>
+        <h1 id="today-title" tabindex="-1">${isToday ? head.title : `${nice(day)}.`}</h1>
         <p class="today-line">${isToday ? head.line : `${summary.measured} of ${summary.total} windows measured on this day.`}</p>
       </div>
       <div class="stepper" role="group" aria-label="Change day">
@@ -132,8 +120,6 @@ export function mountToday(host, { go }, requested) {
         <button type="button" class="round-btn" data-day="${shift(day, 1)}" aria-label="Next day" ${isToday ? "disabled" : ""}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
     </div>
-
-    ${crewStatusHtml(crew)}
 
     <div class="hero">
       ${cupola(summary, entry)}
@@ -174,39 +160,16 @@ export function mountToday(host, { go }, requested) {
           <li>Missions to the space station are “entirely within the magnetosphere”; Moon and Mars missions “will extend beyond this protective bubble”. <a href="https://www.nasa.gov/reference/risk-of-radiation-induced-cancers/" target="_blank" rel="noopener">NASA</a></li>
           <li>“Neutron radiation, which contributes to about 30% of total radiation on the ISS”. <a href="https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp" target="_blank" rel="noopener">Canadian Space Agency</a></li>
         </ul>
-        <div class="limit">
-          <div class="limit-bar"><span style="width:${Math.min(100, (rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(2)}%"></span></div>
-          <p class="fine">${rad.total} of ${RADIATION_LIMITS.careerMSv} mSv career limit (${((rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(1)} %) · ${RADIATION_LIMITS.source}. Doses from earlier missions are not included.</p>
-        </div>
+        <p class="fine">Dose limits: ${chip("pending")} until an official limit is added to the sources.</p>
       </section>
     </div>
 
     <section aria-labelledby="rd-h">
       <div class="rd-head"><h2 id="rd-h">Readings</h2><span class="mono">last 14 days</span></div>
       <ul class="readings">${readingRows(log, day, entry)}</ul>
-      <p class="fine">Ranges: ${REVIEW_NOTE}</p>
     </section>
   </section>`;
 
-  const rerender = () => mountToday(host, { go }, requested);
-  host.querySelector(".crew-status").addEventListener("click", (e) => {
-    const card = e.target.closest("[data-member]");
-    if (card) { S.setActive(card.dataset.member); rerender(); return; }
-    if (e.target.closest('[data-action="manage-crew"]')) {
-      host.insertAdjacentHTML("beforeend", manageHtml(S.getCrew()));
-      const veil = host.querySelector('[data-ref="crew-veil"]');
-      veil.querySelector("input[name=name]")?.focus();
-      bindCrewForm(veil, rerender);
-      veil.addEventListener("click", (ev) => {
-        if (ev.target.closest('[data-action="close-crew"]') || ev.target === veil) { rerender(); return; }
-        const rm = ev.target.closest("[data-remove]");
-        if (rm) {
-          const m = S.getCrew().members.find((x) => x.id === rm.dataset.remove);
-          if (m && confirm(`Remove ${m.name}? Their log on this device will be erased.`)) { S.deleteMember(m.id); rerender(); }
-        }
-      });
-    }
-  });
   host.querySelector(".cupola").addEventListener("click", (e) => {
     const b = e.target.closest(".pane-label");
     if (b) go(`body/${b.dataset.body}`);

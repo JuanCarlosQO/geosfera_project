@@ -2,8 +2,7 @@
 // a self-drawing week of exercise and habit achievements.
 
 import * as M from "./mission-core.js";
-import { dateKey } from "./log-core.js";
-import * as S from "./store.js";
+import { LOG_KEY, dateKey } from "./log-core.js";
 
 const readJson = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -27,9 +26,7 @@ const weekday = (d) => {
 
 export function mountMission(host) {
   const today = dateKey();
-  const member = S.current();
-  if (!member) { location.hash = "today"; return; }
-  const log = S.readLog(member.id);
+  const log = readJson(LOG_KEY, {});
   const start = readJson("geosfera.mission", {}).start;
   const entry = log[today];
   const mins = M.exerciseMinutes(entry);
@@ -45,7 +42,7 @@ export function mountMission(host) {
 
   host.innerHTML = `
   <section class="mission" aria-labelledby="mi-title">
-    <p class="eyebrow">Module 4 · Mission · ${member.name}</p>
+    <p class="eyebrow">Module 4 · Mission</p>
     <h1 id="mi-title" tabindex="-1">Keep the countermeasures going</h1>
     <p class="lede">Badges reward checking in and doing the exercise NASA asks of every crew member, never what a reading says.</p>
 

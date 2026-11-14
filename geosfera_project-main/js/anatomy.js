@@ -148,8 +148,3 @@ export function figureSvg() {
   <g clip-path="url(#fig-clip)" aria-hidden="true"><rect class="scan" x="0" y="0" width="200" height="8"/></g>
 </svg>`;
 }
-
-/** Small filled silhouette (body + head) for crew cards, same proportions as the hologram. */
-export function silhouetteSvg(cls = "") {
-  return `<svg class="silhouette ${cls}" viewBox="0 0 200 450" aria-hidden="true"><path d="${smooth(BODY)}"/><path d="${HEAD}"/></svg>`;
-}
