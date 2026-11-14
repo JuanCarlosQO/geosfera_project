@@ -1,3 +1,4 @@
+import { FIELDS, fieldByKey } from "./log-core.js";
 // Main dashboard ("Today") rules, with no DOM so Node can test them.
 // The six Cupola windows, what each reads from the daily log, and how today is summarised.
 
@@ -11,7 +12,7 @@ export const WINDOWS = [
 ];
 
 // Worst first: the window shows the most urgent status among its readings.
-export const SEVERITY = ["act", "again", "watch", "pending", "normal", "none"];
+export const SEVERITY = ["act", "again", "watch", "pending", "logged", "normal", "none"];
 
 /**
  * Status of one window.
@@ -72,4 +73,77 @@ export function cupolaGeometry({ cx = 195, cy = 180, inner = 74, outer = 178, in
     const points = raw.map(([x, y]) => [mx + (x - mx) * inset, my + (y - my) * inset]);
     return { id: w.id, points, centre: [mx, my] };
   });
+}
+
+/* ---------- full dashboard: actions, radiation, series, reasons ---------- */
+
+
+export const CORE_FIELDS = ["heartRate", "bloodPressure", "temperature", "bloodOxygen", "sleepHours"];
+export const EXERCISE_GOAL_MIN = 90; // NASA: 1.5 hours per day (docs/SOURCES.md)
+
+/** "What to do now": measuring steps only, never medical advice. */
+export function actionsFor(entry) {
+  const out = [];
+  for (const f of FIELDS) {
+    if (entry?.[f.key]?.flag === "again") {
+      out.push({ tone: "again", title: `Measure again: ${f.label.toLowerCase()}`, text: `It changed a lot since your last reading. ${f.how ?? ""}`.trim() });
+    }
+  }
+  const missing = CORE_FIELDS.filter((k) => entry?.[k]?.value == null).map((k) => fieldByKey(k).label.toLowerCase());
+  if (missing.length) out.push({ tone: "none", title: "Not measured yet", text: `${missing.join(", ")}.` });
+  const ex = entry?.exerciseMinutes?.value ?? 0;
+  if (ex < EXERCISE_GOAL_MIN) out.push({ tone: "none", title: "Exercise", text: `${EXERCISE_GOAL_MIN - ex} min left to reach NASA's 1.5 hours today.` });
+  return out;
+}
+
+/** Dosimeter totals from the log, up to and including a day. */
+export function radiationTotals(log, day) {
+  let total = 0;
+  let days = 0;
+  for (const d of Object.keys(log ?? {})) {
+    const v = log[d]?.radiationDose?.value;
+    if (d <= day && v != null) { total += v; days += 1; }
+  }
+  return { today: log?.[day]?.radiationDose?.value ?? null, total: Number(total.toFixed(2)), days };
+}
+
+/** Values of one reading for the n days ending on a day (null where not measured). */
+export function series(log, key, day, n = 14) {
+  const [y, m, d] = day.split("-").map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const dt = new Date(y, m - 1, d - (n - 1 - i));
+    const k = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    const v = log?.[k]?.[key]?.value;
+    if (v == null) return null;
+    return Array.isArray(v) ? v[0] : v;
+  });
+}
+
+/** SVG path for a sparkline; gaps where a day was not measured. */
+export function sparkPath(values, w = 120, h = 32) {
+  const nums = values.filter((v) => v != null);
+  if (nums.length === 0) return "";
+  const lo = Math.min(...nums);
+  const hi = Math.max(...nums);
+  const span = hi - lo || 1;
+  const step = values.length > 1 ? w / (values.length - 1) : 0;
+  let d = "";
+  let pen = false;
+  values.forEach((v, i) => {
+    if (v == null) { pen = false; return; }
+    const x = (i * step).toFixed(1);
+    const y = (h - 3 - ((v - lo) / span) * (h - 6)).toFixed(1);
+    d += `${pen ? "L" : "M"}${x} ${y} `;
+    pen = true;
+  });
+  return d.trim();
+}
+
+/** One line explaining a reading's status. */
+export function reasonFor(key, reading) {
+  if (reading?.value == null) return "Not measured on this day.";
+  if (reading.flag === "again") return "Changed a lot since the last reading (app rule). Check the device and measure again.";
+  if (key === "exerciseMinutes") return (reading.value >= EXERCISE_GOAL_MIN) ? "NASA's 1.5 hours reached." : `${EXERCISE_GOAL_MIN - reading.value} min short of NASA's 1.5 hours.`;
+  if (key === "mood") return "Self-reported on a 1–5 scale.";
+  return "Pending check: no approved official range yet.";
 }

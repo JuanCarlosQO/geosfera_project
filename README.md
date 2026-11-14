@@ -7,7 +7,7 @@ Daily health monitoring for astronauts. Team entry for the **NASA Space Apps Cha
 Built one at a time during the hackathon (14–15 November 2026).
 
 1. **Crew access.** The app opens behind a station hatch. Tap your 4-digit code on the ring of digits; each digit locks one of the four bolts, then the hatch opens onto the station. Optional fingerprint or face unlock.
-- **Today (main dashboard).** After the hatch you look out of the ISS Cupola: six windows show today's state of the heart, lungs, metabolism, radiation, body and mind around a count of what you measured. Tap a window to open that system in the body hologram.
+- **Today (main dashboard).** After the hatch you look out of the ISS Cupola: six windows show today's state of the heart, lungs, metabolism, radiation, body and mind around a count of what you measured. Tap a window to open that system in the body hologram. Below it: a day stepper, mission progress, NASA's five hazards, what to do now, a radiation panel and every reading with a 14-day trend that draws itself.
 2. **Body hologram.** A human figure drawn for Geosfera stands on a ring of light with its skeleton and organs visible. Seven body systems surround it; tap one to light it up and read NASA's own words about the risks of spaceflight for that system, with links to nasa.gov.
 
 3. **Daily check-in.** A numbered checklist for heart rate, blood pressure, temperature, blood oxygen, blood sugar, sleep, exercise, radiation dose and mood. Each value is checked as you type; impossible values and sudden jumps ask you to measure again instead of raising an alarm. Export to CSV, save a backup and restore it on another device. Data never leaves the device.

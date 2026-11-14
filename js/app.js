@@ -20,7 +20,7 @@ const go = (route) => { location.hash = route; };
 function render() {
   const [view = "today", arg] = location.hash.replace(/^#/, "").split("/");
   const name = ["today", "body", "log", "mission"].includes(view) ? view : "today";
-  if (name === "today") mountToday(station, { go });
+  if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "body") {
     const body = mountBody(station);
     if (arg) body.select(arg);

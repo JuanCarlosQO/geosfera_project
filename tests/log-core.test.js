@@ -51,6 +51,8 @@ describe("building a day", () => {
   it("feeds the dashboard: jumps become Measure again, the rest Pending check", () => {
     assert.equal(L.judgeReading("heartRate", { value: 130, flag: "again" }), "again");
     assert.equal(L.judgeReading("heartRate", { value: 64 }), "pending");
+    assert.equal(L.judgeReading("exerciseMinutes", { value: 90 }), "logged");
+    assert.equal(L.judgeReading("mood", { value: 4 }), "logged");
   });
   it("logs every reading the Cupola windows read", () => {
     const keys = new Set(L.FIELDS.map((f) => f.key));

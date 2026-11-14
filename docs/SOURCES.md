@@ -23,6 +23,18 @@ Official sources behind every fact Geosfera may show. Read on the pages themselv
 | 17 risks | Full list in https://www.nasa.gov/hrp/risks/ (11 physiology, 5 behaviour/human factors, 1 radiation) | https://www.nasa.gov/hrp/risks/ |
 
 
+## The five hazards (exact text)
+
+Source: https://www.nasa.gov/hrp/hazards/
+
+| Hazard | Exact words |
+| --- | --- |
+| Space Radiation | "Invisible to the human eye, space radiation is not only stealthy but considered one of the most hazardous aspects of spaceflight." |
+| Isolation and Confinement | "Behavioral responses occur among groups of people far from Earth who are isolated and confined in a small space over a long period of time." |
+| Distance from Earth | "Instructions, new supplies, medical care, and more become increasingly challenging to receive from Earth as astronauts venture deeper into space." |
+| Gravity Fields | "Astronauts' entire bodies – muscles, bones, inner ear, and organs – must adjust to the new gravities encountered on the space station or their spacecraft, as well as on the Moon, Mars, and Earth once they return home." |
+| Hostile/Closed Environments | "Maintaining a safe ecosystem inside a spacecraft presents unique challenges, from ensuring optimal temperatures, pressures, and lighting, to reducing noise, monitoring microbial communities, and tracking immune responses." |
+
 ## Pending
 
 Normal ranges for heart rate, blood pressure, body temperature, blood oxygen, glucose and sleep hours are not in the challenge resources. Until an official source is approved, the app shows them as "Pending check".

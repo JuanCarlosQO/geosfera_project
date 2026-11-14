@@ -55,3 +55,40 @@ describe("mission day and geometry", () => {
     for (const w of g) assert.equal(w.points.length, 4);
   });
 });
+
+import { actionsFor, radiationTotals, series, sparkPath, reasonFor, EXERCISE_GOAL_MIN } from "../js/today-core.js";
+import { HAZARDS } from "../js/data/hazards.js";
+import { readFileSync } from "node:fs";
+
+describe("full dashboard", () => {
+  it("lists measure-again steps, missing core readings and exercise left", () => {
+    const a = actionsFor({ heartRate: { value: 131, flag: "again" }, exerciseMinutes: { value: 60 } });
+    assert.match(a[0].title, /Measure again: resting heart rate/);
+    assert.ok(a.some((x) => x.title === "Not measured yet" && /blood pressure/.test(x.text)));
+    assert.ok(a.some((x) => /30 min left/.test(x.text)));
+  });
+  it("has nothing to do when the core is measured and exercise is done", () => {
+    const full = { heartRate: { value: 60 }, bloodPressure: { value: [118, 76] }, temperature: { value: 36.6 }, bloodOxygen: { value: 98 }, sleepHours: { value: 7 }, exerciseMinutes: { value: EXERCISE_GOAL_MIN } };
+    assert.deepEqual(actionsFor(full), []);
+  });
+  it("adds up dosimeter readings to a day, not after it", () => {
+    const log = { "2026-11-12": { radiationDose: { value: 0.5 } }, "2026-11-13": { radiationDose: { value: 0.52 } }, "2026-11-15": { radiationDose: { value: 9 } } };
+    assert.deepEqual(radiationTotals(log, "2026-11-14"), { today: null, total: 1.02, days: 2 });
+  });
+  it("builds series with gaps and a sparkline that skips them", () => {
+    const s = series({ "2026-11-13": { heartRate: { value: 60 } }, "2026-11-14": { heartRate: { value: 64 } }, "2026-11-11": { bloodPressure: { value: [120, 80] } } }, "heartRate", "2026-11-14", 4);
+    assert.deepEqual(s, [null, null, 60, 64]);
+    assert.match(sparkPath(s), /^M\S+ \S+ L/);
+    assert.equal(sparkPath([null, null]), "");
+  });
+  it("explains every status honestly", () => {
+    assert.match(reasonFor("heartRate", { value: 60 }), /Pending check/);
+    assert.match(reasonFor("heartRate", { value: 131, flag: "again" }), /app rule/);
+    assert.match(reasonFor("heartRate", undefined), /Not measured/);
+  });
+  it("shows the five NASA hazards word for word from docs/SOURCES.md", () => {
+    const src = readFileSync(new URL("../docs/SOURCES.md", import.meta.url), "utf8");
+    assert.equal(HAZARDS.length, 5);
+    for (const h of HAZARDS) assert.ok(src.includes(h.text), h.name);
+  });
+});

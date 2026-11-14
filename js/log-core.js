@@ -99,8 +99,12 @@ export function saveDay(log, day, entry) {
 
 /** Status for the dashboard: "again" for a flagged jump, otherwise "pending" until ranges are approved. */
 export function judgeReading(key, reading) {
-  return reading?.flag === "again" ? "again" : "pending";
+  if (reading?.flag === "again") return "again";
+  return HABITS.includes(key) ? "logged" : "pending";
 }
+
+/** Habits and self-reports: no medical range applies, so they are simply "Logged". */
+export const HABITS = ["exerciseMinutes", "mood"];
 
 export function countFilled(entry) {
   return FIELDS.filter((f) => entry?.[f.key]?.value != null).length;

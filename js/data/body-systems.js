@@ -139,5 +139,6 @@ export const STATUS = {
   act: { word: "Act now", shape: "⯃", tone: "act" },
   again: { word: "Measure again", shape: "◌", tone: "again" },
   pending: { word: "Pending check", shape: "◇", tone: "none" },
+  logged: { word: "Logged", shape: "✓", tone: "none" },
   none: { word: "No data", shape: "—", tone: "none" }
 };
