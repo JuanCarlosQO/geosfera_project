@@ -30,6 +30,7 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 | `css/mission.css` | Module 4 styles |
 | `js/mission-core.js` | Mission rules, tested: NASA exercise goal (90 min, 6 days/week, quoted), streaks, week, habit achievements, adherence |
 | `js/mission.js` | Module 4 screen (`#mission`): exercise ring, check-in streak, self-drawing week chart with goal line, mission patches |
+| `css/instrument.css` | Shared futuristic layer loaded last: background grid, glass panels with light sweep and lift on hover, SEC 01… section codes, glowing digital readouts, Cupola and hazard hovers, lit dock indicator, CTA sweep |
 | `css/body.css` | Module 2 styles |
 | `js/anatomy.js` | Our own anatomical figure (SVG): outline, surface contours, skeleton, organs; every part has a `data-region` |
 | `js/body.js` | Module 2 screen: figure on a ring of light, seven body-system controls joined by lines, panel with NASA risks and facts |
@@ -63,5 +64,6 @@ Geosfera is the team's entry for the **NASA Space Apps Challenge 2026**, challen
 - **Gamification:** streaks, achievements, mission progress. Reward the habit of measuring, never the health values.
 - **Dynamic charts:** lines that draw themselves, numbers that count up, body systems that light up.
 - **Colour code**, always with a word and a shape: Normal ● teal · Watch ▲ orange · Act now ⯃ red · Measure again ◌ blue · No data — grey.
+- **Futuristic instrument style everywhere** (Juan Carlos: "we must surprise NASA"): every module uses the check-in's look — glass panels, hover sweeps, digital readouts, section codes. Put shared styling in `css/instrument.css`.
 - Look: night in low Earth orbit, titanium hull, one cyan accent (`--beacon`); Saira + IBM Plex Mono. Respect `prefers-reduced-motion`; touch targets ≥ 44 px.
 - Commits end with the Co-Authored-By line for Claude. Keep `docs/AI_USE.md` accurate.

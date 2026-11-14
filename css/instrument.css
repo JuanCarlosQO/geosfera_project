@@ -1,0 +1,88 @@
+/* Shared "flight instrument" layer: the check-in's futuristic look applied across modules.
+   Loaded last so it refines each module's own styles. */
+
+/* faint navigation grid behind everything */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(#6fe3ff08 1px, transparent 1px), linear-gradient(90deg, #6fe3ff08 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
+}
+
+/* ---- glass instrument panels ---- */
+.panel, .strip, .hz, .rd, .mission-card, .ring-card, .streak-card, .week-card, .badge, .fact, .risk, .tally li, .hz-detail {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #111821 0%, #0b1016 100%);
+  border: 1px solid #222b35; border-radius: 18px;
+  transition: transform .25s cubic-bezier(.3, 0, .2, 1), border-color .25s, box-shadow .25s;
+}
+.rd, .badge, .fact, .risk, .tally li { border-radius: 14px; }
+.panel::before, .strip::before, .rd::before, .ring-card::before, .streak-card::before, .week-card::before, .badge::before, .risk::before, .fact::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, #6fe3ff14 50%, transparent 70%); transform: translateX(-120%);
+}
+.panel:hover::before, .strip:hover::before, .rd:hover::before, .ring-card:hover::before, .streak-card:hover::before,
+.week-card:hover::before, .badge:hover::before, .risk:hover::before, .fact:hover::before { transform: translateX(120%); transition: transform 1s ease; }
+.panel:hover, .strip:hover, .rd:hover, .ring-card:hover, .streak-card:hover, .week-card:hover, .badge:hover, .risk:hover, .fact:hover, .hz:hover {
+  border-color: #6fe3ff88; box-shadow: 0 0 0 1px #6fe3ff33, 0 14px 40px -18px #6fe3ff66; transform: translateY(-2px);
+}
+.badge.won { border-color: #6fe3ff66; box-shadow: 0 0 24px -12px #6fe3ff; }
+
+/* ---- section codes: SEC 01, SEC 02… ---- */
+.today, .mission, .system-panel { counter-reset: sec; }
+.today > section > h2, .today .panel > h2, .today .rd-head > h2, .mission .wk-head > h2, .system-panel h3 {
+  display: flex; align-items: center; gap: 10px;
+}
+.today > section > h2::before, .today .panel > h2::before, .today .rd-head > h2::before, .mission .wk-head > h2::before, .system-panel h3::before {
+  counter-increment: sec; content: "SEC " counter(sec, decimal-leading-zero);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--beacon);
+  padding: 3px 7px; border: 1px solid #6fe3ff55; border-radius: 6px; font-weight: 500;
+}
+
+/* ---- digital readouts ---- */
+.rad-nums strong, .streak-num strong, .ring-text strong, .tally strong, .rd-val strong, .hub-num, .hr-text strong, .strip-text strong, .pl-value {
+  font-family: var(--mono); color: #bff4ff; text-shadow: 0 0 12px #6fe3ff88; letter-spacing: .02em;
+}
+.tally strong { font-weight: 400; }
+
+/* ---- Cupola: windows react to the pointer ---- */
+.cupola .pane-label { transition: background .25s, transform .25s; }
+.cupola .pane-label:hover { background: #6fe3ff1a; transform: translate(-50%, -50%) scale(1.04); }
+.cupola .pane-label:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
+.cupola svg { filter: drop-shadow(0 20px 40px #1b4f8f33); }
+
+/* ---- hazards as instrument keys ---- */
+.hz { border-radius: 14px; }
+.hz svg { transition: transform .3s, filter .3s; }
+.hz:hover svg, .hz[aria-expanded="true"] svg { transform: scale(1.15); filter: drop-shadow(0 0 6px var(--beacon)); }
+
+/* ---- dock: lit indicator on the active tab ---- */
+.dock a { position: relative; transition: color .2s; }
+.dock a[aria-current="page"]::before {
+  content: ""; position: absolute; top: -1px; left: 18%; right: 18%; height: 2px; border-radius: 2px;
+  background: var(--beacon); box-shadow: 0 0 10px var(--beacon);
+}
+.dock a:hover svg { filter: drop-shadow(0 0 6px var(--beacon)); }
+
+/* ---- body hologram controls pulse on hover ---- */
+.sys:hover .sys-dot { animation: sys-pulse 1.2s ease-in-out infinite; }
+.risk h4 { color: #dff8ff; }
+
+/* ---- calls to action ---- */
+.cta-wide { position: relative; overflow: hidden; box-shadow: 0 10px 40px -12px #6fe3ffaa; transition: transform .2s, box-shadow .2s; }
+.cta-wide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, #ffffff66 50%, transparent 80%); transform: translateX(-100%); animation: cta-sweep 3.2s ease-in-out infinite; }
+.cta-wide:hover { transform: translateY(-1px); box-shadow: 0 16px 50px -12px #6fe3ffdd; }
+
+/* ---- entrance: panels rise in order ---- */
+.today.ready .panels > *, .today.ready .readings > li, .mission.ready .badges > li { animation: rise-in .5s ease both; }
+.today.ready .readings > li { animation-delay: calc(var(--i, 0) * 40ms); }
+
+@keyframes sys-pulse { 50% { box-shadow: 0 0 0 8px #6fe3ff1a; } }
+@keyframes cta-sweep { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .panel::before, .strip::before, .rd::before, .ring-card::before, .streak-card::before, .week-card::before, .badge::before, .risk::before, .fact::before, .cta-wide::after { display: none; }
+  .sys:hover .sys-dot, .today.ready .panels > *, .today.ready .readings > li, .mission.ready .badges > li { animation: none; }
+  .panel:hover, .strip:hover, .rd:hover, .ring-card:hover, .streak-card:hover, .week-card:hover, .badge:hover, .risk:hover, .fact:hover, .hz:hover { transform: none; }
+}
