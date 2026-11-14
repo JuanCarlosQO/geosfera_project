@@ -6,6 +6,7 @@ import { mountMission } from "./mission.js";
 import { mountMeds } from "./meds.js";
 import { mountDuty } from "./duty.js";
 import { mountLive } from "./telemetry.js";
+import { startSync, mountSyncButton } from "./sync.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -66,6 +67,9 @@ async function closeHatch() {
 }
 
 window.addEventListener("hashchange", render);
+window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });
+mountSyncButton(document.querySelector('[data-action="sync"]'), document.body);
+startSync();
 document.querySelector('[data-action="lock"]').addEventListener("click", closeHatch);
 document.querySelector('[data-action="theme"]').addEventListener("click", () => {
   const next = document.documentElement.dataset.theme === "night" ? "day" : "night";
