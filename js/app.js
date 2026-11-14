@@ -8,6 +8,8 @@ import { mountDuty } from "./duty.js";
 import { mountLive } from "./telemetry.js";
 import { mountFuture } from "./future.js";
 import { mountSources } from "./sources.js";
+import { mountSupport } from "./support.js";
+import { mountMind } from "./mind.js";
 import { startSync, mountSyncButton } from "./sync.js";
 
 const station = document.getElementById("station");
@@ -35,13 +37,14 @@ applyTheme(savedTheme);
 
 function render() {
   const [view = "today", arg] = location.hash.replace(/^#/, "").split("/");
-  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources"].includes(view) ? view : "today";
+  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind"].includes(view) ? view : "today";
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
   if (name === "live") mountLive(station);
   if (name === "future") mountFuture(station);
   if (name === "sources") mountSources(station);
+  if (name === "mind") mountMind(station, { openSupport: () => support.open() });
   if (name === "body") {
     const body = mountBody(station);
     if (arg) body.select(arg);
@@ -49,7 +52,7 @@ function render() {
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
   for (const a of nav.querySelectorAll("a")) {
-    if (a.dataset.view === ({ duty: "meds", future: "mission" }[name] ?? name)) a.setAttribute("aria-current", "page");
+    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body" }[name] ?? name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (!station.inert) station.querySelector("h1")?.focus({ preventScroll: true });
@@ -70,6 +73,7 @@ async function closeHatch() {
   stampUtc();
 }
 
+const support = mountSupport(); // the support button works even with the hatch closed
 window.addEventListener("hashchange", render);
 window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });
 mountSyncButton(document.querySelector('[data-action="sync"]'), document.body);

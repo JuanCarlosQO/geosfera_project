@@ -198,6 +198,20 @@ NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 
 
 **App's extrapolation (not a NASA prediction):** NASA's 1–1.5 % a month comes from 4-to-6-month missions. The chart draws it as a straight line to 36 months (a Mars mission, "roughly three years") and marks everything after 6 months as extrapolated. The effect of Mars's partial gravity on bone is not modelled. The crew member's exercise and vitamin D are shown as habits only; the app does not turn them into a bone number.
 
+## Mind & support
+
+NASA OCHMO-TB-016 Rev B (Behavioral Health and Performance, 24 Oct 2023) read on 14 November 2026 in the PDF text (pp. 6–7, "Application").
+
+| Fact | Exact words | Source |
+| --- | --- | --- |
+| Private psychological conferences | "Private psychological conferences (PPCs) are currently provided" | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
+| Support across the mission | "current behavioral health support is provided before, during, and after the mission." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
+| Each astronaut's own baseline | "A preflight baseline is obtained for each astronaut and is then compared using a monthly in-flight test." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
+| Why an app helps on long missions | "For missions beyond 6 months and/or beyond LEO, additional minimally obtrusive measures that objectively evaluate psychological and behavioral states within the mission context should be provided." | https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf |
+| Delay to Earth | "Facing a communication delay of up to 20 minutes one way" | https://www.nasa.gov/hrp/hazard-distance-from-earth/ |
+
+**App choices (not NASA rules):** the support and emergency buttons, holding the emergency button 1.5 seconds to send, the list of reasons, showing an unanswered alert on crewmates' screens for 12 hours, and the comfort settings (calm motion, larger text, one thing at a time) for different sensory and attention needs. Alerts reach crewmates' devices only through the team's station sync; delivery to Mission Control is simulated in this prototype and the screen says so.
+
 ## Pending
 
 Vital-sign ranges now come from the team document above (Earth clinical references, pending team review). The app labels them that way and warns that in flight blood pressure runs lower and temperature higher.

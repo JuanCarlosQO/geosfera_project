@@ -22,6 +22,8 @@ Built one at a time during the hackathon (14–15 November 2026).
 
 5. **Future body.** Where the bones are heading on a long mission: NASA's average loss without countermeasures (1–1.5 % a month) against NASA's requirement to keep hip and spine at 95 % or more, on a chart that draws itself and a skeleton that fades month by month, from a 6-month Space Station increment to a three-year Mars mission. Beside it, your own exercise and vitamin D habits.
 
+11. **Mind & support.** A red Support button on every screen, even with the app locked: "I'd like to talk to someone" with one tap, or "Emergency" by holding it. With a station linked, every crewmate's device shows the alert and can answer "I'm on my way"; Mission Control delivery is simulated. The Mind page shows the week's mood and sleep against your own history and offers comfort settings for different sensory and attention needs: calm motion, larger text, one thing at a time.
+
 ## Plan
 
 The build plan, with every task and its status, is public in [docs/PLAN.md](docs/PLAN.md).

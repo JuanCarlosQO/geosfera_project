@@ -135,6 +135,7 @@ export function mountBody(host) {
       <p class="eyebrow">Module 2</p>
       <h1 id="body-title" tabindex="-1">Body hologram</h1>
       <a class="fb-link" href="#future"><span>Future body<small>Bone density over a mission, against NASA's requirement</small></span><span>Open →</span></a>
+      <a class="fb-link" href="#mind"><span>Mind &amp; support<small>Mood and sleep this week, comfort settings, and asking for help</small></span><span>Open →</span></a>
     </header>
     <div class="body-layout">
       <div class="stage" data-ref="stage">

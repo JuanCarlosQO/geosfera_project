@@ -71,6 +71,11 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `css/sources.css` | Sources page styles (also compacts the masthead on 360 px phones) |
 | `js/sources-core.js` | Sources index, tested: collects every quoted fact from the data modules, names and groups each document (NASA standards, NASA HRP, real NASA data, partner agencies, Earth references), lists the modules that use it, search filter |
 | `js/sources.js` | In-app sources page (`#sources`, document button in the masthead): legend, search, documents with links, module chips and their exact quotes |
+| `css/support.css` | Support button, sheet, crew alert banners, Mind page and comfort settings |
+| `js/support-core.js` | Support rules, tested: build an alert (talk / emergency, reasons, note), add, acknowledge once per person, close, which alerts a crewmate should see, mood and sleep trend, comfort settings |
+| `js/support.js` | The red Support button on every screen (also over the hatch), the sheet (talk, or hold 1.5 s for emergency), banners with "I'm on my way" on other crew devices, comfort settings applied to the page |
+| `js/mind.js` | Mind & support page (`#mind`, linked from Body and the sheet): ask for support, requests and answers, mood and sleep week, comfort settings, NASA's behavioral-health practice |
+| `js/data/support.js` | NASA behavioral-health quotes, reasons, alert levels and comfort settings |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules
@@ -90,6 +95,8 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 10. **Live telemetry — in review (branch `clinic-style`).** A second-by-second feed: crew heart rate, blood pressure and minutes still; cabin CO2 (mmHg and ppm), temperature, humidity and pressure, all SIMULATED and labelled; radiation dose rate is REAL RadLab data replayed. Scenario buttons show emergencies; each alert lists what to do. Vitals are compared with the team ranges and with the crew member's own baseline. The latest real solar flare comes live from NASA DONKI (CCMC), with an offline message. The timer stops when the screen is left.
 
 5b. **Future body — in review (module 5 of the team plan).** Bone mineral density over a mission without countermeasures, with NASA's average 1–1.5 % a month (measured on 4-to-6-month missions), against NASA-STD-3001 [V1 4027] (hip and spine ≥ 95 %), and the 6-month result with countermeasures (< 5 % loss for most crews). Beyond 6 months the line is the app's extrapolation and is drawn dashed and labelled. Exercise and vitamin D are shown as habits only; no bone number is derived from them.
+
+11. **Mind & support — in review.** A red Support button on every screen: "I'd like to talk to someone" (one tap) or "Emergency" (hold 1.5 s). Alerts live in `geosfera.alerts`; the station sync carries them to linked crew devices, which show a banner with "I'm on my way" / "Seen". Mission Control delivery is simulated and says so. The Mind page adds the week's mood and sleep against the crew member's own history, and comfort settings for different sensory and attention needs (calm motion, larger text, one thing at a time) — the team's neuro-inclusive design. NASA quotes: OCHMO-TB-016.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
 
