@@ -55,3 +55,12 @@ button { font: inherit; color: inherit; }
 .intro p { color: var(--ink-2); line-height: 1.6; font-size: 16px; }
 .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--beacon) !important; }
 .fine { font-family: var(--mono); font-size: 12px; color: var(--ink-3) !important; }
+
+/* in-page confirmation (js/ask.js) */
+.ask-here { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; }
+.ask-q { color: var(--ink); }
+.ask-btns { display: inline-flex; align-items: center; gap: 8px; }
+.ask-yes { min-height: 40px; padding: 0 14px; border-radius: 20px; border: 0; background: #dc2626; color: #ffffff; font: 600 14px var(--sans); cursor: pointer; }
+.ask-yes:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.roster li:has(.ask-here) { grid-template-columns: 40px 1fr; }
+.roster li .ask-here { grid-column: 1 / -1; }

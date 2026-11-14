@@ -1,6 +1,7 @@
 // Station sync client: links this device to a station, keeps local data and the cloud copy
 // together, and shows a status button in the masthead. Works offline; syncs when it can.
 
+import { confirmHere } from "./ask.js";
 import * as Y from "./sync-core.js";
 
 const API = "api/sync";
@@ -192,7 +193,7 @@ function openSheet(host) {
     if (a === "close") { off(); close(); }
     if (a === "now") syncNow();
     if (a === "copy") { try { await navigator.clipboard.writeText(readCfg().stationId); e.target.textContent = "Copied"; } catch { /* ignore */ } }
-    if (a === "unlink" && confirm("Unlink this device? Its data stays here; it just stops syncing.")) { unlink(); off(); veil.remove(); openSheet(host); }
+    if (a === "unlink" && await confirmHere(e.target.closest("[data-sync]"), "Unlink this device? Its data stays here; it just stops syncing.", "Yes, unlink")) { unlink(); off(); veil.remove(); openSheet(host); }
   });
   veil.querySelectorAll(".sy-form").forEach((form) => form.addEventListener("submit", async (e) => {
     e.preventDefault();

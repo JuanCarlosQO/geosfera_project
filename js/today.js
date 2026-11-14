@@ -1,6 +1,7 @@
 // Main dashboard — the Cupola, plus the full picture under it: day stepper, mission strip,
 // NASA's five hazards, what to do now, radiation and every reading with a trend and a reason.
 
+import { confirmHere } from "./ask.js";
 import {
   WINDOWS, summarise, headline, missionDay, cupolaGeometry,
   actionsFor, radiationTotals, series, sparkPath, reasonFor, EXERCISE_GOAL_MIN
@@ -198,8 +199,8 @@ export function mountToday(host, { go }, requested) {
   </section>`;
 
   const rerender = () => mountToday(host, { go }, requested);
-  host.querySelector('[data-action="remove-demo"]')?.addEventListener("click", () => {
-    if (confirm("Remove the demo crew and its simulated data from this device?")) { removeDemo(); mountToday(host, { go }, undefined); }
+  host.querySelector('[data-action="remove-demo"]')?.addEventListener("click", async (e) => {
+    if (await confirmHere(e.currentTarget, "Remove the demo crew and its simulated data?")) { removeDemo(); mountToday(host, { go }, undefined); }
   });
   host.querySelector(".crew-status").addEventListener("click", (e) => {
     const card = e.target.closest("[data-member]");
@@ -209,12 +210,12 @@ export function mountToday(host, { go }, requested) {
       const veil = host.querySelector('[data-ref="crew-veil"]');
       veil.querySelector("input[name=name]")?.focus();
       bindCrewForm(veil, rerender);
-      veil.addEventListener("click", (ev) => {
+      veil.addEventListener("click", async (ev) => {
         if (ev.target.closest('[data-action="close-crew"]') || ev.target === veil) { rerender(); return; }
         const rm = ev.target.closest("[data-remove]");
         if (rm) {
           const m = S.getCrew().members.find((x) => x.id === rm.dataset.remove);
-          if (m && confirm(`Remove ${m.name}? Their log on this device will be erased.`)) { S.deleteMember(m.id); rerender(); }
+          if (m && await confirmHere(rm, `Remove ${m.name}? Their log on this device is erased.`)) { S.deleteMember(m.id); rerender(); }
         }
       });
     }

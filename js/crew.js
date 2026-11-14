@@ -69,7 +69,7 @@ export function manageHtml(crew) {
       <ul class="roster">${crew.members.map((m) => `<li><span class="r-init">${initials(m.name)}</span><span><b>${m.name}</b><small>${m.role}</small></span>
         <button type="button" class="textlink danger" data-remove="${m.id}">Remove</button></li>`).join("")}</ul>
       ${crewFormHtml(false)}
-      <p class="fine">Removing a member erases their log on this device. Save a backup from the Log first.</p>
+      <p class="fine">Removing a member erases their log on this device. Save a backup from the Log first. To try the demo crew, remove everyone: the empty station offers it.</p>
     </div></div>`;
 }
 
