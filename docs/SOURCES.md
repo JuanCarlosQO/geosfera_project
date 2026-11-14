@@ -179,6 +179,25 @@ Quotes read on 14 November 2026 in the PDF text of NASA OCHMO-TB-004 Rev D (CO2)
 
 **App rules (not NASA limits):** "your usual range" = mean ± 2 standard deviations of the crew member's last 14 days, shown after 5 readings and never narrower than ±3 % · minutes without moving: reminder at 60, "move now" at 120 · dose rate at 10 times the replay's median raises "Watch" · heart rate and blood pressure are judged on their 10-second average · the response steps under each alert, except the quoted ones.
 
+## Module 5 — future body
+
+NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 39, [V1 4027], its rationale, and [V1 4028]); the others are already listed above.
+
+| Fact | Exact words | Source |
+| --- | --- | --- |
+| loss | "on average, bones lose between 1% and 1.5% of their density each month during four-to-six-month missions" | https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/ |
+| requirement | "Countermeasures shall maintain bone mineral density of the hip and spine at or above 95% of pre-mission values and at or above 90% for the femoral neck." | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
+| withCountermeasures | "have resulted in the majority of crewmembers returning with <10% deficit bone mineral density in femoral neck and <5% in total hip or spine during 6-month ISS missions." | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
+| drugs | "decreased the bone loss further (~0% loss) when used in combination with exercise countermeasures." | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
+| recovery | "Post-mission reconditioning shall be aimed at returning bone mineral density to pre-mission baseline." | https://standards.nasa.gov/sites/default/files/standards/NASA/C//nasa-std-3001-vol-1-rev-c-signature.pdf |
+| exercise | "Six to seven days a week … resistance training and aerobic exercises for 1.5 hours per day" | https://www.nasa.gov/reference/risk-of-reduced-cardiorespiratory-and-musculoskeletal-fitness/ |
+| fitness | "average losses to strength and aerobic fitness are 10-12% of pre-mission levels" | https://www.nasa.gov/reference/risk-of-reduced-cardiorespiratory-and-musculoskeletal-fitness/ |
+| mars | "roughly three years" | https://www.nasa.gov/hrp/hazards/ |
+| marsGravity | "three-eighths of Earth's gravitational pull for up to two years" | https://www.nasa.gov/hrp/hazards/ |
+| vitaminD | "The problem of weightlessness-induced bone loss must be solved, but vitamin D is not the answer." | https://humanresearchroadmap.nasa.gov/evidence/reports/Nutrition.pdf |
+
+**App's extrapolation (not a NASA prediction):** NASA's 1–1.5 % a month comes from 4-to-6-month missions. The chart draws it as a straight line to 36 months (a Mars mission, "roughly three years") and marks everything after 6 months as extrapolated. The effect of Mars's partial gravity on bone is not modelled. The crew member's exercise and vitamin D are shown as habits only; the app does not turn them into a bone number.
+
 ## Pending
 
 Vital-sign ranges now come from the team document above (Earth clinical references, pending team review). The app labels them that way and warns that in flight blood pressure runs lower and temperature higher.

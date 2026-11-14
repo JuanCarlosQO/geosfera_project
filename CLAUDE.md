@@ -64,6 +64,10 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `lib/sync-handler.js` | Server logic, tested: token check (stored as SHA-256), version compare-and-set (409 on conflict), size limit; Lua CAS script; in-memory store |
 | `api/sync.js` | Vercel function `GET/PUT /api/sync?station=ID` on Upstash Redis (`KV_REST_API_URL`/`KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_*`) |
 | `dev-server.mjs` | `npm run dev`: local preview with `/api/sync` in memory |
+| `css/future.css` | Module 5 styles (also keeps the masthead inside a 360 px phone) |
+| `js/future-core.js` | Future body rules, tested: NASA's 1–1.5 %/month without countermeasures, the 95 % requirement, months to cross it, habits from the log, chart geometry |
+| `js/future.js` | Module 5 screen (`#future`, linked from Mission and Body): mission buttons (ISS 6 months, Mars 36), month slider, fading skeleton, self-drawing chart with the requirement line and the 6-month countermeasure result, exercise and vitamin D habits |
+| `js/data/future.js` | NASA quotes for Future body and the two mission presets |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules
@@ -81,6 +85,8 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 10. Next modules are announced to Juan Carlos before starting. Jira and the Excel board are no longer used.
 
 10. **Live telemetry — in review (branch `clinic-style`).** A second-by-second feed: crew heart rate, blood pressure and minutes still; cabin CO2 (mmHg and ppm), temperature, humidity and pressure, all SIMULATED and labelled; radiation dose rate is REAL RadLab data replayed. Scenario buttons show emergencies; each alert lists what to do. Vitals are compared with the team ranges and with the crew member's own baseline. The latest real solar flare comes live from NASA DONKI (CCMC), with an offline message. The timer stops when the screen is left.
+
+5b. **Future body — in review (module 5 of the team plan).** Bone mineral density over a mission without countermeasures, with NASA's average 1–1.5 % a month (measured on 4-to-6-month missions), against NASA-STD-3001 [V1 4027] (hip and spine ≥ 95 %), and the 6-month result with countermeasures (< 5 % loss for most crews). Beyond 6 months the line is the app's extrapolation and is drawn dashed and labelled. Exercise and vitamin D are shown as habits only; no bone number is derived from them.
 
 ## Information rules (Juan Carlos: "real and verified, never false or biased")
 

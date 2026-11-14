@@ -20,6 +20,8 @@ Built one at a time during the hackathon (14–15 November 2026).
 
 10. **Live telemetry.** A sensor feed that updates every second: heart rate, blood pressure and time still for the crew member; CO₂, temperature, humidity and pressure for the cabin; and the radiation dose rate. Crew and cabin values are simulated around NASA's nominal values and your own history; the dose rate is real NASA data from the Space Station, replayed. Buttons trigger a CO₂ scrubber fault, a solar particle event or a long time still, and every alert says what to do. The latest real solar flare comes live from NASA's DONKI service.
 
+5. **Future body.** Where the bones are heading on a long mission: NASA's average loss without countermeasures (1–1.5 % a month) against NASA's requirement to keep hip and spine at 95 % or more, on a chart that draws itself and a skeleton that fades month by month, from a 6-month Space Station increment to a three-year Mars mission. Beside it, your own exercise and vitamin D habits.
+
 ## Plan
 
 The build plan, with every task and its status, is public in [docs/PLAN.md](docs/PLAN.md).

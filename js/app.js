@@ -6,6 +6,7 @@ import { mountMission } from "./mission.js";
 import { mountMeds } from "./meds.js";
 import { mountDuty } from "./duty.js";
 import { mountLive } from "./telemetry.js";
+import { mountFuture } from "./future.js";
 import { startSync, mountSyncButton } from "./sync.js";
 
 const station = document.getElementById("station");
@@ -33,11 +34,12 @@ applyTheme(savedTheme);
 
 function render() {
   const [view = "today", arg] = location.hash.replace(/^#/, "").split("/");
-  const name = ["today", "body", "log", "mission", "meds", "duty", "live"].includes(view) ? view : "today";
+  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future"].includes(view) ? view : "today";
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
   if (name === "live") mountLive(station);
+  if (name === "future") mountFuture(station);
   if (name === "body") {
     const body = mountBody(station);
     if (arg) body.select(arg);
@@ -45,7 +47,7 @@ function render() {
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
   for (const a of nav.querySelectorAll("a")) {
-    if (a.dataset.view === (name === "duty" ? "meds" : name)) a.setAttribute("aria-current", "page");
+    if (a.dataset.view === ({ duty: "meds", future: "mission" }[name] ?? name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (!station.inert) station.querySelector("h1")?.focus({ preventScroll: true });

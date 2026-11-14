@@ -29,7 +29,7 @@ Status: ✅ done · 🔍 in review · ⏳ to do
 
 | Key | When | Task | Who | Status |
 | --- | --- | --- | --- | --- |
-| SCRUM-16 | 08–13 | Module 5: future body — bone density projection with animated chart | Dev 1 | ⏳ |
+| SCRUM-16 | 08–13 | Module 5: future body — bone density projection with animated chart | Dev 1 · Claude Code | 🔍 |
 | SCRUM-17 | 08–13 | Module 7: trends — self-drawing charts per reading | Dev 2 | ⏳ |
 | SCRUM-18 | 08–13 | Module 6: hazards and radiation | Dev 3 | ⏳ |
 | SCRUM-19 | 13–17 | In-app sources page | Dev 2 | ⏳ |

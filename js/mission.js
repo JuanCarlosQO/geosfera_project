@@ -48,6 +48,7 @@ export function mountMission(host) {
     <p class="eyebrow">Module 4 · Mission · ${member.name}</p>
     <h1 id="mi-title" tabindex="-1">Keep the countermeasures going</h1>
     <p class="lede">Badges reward checking in and doing the exercise NASA asks of every crew member, never what a reading says.</p>
+    <a class="fb-link" href="#future"><span>Future body<small>Where your bones are heading on a long mission, and why the exercise matters</small></span><span>Open →</span></a>
 
     <div class="mi-top">
       <figure class="ring-card">
