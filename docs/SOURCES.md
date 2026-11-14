@@ -118,6 +118,24 @@ Read on 14 November 2026. Official NASA, NIH and FDA documents. The module **doe
 
 When "Did it work?" is asked after each medication · the same kit category logged on 3 days in a row → "Include it in the next downlink to Earth" · a medication that did not work twice in a row → "Talk it over with your crew medical officer" · the body zones that say what a dose was for · the alarm-sign list. Warnings that quote the kit list: more than its 24-hour limit, more days in a row than it allows, and sleep medications combined within 24 hours.
 
+### Pharmacist review (team)
+
+Isabel, the team's pharmaceutical chemist, reviewed nine of the ten kit medications in her document of 14 Nov 2026 (in Spanish; her references: NASA ISS Medical Checklist 3.001, OCHMO-MTB-012 / OCHMO-TB-006, OCHMO-TB-043, the Orion Medical Kit Contents, Eyal & Derendorf 2022, Diaz et al. 2024, Blue et al. 2019). Bisacodyl is not in her document and stays unreviewed. These values are her professional review, shown in the app as "pharmacist review", never as NASA's words:
+
+| Medication | What the app does with her review |
+| --- | --- |
+| Promethazine | Asks "Did it work?" after 1 hour (she: 20–60 min); Fit for duty counts it for 12 hours (she: reassess alertness at 12 hours before critical tasks) |
+| Pseudoephedrine | Asks after 1 hour (she: check blood pressure at 1 hour) |
+| Zolpidem | Fit for duty counts it for 12 hours (she: 8–12 hours, alertness and coordination test on waking) |
+| Hydrocortisone | Asks after 3 days (she: review every 3 to 5 days); after more than 7 days in a row: "Stop it after 7 to 10 days, to avoid thinning the skin." |
+| Ibuprofen | After more than 5 days in a row: "After 3 to 5 days in a row, watch for stomach symptoms and kidney function." |
+| Melatonin | Before logging: "Look at the tablet first: if its colour has changed, do not take it." |
+| Acetaminophen, meclizine, oxymetazoline | Her timings match the app's (1 h, 1–2 h, 1 h); oxymetazoline's 3-day limit is already quoted from NASA's kit list |
+
+**App choice:** the app never shortens its own 8-hour Fit-for-duty window from her values (meclizine: she checks coordination at 1–2 hours, the app keeps 8).
+
+**Not taken into the app, pending exact sources:** vitamins C, E, B complex and potassium citrate (NASA's nutrition report: "The only supplement NASA recommends for astronaut use during spaceflight is vitamin D."); medications outside the 2015 ISS kit list (would need the Orion Medical Kit PDF, quoted word for word); claims about radiation degrading zolpidem and ibuprofen, doxycycline sticking to the oesophagus in microgravity, and latent virus reactivation in more than 50 % of crew.
+
 ### Dose Tracker (NASA's medication app for ISS crews)
 
 NASA Dose Tracker, ISS Increment 45/46 Science Symposium, July 2015 — https://ntrs.nasa.gov/citations/20150014490 (results: Wotring and Smith, Aerospace Medicine and Human Performance, 2020 — https://www.pubmed.gov/31852573/). NASA never published the app or its code; Ergosphere takes only the ideas below, in its own design.

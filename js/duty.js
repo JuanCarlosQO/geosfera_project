@@ -5,7 +5,7 @@
 
 import * as D from "./duty-core.js";
 import { TASKS, WORKLOAD, LEVELS, DUTY_FACTS } from "./data/duty.js";
-import { KIT } from "./data/med-kit.js";
+import { KIT, REVIEWER } from "./data/med-kit.js";
 import { MEDS_KEY, cleanStore, dayOf, spanWords } from "./meds-core.js";
 import { fieldByKey } from "./log-core.js";
 import { readLog } from "./store.js";
@@ -48,10 +48,13 @@ function moodRow(c) {
   return row(c, "Mood today", c.state === "flag" ? `${word} (${c.value} of 5). App rule: 1 or 2 is worth mentioning.` : `${word} (${c.value} of 5).`);
 }
 
+const LONGER = KIT.filter((k) => k.performance && D.hoursFor(k) > D.RULES.impairHours);
+const longerWords = LONGER.map((k) => `${k.name.toLowerCase()} ${D.hoursFor(k)}`).join(", ");
+
 function medsRow(c, now) {
-  if (c.state === "ok") return row(c, "Medication record", `No medication with a NASA performance caution in the last ${D.RULES.impairHours} hours of <a href="#meds">your record</a>. Doses you did not record are not counted.`);
+  if (c.state === "ok") return row(c, "Medication record", `No medication with a NASA performance caution in its counting window (${D.RULES.impairHours} hours${LONGER.length ? `; ${longerWords} hours` : ""}) of <a href="#meds">your record</a>. Doses you did not record are not counted.`);
   return row(c, "Medication record", `${c.items.map((i) => `<p class="duty-med"><strong>${i.med.name} ${i.med.strength}</strong>, ${spanWords(i.at, now)} ago.<small class="src">NASA kit list: “${i.med.performance.quote}” <a href="${i.med.performance.url}" target="_blank" rel="noopener">source</a></small></p>`).join("")}
-    <p class="fine">App rule: a cautioned medication counts for ${D.RULES.impairHours} hours after the dose.</p>`);
+    <p class="fine">A cautioned medication counts for ${D.RULES.impairHours} hours after the dose (app rule)${LONGER.length ? `; ${longerWords} hours (pharmacist review: ${REVIEWER})` : ""}.</p>`);
 }
 
 function workloadRow(c) {

@@ -37,13 +37,16 @@ export function checkMood(log, day) {
   return { id: "mood", state: r.value <= RULES.lowMood ? "flag" : "ok", value: r.value };
 }
 
-/** Recorded doses, in the last RULES.impairHours, of medications whose NASA entry cautions about performance. */
+/** Hours a cautioned medication counts before a critical task: the pharmacist's value when she gave a longer one. */
+export const hoursFor = (med) => Math.max(RULES.impairHours, med?.dutyHours ?? 0);
+
+/** Recorded doses of medications whose NASA entry cautions about performance, within their hours. */
 export function checkMeds(doses, kit, now = new Date()) {
   const byId = new Map(kit.map((k) => [k.id, k]));
   const items = (doses ?? [])
-    .filter((d) => byId.get(d.medId)?.performance && ms(d.at) <= ms(now) && ms(now) - ms(d.at) < RULES.impairHours * HOUR)
+    .filter((d) => byId.get(d.medId)?.performance && ms(d.at) <= ms(now) && ms(now) - ms(d.at) < hoursFor(byId.get(d.medId)) * HOUR)
     .sort((a, b) => ms(b.at) - ms(a.at))
-    .map((d) => ({ med: byId.get(d.medId), at: d.at, hoursAgo: Math.floor((ms(now) - ms(d.at)) / HOUR) }));
+    .map((d) => ({ med: byId.get(d.medId), at: d.at, hoursAgo: Math.floor((ms(now) - ms(d.at)) / HOUR), hours: hoursFor(byId.get(d.medId)) }));
   return { id: "meds", state: items.length ? "flag" : "ok", items };
 }
 

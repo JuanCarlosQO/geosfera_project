@@ -206,3 +206,17 @@ describe("Dose Tracker 3: how strong the side effect was", () => {
     assert.equal(p[0].illustrative, true);
   });
 });
+
+describe("pharmacist review: day limits", () => {
+  const KIT2 = [{ id: "cream", name: "Cream", unit: "dose", ingredient: "c", category: "Steroid", reviewedBy: "Pharmacist", reviewLimit: { days: 7, text: "Stop it after 7 to 10 days." }, askAfterHours: 72 }];
+  it("raises it with the crew medical officer after more days in a row than she allows, labelled as her review", () => {
+    const days = (n) => Array.from({ length: n }, (_, i) => dose("cream", i * 24));
+    const review = (list) => list.filter((x) => x.id.startsWith("review-"));
+    assert.equal(review(M.patterns(store(days(7)), KIT2, NOW)).length, 0);
+    const p = review(M.patterns(store(days(8)), KIT2, NOW));
+    assert.equal(p[0].id, "review-cream");
+    assert.equal(p[0].level, "talk");
+    assert.equal(p[0].reviewed, "Pharmacist");
+    assert.match(p[0].text, /8 days in a row\. Pharmacist review: Stop it after 7 to 10 days\./);
+  });
+});

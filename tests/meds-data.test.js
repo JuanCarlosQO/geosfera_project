@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { RED_FLAGS, KIT, SIDE_EFFECTS, KIT_FACTS, allQuotes } from "../js/data/med-kit.js";
+import { RED_FLAGS, KIT, SIDE_EFFECTS, KIT_FACTS, allQuotes, REVIEWER } from "../js/data/med-kit.js";
 import { SUPPLEMENTS } from "../js/data/supplements.js";
 import { FORMS } from "../js/pill3d.js";
 import { ZONES } from "../js/data/med-zones.js";
@@ -66,5 +66,15 @@ describe("medication data is verified", () => {
       assert.ok(s.plan && s.why.text && s.why.facts.length >= 2, s.id);
       for (const f of s.why.facts) assert.match(f.url, OFFICIAL);
     }
+  });
+
+  it("labels the pharmacist's values as hers and lists them in docs/SOURCES.md", () => {
+    assert.ok(sources.includes("Pharmacist review"));
+    for (const m of KIT.filter((k) => k.reviewLimit || k.dutyHours || k.beforeTaking)) {
+      assert.equal(m.reviewedBy, REVIEWER, m.id);
+      if (m.reviewLimit) assert.ok(sources.includes(m.reviewLimit.text), `${m.id} limit not in SOURCES.md`);
+      if (m.beforeTaking) assert.ok(sources.includes(m.beforeTaking), `${m.id} check not in SOURCES.md`);
+    }
+    assert.equal(KIT.find((k) => k.id === "bisacodyl").reviewedBy, null, "not in her document");
   });
 });

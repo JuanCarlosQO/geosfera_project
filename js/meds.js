@@ -97,6 +97,7 @@ function pickHtml(z) {
   </div>
   <div class="log-step" data-ref="howmany" hidden>
     <p class="mono step-label">STEP 3 · HOW MANY</p>
+    <p class="before-take" data-ref="before" hidden></p>
     <div class="chips" role="radiogroup" aria-label="How many">${[1, 2, 3].map((n) => `<label class="chip"><input type="radio" name="units" value="${n}" ${n === 1 ? "checked" : ""}><span data-unit-label="${n}">${n}</span></label>`).join("")}</div>
     <label class="when"><span>When</span><select name="when">${M.WHEN.map((w) => `<option value="${w.id}">${w.label}</option>`).join("")}</select></label>
     <button type="button" class="cta main log-btn" data-med-act="log">Log it</button>
@@ -160,6 +161,7 @@ function patternsHtml(store, now) {
     <p class="pt-head">${p.level === "talk" ? `${STATUS.watch.shape} ${M.LEVELS.talk}` : `↗ ${M.LEVELS.downlink}`}</p>
     <p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, "NASA kit list")}` : ""}</p>
     ${p.illustrative ? `<p class="fine">Illustrative app rule, not a NASA limit.</p>` : ""}
+    ${p.reviewed ? `<p class="fine">From the team pharmacist's review (${typeof p.reviewed === "string" ? p.reviewed : "team"}), not a NASA quote.</p>` : ""}
   </li>`).join("")}</ul>`;
 }
 
@@ -316,6 +318,8 @@ export function mountMeds(host) {
       const m = med(e.target.value);
       $("howmany").hidden = false;
       root.querySelectorAll("[data-unit-label]").forEach((s) => { s.textContent = units(m, Number(s.dataset.unitLabel)); });
+      $("before").innerHTML = m.beforeTaking ? `<strong>Before you take it.</strong> ${m.beforeTaking} <span class="fine">Pharmacist review (${m.reviewedBy}).</span>` : "";
+      $("before").hidden = !m.beforeTaking;
       $("howmany").scrollIntoView({ block: "nearest" });
     }
     if (e.target.name === "effect") {

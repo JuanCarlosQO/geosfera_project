@@ -2,11 +2,14 @@
 // Names, categories, possible side effects and the kit-list comments come word for word from
 // NASA's "3.001 Medical Kit – Contents and Reference" (2015); label wording from FDA labels.
 // The app shows names and kit categories, never a recommended dose. Every `quote` is repeated
-// in docs/SOURCES.md (tests/meds-data.test.js checks it). `reviewedBy` stays null until the
-// team pharmacist signs the entry off.
+// in docs/SOURCES.md (tests/meds-data.test.js checks it). `reviewedBy` names the team
+// pharmacist once she has reviewed the entry; the values marked "pharmacist review" (follow-up
+// times, hours before a critical task, day limits, the melatonin check) come from her
+// document of 14 Nov 2026 and are labelled that way in the app, never as NASA's words.
 
 import { SUPPLEMENTS } from "./supplements.js";
 
+export const REVIEWER = "Isabel, the team's pharmaceutical chemist, 14 Nov 2026";
 const KIT_LIST = "https://www.nasa.gov/wp-content/uploads/2015/03/medical_kit_checklist_-_full_release.pdf";
 const SAS = "https://www.nasa.gov/wp-content/uploads/2025/09/ochmo-mtb-004-space-adaptation-sickness-sas.pdf";
 const CO2 = "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf";
@@ -57,7 +60,7 @@ export const KIT = [
       kitSays("comments", "No more than 12 tablets every 24 hours.")
     ],
     note: "The label limit (10 in 24 hours) is lower than the kit list's (12). Ergosphere follows the lower one.",
-    askAfterHours: 1, reviewedBy: null, demo: { stock: 40, expiresInDays: 310 }
+    askAfterHours: 1, reviewedBy: REVIEWER, demo: { stock: 40, expiresInDays: 310 }
   },
   {
     id: "ibuprofen", category: "Pain Reliever", sideEffects: { quote: "Dizziness, nervousness, upset stomach, nausea, vomiting, rash, ringing in the ears", url: KIT_LIST }, kitLimit: { perDay: 8, quote: "No more than 8 tablets every 24 hours.", url: KIT_LIST }, form: "caplet", tint: "#e8845c", name: "Ibuprofen", strength: "400 mg", unit: "tablet", ingredient: "ibuprofen", tags: ["pain"], rx: true,
@@ -70,7 +73,7 @@ export const KIT = [
       kitSays("possible side effects", "Dizziness, nervousness, upset stomach, nausea, vomiting, rash, ringing in the ears"),
       { head: "Label: daily limit", quote: "Do not exceed 3200 mg total daily dose", url: label("00872852-680a-41b3-901b-b991b12a176d") }
     ],
-    askAfterHours: 1, reviewedBy: null, demo: { stock: 60, expiresInDays: 420 }
+    askAfterHours: 1, reviewLimit: { days: 5, text: "After 3 to 5 days in a row, watch for stomach symptoms and kidney function." }, reviewedBy: REVIEWER, demo: { stock: 60, expiresInDays: 420 }
   },
   {
     id: "meclizine", category: "Space Motion Sickness/Anti-Nausea", sideEffects: { quote: "Drowsiness, headache, fatigue, nervousness, dizziness, dry mouth, blurred vision", url: KIT_LIST }, form: "tablet", tint: "#f3d36b", name: "Meclizine", strength: "25 mg", unit: "tablet", ingredient: "meclizine", tags: ["drowsy"],
@@ -85,7 +88,7 @@ export const KIT = [
     ],
     askFirst: [{ tag: "sleep", quote: "Do not use with sleep meds.", url: KIT_LIST }],
     performance: { quote: "May cause sedation and impair performance. Do not use with sleep meds.", url: KIT_LIST },
-    askAfterHours: 2, reviewedBy: null, demo: { stock: 12, expiresInDays: 200 }
+    askAfterHours: 2, reviewedBy: REVIEWER, demo: { stock: 12, expiresInDays: 200 }
   },
   {
     id: "promethazine", category: "Space Motion Sickness/Anti-Nausea", sideEffects: { quote: "Sedation, inability to concentrate, drowsiness, dizziness, blurred or double vision, nausea, dry mouth, urinary retention, constipation, rash, agitation, photosensitivity, uncontrolled muscle spasms", url: KIT_LIST }, form: "tablet", tint: "#9ad0f5", name: "Promethazine", strength: "25 mg", unit: "tablet", ingredient: "promethazine", tags: ["drowsy"], rx: true,
@@ -100,7 +103,7 @@ export const KIT = [
     ],
     askFirst: [{ tag: "sleep", quote: "Do not use with sleep meds.", url: KIT_LIST }],
     performance: { quote: "May cause sedation and impair performance. Do not use with sleep meds.", url: KIT_LIST },
-    askAfterHours: 2, reviewedBy: null, demo: { stock: 16, expiresInDays: -40 }
+    askAfterHours: 1, dutyHours: 12, reviewedBy: REVIEWER, demo: { stock: 16, expiresInDays: -40 }
   },
   {
     id: "oxymetazoline", category: "Decongestant", sideEffects: { quote: "Transient burning, stinging, dryness of the nasal mucosa, sneezing, cough", url: KIT_LIST }, kitLimit: { days: 3, quote: "Do not use more than 3 consecutive days.", url: KIT_LIST }, form: "spray", tint: "#7fd6c2", name: "Oxymetazoline nasal spray", strength: "0.05 %", unit: "dose", ingredient: "oxymetazoline", tags: ["decongestant"],
@@ -112,7 +115,7 @@ export const KIT = [
       kitSays("comments", "Do not use more than 3 consecutive days. Rebound congestion with prolonged use."),
       { head: "Label: when using", quote: "Frequent or prolonged use may cause nasal congestion to recur or worsen", url: label("0f5ec576-f788-40aa-9088-0dd672e3cc7c") }
     ],
-    askAfterHours: 1, reviewedBy: null, demo: { stock: 30, expiresInDays: 24 }
+    askAfterHours: 1, reviewedBy: REVIEWER, demo: { stock: 30, expiresInDays: 24 }
   },
   {
     id: "pseudoephedrine", category: "Decongestant", sideEffects: { quote: "Dizziness, rapid heart rate, high blood pressure, restlessness, tremor, headache, loss of appetite, may impair ability to concentrate, dry mouth, insomnia, photosensitivity", url: KIT_LIST }, form: "caplet", tint: "#e2616b", name: "Pseudoephedrine 12-hour", strength: "120 mg", unit: "tablet", ingredient: "pseudoephedrine", tags: ["decongestant"],
@@ -126,7 +129,7 @@ export const KIT = [
     ],
     inFlight: { quote: "Treatment: pharmaceuticals such as pseudoephedrine (congestion or allergy medications).", url: SAS, source: N_SAS },
     performance: { quote: "Dizziness, rapid heart rate, high blood pressure, restlessness, tremor, headache, loss of appetite, may impair ability to concentrate, dry mouth, insomnia, photosensitivity", url: KIT_LIST },
-    askAfterHours: 2, reviewedBy: null, demo: { stock: 20, expiresInDays: 150 }
+    askAfterHours: 1, reviewedBy: REVIEWER, demo: { stock: 20, expiresInDays: 150 }
   },
   {
     id: "melatonin", category: "Sleep", sideEffects: { quote: "Headache, nausea, drowsiness, dizziness", url: KIT_LIST }, form: "tablet", tint: "#b9a5f0", name: "Melatonin", strength: "3 mg", unit: "tablet", ingredient: "melatonin", tags: ["sleep"], noLabel: true,
@@ -143,7 +146,7 @@ export const KIT = [
       { tag: "drowsy", quote: "May cause sedation and impair performance. Do not use with sleep meds.", url: KIT_LIST }
     ],
     performance: { quote: "Headache, nausea, drowsiness, dizziness", url: KIT_LIST },
-    askAfterHours: 9, reviewedBy: null, demo: { stock: 20, expiresInDays: 12 }
+    askAfterHours: 9, beforeTaking: "Look at the tablet first: if its colour has changed, do not take it.", reviewedBy: REVIEWER, demo: { stock: 20, expiresInDays: 12 }
   },
   {
     id: "zolpidem", category: "Sleep", sideEffects: { quote: "Drowsiness, dizziness, headache, abnormal dreams, insomnia, memory impairment, visual and attention disturbance", url: KIT_LIST }, form: "caplet", tint: "#f4f1ea", name: "Zolpidem", strength: "10 mg", unit: "tablet", ingredient: "zolpidem", tags: ["sleep"], rx: true,
@@ -163,7 +166,7 @@ export const KIT = [
       { tag: "drowsy", quote: "May cause sedation and impair performance. Do not use with sleep meds.", url: KIT_LIST }
     ],
     performance: { quote: "Drowsiness, dizziness, headache, abnormal dreams, insomnia, memory impairment, visual and attention disturbance", url: KIT_LIST },
-    askAfterHours: 9, reviewedBy: null, demo: { stock: 14, expiresInDays: 260 }
+    askAfterHours: 9, dutyHours: 12, reviewedBy: REVIEWER, demo: { stock: 14, expiresInDays: 260 }
   },
   {
     id: "hydrocortisone", category: "Steroid", sideEffects: { quote: "No significant side effects", url: KIT_LIST }, form: "packet", tint: "#dfe7f2", name: "Hydrocortisone cream", strength: "1 %", unit: "application", ingredient: "hydrocortisone", tags: [],
@@ -175,7 +178,7 @@ export const KIT = [
       { head: "Label: stop and ask if", quote: "condition worsens, symptoms persist for more than 7 days or clear up and occur again within a few days", url: label("01cb7b47-2c3c-707d-e063-6294a90a5d97") },
       { head: "Label", quote: "For external use only", url: label("01cb7b47-2c3c-707d-e063-6294a90a5d97") }
     ],
-    askAfterHours: 24, reviewedBy: null, demo: { stock: 30, expiresInDays: 500 }
+    askAfterHours: 72, reviewLimit: { days: 7, text: "Stop it after 7 to 10 days, to avoid thinning the skin." }, reviewedBy: REVIEWER, demo: { stock: 30, expiresInDays: 500 }
   },
   {
     id: "bisacodyl", category: "Stool Softener", sideEffects: { quote: "Mild abdominal cramps, nausea, vomiting, dizziness", url: KIT_LIST }, form: "tablet", tint: "#f0a65a", name: "Bisacodyl", strength: "5 mg", unit: "tablet", ingredient: "bisacodyl", tags: [],

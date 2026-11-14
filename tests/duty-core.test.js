@@ -86,3 +86,19 @@ describe("fit for duty: words are verified", () => {
     assert.ok(String(D.RULES.sleepHours) === "7" && DUTY_FACTS.sleep.quote.includes("7-9 hours"));
   });
 });
+
+describe("fit for duty: the pharmacist's longer windows", () => {
+  const at = (h) => new Date(NOW.getTime() - h * 3600000).toISOString();
+  const dose = (medId, h) => ({ id: `${medId}-${h}`, medId, units: 1, at: at(h) });
+  it("counts promethazine and zolpidem for 12 hours, others for the app's 8", () => {
+    assert.equal(D.hoursFor(KIT.find((k) => k.id === "promethazine")), 12);
+    assert.equal(D.hoursFor(KIT.find((k) => k.id === "zolpidem")), 12);
+    assert.equal(D.hoursFor(KIT.find((k) => k.id === "melatonin")), D.RULES.impairHours);
+    const c = D.checkMeds([dose("promethazine", 10), dose("melatonin", 10)], KIT, NOW);
+    assert.deepEqual(c.items.map((i) => i.med.id), ["promethazine"]);
+    assert.equal(D.checkMeds([dose("zolpidem", 13)], KIT, NOW).state, "ok");
+  });
+  it("never shortens the app's window", () => {
+    for (const k of KIT) assert.ok(D.hoursFor(k) >= D.RULES.impairHours, k.id);
+  });
+});

@@ -263,6 +263,12 @@ export function patterns(store, kit, now = new Date(), log = {}) {
     if (n > med.kitLimit.days) out.push({ id: `days-${med.id}`, level: "talk", medId: med.id, text: `${med.name} logged on ${n} days in a row. NASA's kit list says:`, quote: med.kitLimit.quote, url: med.kitLimit.url });
   }
 
+  // 2b. More consecutive days than the team pharmacist's review allows (labelled as her review).
+  for (const med of kit.filter((k) => k.reviewLimit?.days)) {
+    const n = daysInARow(store.doses, (d) => d.medId === med.id, today);
+    if (n > med.reviewLimit.days) out.push({ id: `review-${med.id}`, level: "talk", medId: med.id, text: `${med.name} logged on ${n} days in a row. Pharmacist review: ${med.reviewLimit.text}`, reviewed: med.reviewedBy ?? true });
+  }
+
   // 3. Combinations the kit list warns about, within 24 hours (quoted).
   const recent = store.doses.filter((d) => ms(d.at) <= ms(now) && ms(now) - ms(d.at) < RULES.dayHours * HOUR);
   const seen = new Set();
