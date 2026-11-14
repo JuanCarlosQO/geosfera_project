@@ -1,0 +1,120 @@
+/* Module 1: the airlock hatch. */
+
+.hatch-screen {
+  position: fixed; inset: 0; z-index: 20; overflow: hidden auto;
+  display: flex; flex-direction: column; align-items: center;
+  padding: max(18px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
+  background: radial-gradient(ellipse at 50% 46%, #0b1622 0%, var(--night) 62%);
+}
+.hatch-screen .sky { position: absolute; }
+
+.hs-fade { position: relative; transition: opacity .6s ease 1.4s; }
+.hs-top { width: 100%; max-width: 420px; display: flex; align-items: center; justify-content: space-between; }
+.hs-title { margin-top: clamp(14px, 4vh, 40px); text-align: center; }
+.hs-title h1 { margin: 0; font-weight: 300; font-size: clamp(24px, 7.4vw, 31px); }
+.hs-title p { margin: 8px 0 0; font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+
+/* ---- the hatch ---- */
+.hatch {
+  --d: min(344px, 88vw, 47vh);
+  --ring: calc(var(--d) * .435);
+  position: relative; flex: none; width: var(--d); height: var(--d);
+  margin: clamp(14px, 3.4vh, 32px) 0;
+  transition: transform 1.6s cubic-bezier(.5, 0, .2, 1) 1.8s, opacity .9s ease 2.5s;
+}
+.hatch-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hatch-art .slow { transform-origin: 50% 50%; animation: turn 140s linear infinite; }
+
+.window {
+  position: absolute; inset: 18%; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 50% 165%, #2f78de 0 38%, #10407f 51%, #08162b 63%, #02040a 80%);
+}
+.window .glow { position: absolute; left: -10%; right: -10%; bottom: 14%; height: 3px; background: #a6d8ff; filter: blur(2px); opacity: .75; }
+.window .station-big { position: absolute; left: 17%; top: 27%; width: 66%; animation: float 10s ease-in-out infinite; }
+
+.leaf { position: absolute; top: 0; width: 50%; height: 100%; transition: transform 1.1s cubic-bezier(.6, 0, .2, 1) .6s; }
+.leaf.left { left: 0; background: linear-gradient(132deg, #3c4652, #1e252e 58%, #2f3842); box-shadow: inset -1px 0 #0a0d11; }
+.leaf.right { right: 0; background: linear-gradient(228deg, #3c4652, #1e252e 58%, #2f3842); box-shadow: inset 1px 0 #4a5562; }
+.leaf i { position: absolute; top: 36%; width: 7%; height: 28%; border-radius: 3px; background: #141a20; border: 1px solid #48535f; }
+.leaf.left i { right: 9%; }
+.leaf.right i { left: 9%; }
+
+.porthole {
+  position: absolute; inset: 25.5%; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 50% 185%, #2f78de 0 44%, #0c3168 57%, #030714 72%);
+  box-shadow: inset 0 0 0 5px #4c5866, inset 0 0 0 7px #10151b, 0 0 0 1px #0a0d11;
+  transition: opacity .4s ease .3s;
+}
+.porthole .station-small { position: absolute; left: 30%; top: 30%; width: 40%; animation: pass 8s linear infinite; }
+.porthole small { position: absolute; left: 0; right: 0; bottom: 22%; text-align: center; font-family: var(--mono); font-size: 8px; letter-spacing: .08em; color: #b9f2ff; }
+
+.bolt {
+  position: absolute; left: 50%; top: 50%; width: 8px; height: 18px; margin: -9px 0 0 -4px; border-radius: 3px;
+  background: #29313b;
+  transform: rotate(calc(var(--i) * 90deg)) translateY(calc(var(--d) * -.365));
+  transition: background .3s, box-shadow .3s;
+}
+.bolt.shot { background: var(--beacon); box-shadow: 0 0 12px var(--beacon); }
+.hatch.denied .bolt { background: var(--alarm); box-shadow: 0 0 12px var(--alarm); }
+
+.key {
+  position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0;
+  border-radius: 50%; border: 1px solid var(--seam-hi); background: var(--hull);
+  font-family: var(--mono); font-size: 17px; cursor: pointer; touch-action: manipulation;
+  transform: rotate(calc(var(--i) * 36deg)) translateY(calc(var(--ring) * -1)) rotate(calc(var(--i) * -36deg));
+  transition: background .25s, color .25s, box-shadow .25s;
+}
+.key:hover { background: #1b242e; }
+.key.lit { background: var(--beacon); color: var(--beacon-ink); box-shadow: 0 0 18px #6fe3ff88; }
+.key:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ---- below the hatch ---- */
+.hs-foot { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; transition: opacity .6s ease 1.4s; }
+.readout { min-height: 20px; margin: 0; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--ink-2); }
+.readout.warn { color: var(--alarm); }
+.choices { margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.choices .pair { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.cta {
+  display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 22px 0 16px;
+  border-radius: 26px; border: 1px solid var(--seam-hi); background: var(--hull); font-size: 15px; cursor: pointer;
+}
+.cta:hover { border-color: var(--beacon); }
+.cta.main { background: var(--beacon); border-color: var(--beacon); color: var(--beacon-ink); font-weight: 600; padding: 0 24px; }
+.cta.stop { background: var(--alarm); border-color: var(--alarm); color: #2b0804; font-weight: 600; padding: 0 22px; }
+.cta.busy { animation: breathe .9s ease-in-out infinite; }
+.textlink { background: none; border: 0; color: var(--beacon); font-size: 14px; padding: 12px; cursor: pointer; }
+.textlink:hover { color: #b9f2ff; }
+.disclaimer { margin: 18px 0 0; text-align: center; font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--ink-3); }
+
+/* ---- arrival ---- */
+.arrival {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 32px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 1s ease 2.9s;
+  background: radial-gradient(circle at 50% 122%, #1f63c8 0 30%, #08224b 48%, var(--night) 76%);
+}
+.arrival h2 { margin: 0; font-weight: 300; font-size: 34px; line-height: 1.15; }
+.arrival p { margin: 0; color: var(--ink-2); }
+
+.hatch-screen.opening .leaf.left { transform: translateX(-104%); }
+.hatch-screen.opening .leaf.right { transform: translateX(104%); }
+.hatch-screen.opening .porthole { opacity: 0; }
+.hatch-screen.opening .hatch { transform: scale(3.2); opacity: 0; }
+.hatch-screen.opening .hs-fade, .hatch-screen.opening .hs-foot { opacity: 0; }
+.hatch-screen.opening .arrival { opacity: 1; }
+
+/* ---- forgot code ---- */
+.veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 24px; background: #05070ae0; }
+.veil[hidden] { display: none; }
+.sheet { max-width: 360px; padding: 24px; border-radius: 18px; background: var(--hull); border: 1px solid var(--seam-hi); }
+.sheet h2 { margin: 0 0 8px; font-weight: 400; font-size: 22px; }
+.sheet p { margin: 0 0 18px; color: var(--ink-2); line-height: 1.5; font-size: 15px; }
+
+@keyframes turn { to { transform: rotate(360deg); } }
+@keyframes float { 50% { transform: translate(-2%, 2%) rotate(2deg); } }
+@keyframes pass { from { transform: translateX(-165%) rotate(-8deg); } to { transform: translateX(165%) rotate(-8deg); } }
+@keyframes breathe { 50% { box-shadow: 0 0 0 6px #6fe3ff22; border-color: var(--beacon); color: var(--beacon); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: .01s !important; transition-delay: 0s !important; }
+  .hatch-screen.opening .hatch { transform: none; }
+}
