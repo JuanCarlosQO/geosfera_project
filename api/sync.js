@@ -1,31 +1,37 @@
-// Vercel serverless function: station sync backed by Upstash Redis (Vercel Marketplace).
-// Vercel injects the database URL and token as environment variables when Upstash is added.
+// Vercel serverless function: station sync. Storage is Supabase (Postgres) when its settings are
+// present; Upstash Redis is still supported as a fallback.
 
 import { handle, CAS_SCRIPT } from "../lib/sync-handler.js";
+import { supabaseStore, supabaseEnv } from "../lib/supabase-store.js";
 
-const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-async function redis(command) {
-  const r = await fetch(URL_, { method: "POST", headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify(command) });
-  const data = await r.json();
-  if (data.error) throw new Error(data.error);
-  return data.result;
+function upstashStore() {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  const redis = async (command) => {
+    const r = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(command) });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    return data.result;
+  };
+  return { get: (k) => redis(["GET", k]), cas: (k, a, b, v) => redis(["EVAL", CAS_SCRIPT, "1", k, a, String(b), v]) };
 }
 
-const store = {
-  get: (k) => redis(["GET", k]),
-  cas: (k, authHash, base, value) => redis(["EVAL", CAS_SCRIPT, "1", k, authHash, String(base), value])
-};
+function pickStore() {
+  const sb = supabaseEnv(process.env);
+  return sb ? supabaseStore(sb) : upstashStore();
+}
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  if (!URL_ || !TOKEN) { res.status(503).json({ error: "Sync is not set up on the server yet (add Upstash Redis in Vercel)." }); return; }
+  const store = pickStore();
+  if (!store) { res.status(503).json({ error: "Sync is not set up on the server yet (connect Supabase in Vercel and run supabase/schema.sql)." }); return; }
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body;
     const out = await handle({ method: req.method, query: req.query, headers: req.headers, body }, store);
     res.status(out.status).json(out.body);
-  } catch {
-    res.status(500).json({ error: "Sync failed on the server." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Sync failed on the server. Check that supabase/schema.sql was run." });
   }
 }
