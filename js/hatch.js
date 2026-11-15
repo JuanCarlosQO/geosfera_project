@@ -7,6 +7,11 @@ import { logKeyFor } from "./crew-core.js";
 import { DEMO_CODES } from "./demo-core.js";
 import { avatarHtml, AVATARS, avatarSrc } from "./avatar.js";
 import { saveCrew } from "./store.js";
+import { GROUND, GROUND_ID, signIn } from "./role-core.js";
+import { setRole } from "./role.js";
+import { isDemoId } from "./demo-core.js";
+
+const GROUND_DEMO_CODE = "2046"; // the ground team's demo code, shown only with the demo crew
 
 const STORE = "geosfera.crew-access";
 const OPEN_DURATION = 3800;
@@ -45,7 +50,16 @@ const spaced = (code) => code.split("").join(" ");
 
 /** The crew to choose from: each profile with its own code. Demo profiles show theirs. */
 function crewHtml(members, store) {
-  return `<ul class="hs-crew-list">${members.map((m, i) => {
+  const demo = members.some((m) => isDemoId(m.id));
+  const g = core.accessFor(store, GROUND_ID).record;
+  const gLine = demo ? `<span class="hs-code">Demo code <b>${spaced(GROUND_DEMO_CODE)}</b></span>` : g ? `<span class="hs-code">Code set</span>` : `<span class="hs-code">First time: choose a code</span>`;
+  return `<p class="hs-sec mono">ON THE GROUND · SEES EVERY READING</p>
+  <ul class="hs-crew-list hs-ground"><li style="--i:0"><button type="button" class="hs-prof" data-pick="${GROUND_ID}">
+      <span class="hs-pic hs-pic-ground" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.500 3 14.500 0 18M12 3c-3 3.500-3 14.500 0 18"/></svg></span>
+      <span class="hs-prof-txt"><strong>${GROUND.name}</strong><small>${GROUND.role} · flight surgeon and biomedical engineers</small>${gLine}</span>
+      <span class="hs-go" aria-hidden="true">›</span></button></li></ul>
+  <p class="hs-sec mono">ON BOARD · REPORTS, NO READINGS</p>
+  <ul class="hs-crew-list">${members.map((m, i) => {
     const rec = core.accessFor(store, m.id).record;
     const demo = DEMO_CODES[m.id];
     const line = demo ? `<span class="hs-code">Demo code <b>${spaced(demo)}</b></span>` : rec ? `<span class="hs-code">Code set</span>` : `<span class="hs-code">First time: choose a code</span>`;
@@ -53,9 +67,9 @@ function crewHtml(members, store) {
       ${avatarHtml(m, "hs-pic")}
       <span class="hs-prof-txt"><strong>${esc(m.name)}</strong><small>${esc(m.role)}${m.age ? ` · ${m.age}` : ""}${m.home ? ` · ${esc(m.home)}` : ""}</small>${line}</span>
       <span class="hs-go" aria-hidden="true">›</span></button>
-      <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose a picture for ${esc(m.name)}">✎ Picture</button></li>`;
+      <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose an avatar for ${esc(m.name)}">✎ Avatar</button></li>`;
   }).join("")}</ul>
-  ${members.some((m) => DEMO_CODES[m.id]) ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them.</p>` : ""}`;
+  ${demo ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them. Crew members see only what they report; the ground team sees the readings.</p>` : ""}`;
 }
 
 function markup() {
@@ -251,22 +265,23 @@ export class Hatch {
   /** A profile was chosen: greet that person and ask for their own code (a demo profile's is ready). */
   async pick(id) {
     this.memberId = id;
-    const m = this.members.find((x) => x.id === id);
+    const m = id === GROUND_ID ? GROUND : this.members.find((x) => x.id === id);
     if (m) {
-      setActive(id);
+      if (id !== GROUND_ID) setActive(id);
       this.ui.who.hidden = false;
       this.ui.who.innerHTML = `<span class="hs-avatar" aria-hidden="true">${initials(m.name)}</span>${esc(m.name)} · ${esc(m.role)}`;
-      this.ui.heading.textContent = `${timeOfDay()}, ${m.name.split(" ")[0]}`;
-      this.ui.arrive.textContent = m.name.split(" ")[0];
+      this.ui.heading.textContent = id === GROUND_ID ? `${timeOfDay()}, ground team` : `${timeOfDay()}, ${m.name.split(" ")[0]}`;
+      this.ui.arrive.textContent = id === GROUND_ID ? "ground team" : m.name.split(" ")[0];
     }
     this.saved = core.accessFor(this.all, id);
-    if (!this.saved.record && DEMO_CODES[id]) {
+    const demoCode = id === GROUND_ID ? (this.members.some((x) => isDemoId(x.id)) ? GROUND_DEMO_CODE : null) : DEMO_CODES[id];
+    if (!this.saved.record && demoCode) {
       this.working = true;
       this.tell("Preparing the demo profile…");
-      this.saved = { record: await core.deriveRecord(DEMO_CODES[id]), misses: core.cleanSlate() };
+      this.saved = { record: await core.deriveRecord(demoCode), misses: core.cleanSlate() };
       this.persist();
       this.working = false;
-      this.tell(`Demo code: ${spaced(DEMO_CODES[id])}`);
+      this.tell(`Demo code: ${spaced(demoCode)}`);
     }
     this.goTo(this.saved.record ? "enter" : "create");
     if (!this.saved.record) this.tell(m ? `First time for ${m.name.split(" ")[0]}: choose a four-digit code.` : "First time on this device: set your crew code.");
@@ -314,7 +329,7 @@ export class Hatch {
       c.insertAdjacentHTML("beforeend", `<div class="pair"><button type="button" class="cta main" data-do="enrol">${fingerprintSvg}Add fingerprint</button><button type="button" class="cta" data-do="skip">Not now</button></div>`);
     }
     if (this.step === "enter") c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="forgot">Forgot your code?</button>`);
-    if (["enter", "create"].includes(this.step) && this.members.length > 1) c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="switch">Not you? Choose another profile</button>`);
+    if (["enter", "create"].includes(this.step) && this.members.length) c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="switch">Not you? Choose another profile</button>`);
     if (this.step === "repeat") c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="restart">Start again</button>`);
   }
 
@@ -339,6 +354,8 @@ export class Hatch {
 
   open() {
     clearInterval(this.countdown);
+    // who just came in: the ground team sees every reading, a crew member only what they report
+    if (this.members.length) setRole(signIn(this.memberId === GROUND_ID ? "ground" : "crew"));
     this.tell("All four bolts locked · opening the hatch");
     this.screen.classList.add("opening");
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -422,11 +439,15 @@ export class Hatch {
     const m = this.members.find((x) => x.id === id);
     if (!m) return;
     const sheet = this.ui.crew.querySelector(".hs-avs") ?? Object.assign(document.createElement("div"), { className: "hs-avs" });
-    sheet.innerHTML = `<p><strong>Picture for ${esc(m.name.split(" ")[0])}</strong></p>
-      <div class="hs-av-grid">${AVATARS.map((a) => `<button type="button" class="hs-av-opt" data-avatar="${a.id}" data-for="${esc(id)}" aria-pressed="${m.avatar === a.id}"><img src="${avatarSrc(a.id)}" alt="Portrait ${a.id}" onerror="this.closest('button').hidden=true"></button>`).join("")}
-        <button type="button" class="hs-av-opt ini" data-avatar="" data-for="${esc(id)}" aria-pressed="${!m.avatar}">${avatarHtml({ ...m, avatar: null }, "hs-pic")}<small>Initials</small></button></div>`;
+    // women's avatars first for a woman's body, men's first for a man's; any can be chosen
+    const order = [...AVATARS].sort((a, b) => (b.body === m.body) - (a.body === m.body));
+    sheet.innerHTML = `<p><strong>Avatar for ${esc(m.name.split(" ")[0])}</strong> <span class="fine">Shown on the health screens</span></p>
+      <div class="hs-av-grid">${order.map((a) => `<button type="button" class="hs-av-opt" data-avatar="${a.id}" data-for="${esc(id)}" aria-pressed="${m.avatar === a.id}" aria-label="Avatar ${a.id}"><img src="${avatarSrc(a.id)}" alt="" onerror="this.closest('button').hidden=true"></button>`).join("")}
+        <button type="button" class="hs-av-opt ini" data-avatar="" data-for="${esc(id)}" aria-pressed="${!m.avatar}">${avatarHtml({ ...m, avatar: null }, "hs-pic")}<small>Initials</small></button></div>
+      <p class="fine hs-av-wait" hidden>The avatar pictures are not in the app yet: until they are, profiles show initials.</p>`;
     this.ui.crew.append(sheet);
     sheet.scrollIntoView({ block: "nearest" });
+    setTimeout(() => { if (!sheet.querySelector(".hs-av-opt:not(.ini):not([hidden])")) sheet.querySelector(".hs-av-wait").hidden = false; }, 1200);
   }
 
   async onClick(e) {

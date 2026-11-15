@@ -1,0 +1,80 @@
+/* ================= who is looking: the ground team or a crew member ================= */
+
+/* sign-in: the ground team above the crew */
+.hs-sec { margin: 18px 6px 8px; font: 600 11px var(--mono); letter-spacing: .14em; color: var(--ink-3); }
+.hs-sec:first-child { margin-top: 0; }
+.hs-ground .hs-prof { border-color: color-mix(in srgb, var(--beacon) 45%, var(--seam)); }
+.hs-pic-ground { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--tint); color: var(--beacon); font-size: inherit; }
+
+/* the strip under the masthead */
+.role-bar { position: relative; z-index: 2; max-width: 1000px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: 13.5px; color: var(--ink-2); }
+.role-bar[hidden] { display: none; }
+.role-bar .rb-tag { padding: 4px 9px; border-radius: 8px; background: var(--tint); color: var(--beacon); font: 700 10.5px var(--mono); letter-spacing: .14em; }
+.role-bar[data-kind="emergency"] { margin-top: 4px; padding: 10px 14px; border-radius: 16px; background: color-mix(in srgb, var(--tone-act, #dc2626) 10%, var(--hull)); border: 1.5px solid var(--tone-act, #dc2626); color: var(--ink); max-width: calc(1000px - 40px); }
+.role-bar[data-kind="emergency"] .rb-tag { background: var(--tone-act, #dc2626); color: #fff; }
+.rb-txt { flex: 0 1 auto; }
+.rb-crew { display: flex; gap: 6px; flex-wrap: wrap; }
+.rb-who { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 3px 12px 3px 4px; border-radius: 17px; border: 1px solid var(--seam); background: var(--hull); color: var(--ink); font: 500 13.5px var(--sans); cursor: pointer; }
+.rb-who[aria-pressed="true"] { border-color: var(--beacon); background: var(--tint); }
+.rb-who .rb-av { width: 26px; height: 26px; font-size: 26px; }
+.rb-link { margin-left: auto; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--seam); background: var(--hull); color: var(--beacon); font: 600 13px var(--sans); text-decoration: none; cursor: pointer; }
+@media (min-width: 1040px) {
+  [data-theme="day"] .role-bar { max-width: 1280px; padding-left: 124px; }
+  [data-theme="day"] .role-bar[data-kind="emergency"] { max-width: calc(1280px - 144px); margin-left: auto; margin-right: auto; }
+}
+
+/* the crew member's own home */
+.crew-home { max-width: 760px; display: grid; gap: 16px; }
+.ch-head { display: flex; gap: 16px; align-items: center; }
+.ch-pic .ch-av { width: 72px; height: 72px; font-size: 72px; }
+.ch-head h1 { margin: 4px 0 6px; font-size: clamp(26px, 6vw, 36px); font-weight: 500; outline: none; }
+.ch-lead { margin: 0; color: var(--ink-2); line-height: 1.5; }
+.crew-home .sc-card { margin: 0; }
+.sc-from { margin: 0 0 4px; font: 600 11px var(--mono); letter-spacing: .14em; color: var(--beacon); }
+.ch-card { padding: 18px; border-radius: 20px; background: var(--hull); border: 1px solid var(--seam); box-shadow: var(--card-shadow); }
+.ch-card h2 { margin: 0 0 10px; font-size: 18px; font-weight: 600; }
+.ch-card .dv-marks { margin: 0; }
+.ch-msg { margin: 8px 0 0; font-size: 14px; color: var(--tone-normal, #0e9f6e); min-height: 1em; }
+.ch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ch-tile { display: flex; flex-direction: column; gap: 4px; padding: 16px; min-height: 92px; border-radius: 18px; border: 1px solid var(--seam); background: var(--hull); color: var(--ink); text-align: left; text-decoration: none; font: inherit; cursor: pointer; box-shadow: var(--card-shadow); }
+.ch-tile strong { font-size: 16px; font-weight: 600; }
+.ch-tile small { color: var(--ink-2); font-size: 13px; line-height: 1.4; }
+.ch-tile.on { border-color: var(--tone-watch, #d97706); background: color-mix(in srgb, var(--tone-watch, #d97706) 8%, var(--hull)); }
+.ch-tile:disabled { opacity: .75; cursor: default; }
+.ch-emergency { border-color: color-mix(in srgb, var(--tone-act, #dc2626) 45%, var(--seam)); }
+.ch-emergency p { margin: 0 0 12px; color: var(--ink-2); line-height: 1.5; }
+.ch-em-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+@media (max-width: 520px) { .ch-grid { grid-template-columns: 1fr; } .ch-tile { min-height: 0; } }
+
+/* the ground team's crew list */
+.ground { max-width: 900px; }
+.ground h1 { margin: 6px 0 8px; font-size: clamp(28px, 6vw, 40px); font-weight: 500; outline: none; }
+.ground .lead { color: var(--ink-2); line-height: 1.55; max-width: 680px; }
+.gf-list { list-style: none; margin: 18px 0; padding: 0; display: grid; gap: 14px; }
+.gf-card { width: 100%; display: flex; gap: 16px; align-items: flex-start; padding: 18px; border-radius: 20px; border: 1px solid var(--seam); background: var(--hull); color: var(--ink); text-align: left; font: inherit; cursor: pointer; box-shadow: var(--card-shadow); transition: border-color .2s, transform .2s; }
+@media (hover: hover) and (pointer: fine) { .gf-card:hover { border-color: var(--beacon); transform: translateY(-2px); } }
+.gf-pic .gf-av { width: 60px; height: 60px; font-size: 60px; }
+.gf-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.gf-txt > strong { font-size: 19px; font-weight: 600; }
+.gf-txt > small { color: var(--ink-2); font-size: 13.5px; }
+.gf-night { margin-top: 6px; font-size: 14.5px; color: var(--ink-2); }
+.gf-night b { color: var(--ink); }
+.gf-flags { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; }
+.gf-flags li { padding: 6px 10px; border-radius: 10px; background: var(--soft, rgba(127, 127, 127, .08)); font-size: 13.5px; line-height: 1.4; }
+.gf-flags li.gf-watch { background: color-mix(in srgb, var(--tone-watch, #d97706) 12%, var(--hull)); }
+.gf-flags li.gf-act { background: color-mix(in srgb, var(--tone-act, #dc2626) 12%, var(--hull)); }
+.gf-ok { margin-top: 6px; font-size: 13.5px; color: var(--tone-normal, #0e9f6e); }
+.gf-go { align-self: center; font-size: 28px; color: var(--ink-3); }
+
+/* the dock shows only what the signed-in role can open */
+.dock a[hidden] { display: none !important; }
+.gf-night .sim { margin-left: 4px; padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--tone-watch, #d97706) 15%, var(--hull)); font: 600 10px var(--mono); letter-spacing: .08em; color: var(--ink-2); }
+
+/* full-body avatars: round pictures show the head and shoulders of the same picture */
+.av img.av-full { inset: auto; left: -100%; top: -2%; width: 300%; height: auto; max-width: none; object-fit: initial; }
+/* the picker shows the whole character */
+.hs-av-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hs-av-opt:not(.ini) { aspect-ratio: 2 / 3; border-radius: 16px; background: var(--soft, rgba(127, 127, 127, .08)); }
+.hs-av-opt:not(.ini) img { object-fit: contain; }
+.hs-av-opt.ini { aspect-ratio: 2 / 3; }
+.hs-avs p .fine { display: block; margin-top: 2px; }

@@ -16,6 +16,7 @@ import { fold } from "./fold.js";
 import { LIMIT_FACTS } from "./data/telemetry.js";
 import { DEVICE_FACTS } from "./data/devices.js";
 import { setWatchAlerts } from "./alarm.js";
+import { seesData } from "./role.js";
 
 export const WATCH_KEY = "geosfera.watch"; // { [memberId]: { mode, events, lastSync, file } }
 export const ACTIGRAPH_KEY = "geosfera.actigraph"; // { [memberId]: { subject, code } }, this device only
@@ -112,9 +113,10 @@ export function watchAlerts(now = new Date()) {
   if (w.mode === "off") return [];
   const out = [];
   const off = D.offNow(w.events, now);
-  if (off?.remind) out.push({ id: "watch-off", status: "watch", title: `Watch off for ${dur(off.minutes)}: put it back on`, href: "#devices" });
+  if (off?.remind) out.push({ id: "watch-off", status: "watch", title: `Watch off for ${dur(off.minutes)}: put it back on`, href: seesData() ? "#devices" : "#crew" });
   const today = dateKey(now);
   const n = D.nightSummary(w.events, today);
+  if (!seesData()) return out; // a crew member's own screens show no readings: only "put it back on"
   if (n && n.sleepHours < SHORT_NIGHT_H && readSeen()[me.id] !== today) out.push({ id: `short-night-${today}`, status: "watch", title: `Short night: ${n.sleepHours} h asleep (NASA cites 7–9 h)`, href: "#devices" });
   return out;
 }
@@ -208,7 +210,7 @@ function calibHtml(w) {
   </div>`;
 }
 
-function marksHtml(events, w) {
+export function marksHtml(events, w) {
   const off = D.offNow(events);
   const last = [...events].reverse().find((e) => e.kind === "bed" || e.kind === "up");
   const inBed = last?.kind === "bed";
@@ -226,6 +228,31 @@ function marksHtml(events, w) {
     <p class="fine">${fileKnows ? "The watch's file already brings time in bed, sleep, awakenings, wrist activity and time off the wrist: tap only what it cannot know, like how rested you feel, or a moment it missed. When the file arrives, it replaces your taps for what it covers." : "The watch knows its wrist activity and, when its file arrives, time in bed, sleep and time off the wrist: those come in by themselves and replace your taps for what they cover. Tap what it cannot know, like how rested you feel. Either way, time with the watch off is left out of the sleep count."}</p>
   </div>`;
 }
+
+/** The crew member's own "how rested" (1-5), kept with the watch's events. Returns what to say. */
+export function rateMark(memberId, value) {
+  const w = readWatch(memberId);
+  writeWatch(memberId, { ...w, events: D.selfMark(w.events, "rated", new Date(), value) });
+  refreshWatchAlerts();
+  return `Noted: rested ${value} of 5.`;
+}
+
+/** A tap: went to bed, got up, watch off, watch back on. Returns what to say. */
+export function applyMark(memberId, kind) {
+  const w = readWatch(memberId), now = new Date();
+  const events = D.selfMark(w.events, kind, now);
+  writeWatch(memberId, { ...w, events });
+  // with no watch night, the crew member's own marks give the estimate (src "marks")
+  if (kind === "up" || kind === "on") {
+    const n = D.nightSummary(events, dateKey(now));
+    if (n) { const r = D.fillDay(readLog(memberId), dateKey(now), { sleepHours: n.sleepHours }, n.basis === "marks" ? "marks" : w.mode === "sim" ? "simulated" : w.mode === "file" ? "actiware" : w.mode === "cloud" ? "centrepoint" : "marks"); if (r.filled.length) writeLog(r.log, memberId); }
+  }
+  refreshWatchAlerts();
+  return { bed: "Noted: you went to bed.", up: "Noted: you got up.", off: "Noted: the watch is off. That time will not count as sleep.", on: "Noted: the watch is back on." }[kind];
+}
+
+/** The marks block for the crew member's own home (the watch's events, no readings). */
+export const crewMarksHtml = (memberId) => { const w = readWatch(memberId); return marksHtml(w.events, w); };
 
 function watchHtml(w, log, today) {
   // the most recent night the watch (or the crew member) recorded, even from an older file
@@ -450,26 +477,16 @@ export function mountDevices(host) {
   host.addEventListener("click", (e) => {
     const rt = e.target.closest("[data-rate]");
     if (rt) {
-      const w = readWatch(me.id);
-      writeWatch(me.id, { ...w, events: D.selfMark(w.events, "rated", new Date(), Number(rt.dataset.rate)) });
+      const msg = rateMark(me.id, Number(rt.dataset.rate));
       render();
-      refreshWatchAlerts();
-      $("watch-msg").textContent = `Noted: rested ${rt.dataset.rate} of 5.`;
+      $("watch-msg").textContent = msg;
       return;
     }
     const mk = e.target.closest("[data-mark]");
     if (mk) {
-      const w = readWatch(me.id), now = new Date();
-      const events = D.selfMark(w.events, mk.dataset.mark, now);
-      writeWatch(me.id, { ...w, events });
-      // with no watch night, the crew member's own marks give the estimate (src "marks")
-      if (mk.dataset.mark === "up" || mk.dataset.mark === "on") {
-        const n = D.nightSummary(events, dateKey(now));
-        if (n) { const r = D.fillDay(readLog(me.id), dateKey(now), { sleepHours: n.sleepHours }, n.basis === "marks" ? "marks" : w.mode === "sim" ? "simulated" : w.mode === "file" ? "actiware" : w.mode === "cloud" ? "centrepoint" : "marks"); if (r.filled.length) writeLog(r.log, me.id); }
-      }
+      const msg = applyMark(me.id, mk.dataset.mark);
       render();
-      refreshWatchAlerts();
-      $("watch-msg").textContent = { bed: "Noted: you went to bed.", up: "Noted: you got up.", off: "Noted: the watch is off. That time will not count as sleep.", on: "Noted: the watch is back on." }[mk.dataset.mark];
+      $("watch-msg").textContent = msg;
       return;
     }
     const b = e.target.closest("[data-dv]");

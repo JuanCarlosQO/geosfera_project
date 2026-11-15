@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="css/notify.css">
   <link rel="stylesheet" href="css/cupola.css">
   <link rel="stylesheet" href="css/devices.css">
+  <link rel="stylesheet" href="css/role.css">
   <link rel="stylesheet" href="css/dark.css">
   <link rel="icon" href="assets/favicon.png" type="image/png">
 </head>
@@ -59,9 +60,12 @@
     </div>
   </header>
 
+  <div id="role-bar" class="role-bar" hidden></div>
   <main id="station" class="station" inert></main>
 
   <nav class="dock" aria-label="Main" inert>
+    <a href="#ground" data-view="ground" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.500 2.700-6 6-6s6 2.500 6 6M14.500 14.300c.8-.2 1.600-.3 2.500-.3 2.800 0 4.500 2 4.500 5"/></svg>Crew</a>
+    <a href="#crew" data-view="crew" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg>Home</a>
     <a href="#today" data-view="today"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><polygon points="7,3 17,3 22,12 17,21 7,21 2,12"/><circle cx="12" cy="12" r="3.5"/></svg>Today</a>
     <a href="#log" data-view="log"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>Log</a>
     <a href="#mission" data-view="mission"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 8 8"/><circle cx="12" cy="12" r="3"/></svg>Mission</a>

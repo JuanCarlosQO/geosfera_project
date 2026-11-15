@@ -3,6 +3,7 @@
 
 import { watchLine } from "./devices.js";
 import { sleepCheckHtml, bindSleepCheck } from "./sleepcheck.js";
+import { isGround, isCrew } from "./role.js";
 import { SOURCES } from "./devices-core.js";
 import { confirmHere } from "./ask.js";
 import {
@@ -33,7 +34,7 @@ const UNITS = { heartRate: "bpm", bloodOxygen: "%", glucose: "mg/dL", radiationD
 
 const readJson = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
 
-function missionStart() {
+export function missionStart() {
   const saved = readJson(MISSION_KEY, null);
   if (saved?.start) return saved.start;
   const start = dateKey();
@@ -168,7 +169,7 @@ export function mountToday(host, { go }, requested) {
   const medStore = cleanStore(readJson(MEDS_KEY, null), KIT, SUPPLEMENTS);
   const rem = reminders(medStore, medList(KIT, medStore), SUPPLEMENTS);
 
-  const heroProps = { log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, reminders: rem, family: familyWaiting(member.id), who: member, stage: cupola(summary, entry) };
+  const heroProps = { log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, reminders: rem, family: isGround() ? 0 : familyWaiting(member.id), who: member, stage: cupola(summary, entry) };
   const mind = overall(mindSignals({ log, today, me: member, doses: medStore.doses, kit: KIT, alerts: getAlerts(), box: cleanBox(readJson(FAMILY_KEY, {})) }));
   const mindSt = STATUS[mind.status] ?? STATUS.none;
 
@@ -245,7 +246,7 @@ export function mountToday(host, { go }, requested) {
       </div>
     </div>
 
-    ${isToday ? sleepCheckHtml(member, { missionDay: mday }) : ""}
+    ${isToday ? sleepCheckHtml(member, { missionDay: mday, view: isCrew() ? "crew" : "ground" }) : ""}
     ${demoLoaded() ? demoNoticeHtml() : ""}
     ${crewStatusHtml(crew)}
 

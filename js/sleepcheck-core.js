@@ -85,7 +85,7 @@ export function summaryText({ name, role, missionDay, day, check, night = null, 
   if (reasons.length) lines.push(`They say: ${reasons.join("; ")}.`);
   if (a.text) lines.push(`Note: "${a.text}"`);
   lines.push(simulated ? "Data: SIMULATED (demo), not real crew data." : "Data: from the crew member's watch and their own answers.");
-  lines.push("Prepared by Ergosphere. No conclusion is drawn; for the crew medical officer to review.");
+  lines.push("Prepared by Ergosphere. No conclusion is drawn; for the flight surgeon to review.");
   return lines.join("\n");
 }
 

@@ -3,7 +3,7 @@
 // Removing takes away only what the demo wrote: its two members and their logs, its
 // medication doses and vitamin D days, and its mission start.
 
-import { buildDemo, DEMO_KEY, isDemoId } from "./demo-core.js";
+import { buildDemo, DEMO_KEY, isDemoId, DEMO_CREW } from "./demo-core.js";
 import { getCrew, saveCrew, writeLog, deleteMember } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
 import { FAMILY_KEY } from "./family-core.js";
@@ -26,6 +26,25 @@ export function loadDemo(now = new Date()) {
   write(FAMILY_KEY, { ...read(FAMILY_KEY, {}), ...d.family });
   write(DEMO_KEY, { ...d.marker, doses: d.meds.doses.map((x) => x.id), supplementDays: Object.keys(d.meds.supplements), missionStart: d.mission.start });
   return true;
+}
+
+/**
+ * A demo crew loaded by an older version of the app lacks fields added since (a woman's or a
+ * man's body, age, home, avatar), so Valentina showed a man's body. Fills only what is missing;
+ * a choice the crew member made (like an avatar) is never overwritten.
+ */
+export function refreshDemoProfiles() {
+  const crew = getCrew();
+  let changed = false;
+  for (const m of crew.members) {
+    const d = DEMO_CREW.find((x) => x.id === m.id);
+    if (!d) continue;
+    const old = m.body == null;
+    for (const k of ["body", "age", "home"]) if (m[k] == null && d[k] != null) { m[k] = d[k]; changed = true; }
+    if (old && m.avatar == null && d.avatar) { m.avatar = d.avatar; changed = true; }
+  }
+  if (changed) saveCrew(crew);
+  return changed;
 }
 
 export function removeDemo() {

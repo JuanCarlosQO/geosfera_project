@@ -152,6 +152,7 @@ export function mountLive(host, openTab) {
 
   const crewTab = `<h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
     ${sensorsHtml()}
+    <p class="fine tm-realnote">Crew vital signs here are simulated: no real astronaut vital signs are public. The real data on this screen is the radiation dose rate measured on the International Space Station. <a href="#live/rad">See the real data</a></p>
     ${fold("How real sensors connect", realHtml(), { cls: "block" })}
     <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration", "co2Personal"].map(card).join("")}</ul>
     ${fold("Your usual range", `<p class="fine">${bands.hr ? `App rule, last ${T.RULES.baselineDays} days, ${bands.hr.n} readings: heart rate ${bands.hr.low}–${bands.hr.high} bpm${bands.sys ? `, top blood pressure ${bands.sys.low}–${bands.sys.high} mmHg` : ""}. Values outside it are flagged even inside the reference range.` : `Log heart rate and blood pressure on ${T.RULES.baselineMin} days and the feed will also compare you with yourself.`}</p>`)}`;
