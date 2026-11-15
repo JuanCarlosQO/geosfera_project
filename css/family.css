@@ -26,3 +26,20 @@
 .fm-out { margin-top: 16px; border-color: var(--beacon); }
 .mind-family { margin: 0 0 18px; }
 .cl-fam { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--seam); font-size: 13px; color: var(--ink-2); text-decoration: none; }
+
+/* attachments, feeling and pause */
+.fm-photo { display: block; max-width: min(100%, 420px); border-radius: 14px; margin: 12px 0 4px; border: 1px solid var(--seam); }
+.fm-audio { display: block; width: min(100%, 420px); margin: 12px 0 4px; }
+.fm-feel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 2px; font-size: 14px; color: var(--ink-2); }
+.chip-btn { min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid var(--seam-hi); background: transparent; color: var(--ink); font: 14px var(--sans); cursor: pointer; }
+.chip-btn[aria-pressed="true"] { background: var(--beacon); border-color: var(--beacon); color: var(--beacon-ink); font-weight: 600; }
+.fm-care { border-color: var(--tone-watch); background: color-mix(in srgb, var(--tone-watch) 8%, transparent); }
+.fm-care p { margin: 0; }
+.fm-paused { border-style: dashed; }
+.fm-pause-line { margin-top: 14px; }
+.fm-guide ul { margin: 0 0 8px; padding-left: 20px; line-height: 1.6; }
+.fm-guide li { margin-bottom: 6px; }
+.fm-attach { display: grid; gap: 14px; margin: 0 0 18px; }
+.fm-attach .cta { margin: 0 10px 0 0; min-height: 44px; cursor: pointer; }
+.family a.cta { text-decoration: none; display: inline-grid; place-items: center; }
+.fm-photo[hidden], .fm-audio[hidden] { display: none; }

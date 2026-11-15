@@ -81,3 +81,57 @@ describe("family channel: privacy and sources", () => {
     assert.ok(list.every((x) => x.simulated && x.state === "sealed"));
   });
 });
+
+describe("family channel: photos and voice notes", () => {
+  const photo = `data:image/jpeg;base64,${"A".repeat(4000)}`, audio = `data:audio/webm;codecs=opus;base64,${"B".repeat(8000)}`;
+  it("accepts a JPEG photo and a short voice note, even with no text", () => {
+    const r = msg({ text: "", photo, audio });
+    assert.equal(r.ok, true);
+    assert.ok(F.hasMedia(r.message));
+    assert.equal(msg({ text: "" }).ok, false);
+  });
+  it("refuses anything that is not a capped JPEG or audio data URL", () => {
+    for (const bad of ["data:image/svg+xml;base64,AAAA", "data:text/html;base64,AAAA", "https://example.com/x.jpg", "data:image/jpeg;base64,<script>", `data:image/jpeg;base64,${"A".repeat(F.MAX_PHOTO)}`]) assert.equal(msg({ photo: bad }).ok, false, bad.slice(0, 30));
+    assert.equal(msg({ audio: "data:video/mp4;base64,AAAA" }).ok, false);
+  });
+  it("travels as a file and comes back the same; a damaged or foreign file is refused", () => {
+    const m = msg({ photo, audio }).message;
+    assert.deepEqual(F.fromFile(F.toFile(m)).message, m);
+    for (const bad of ["", "{}", "not json", JSON.stringify({ app: "other", kind: "family-message", v: 1, message: m }), F.toFile({ ...m, photo: "data:image/png;base64,AAAA" })]) assert.equal(F.fromFile(bad).ok, false);
+  });
+  it("keeps the photo and the feeling when read back from the device", () => {
+    const m = msg({ photo }).message;
+    let box = F.setState(F.receive({}, "v1", m, NOW).box, "v1", m.id, "open", NOW);
+    box = F.setFeel(box, "v1", m.id, "better");
+    const c = F.cleanBox(JSON.parse(JSON.stringify(box)));
+    assert.equal(c.v1[0].photo, photo);
+    assert.equal(c.v1[0].feel, "better");
+  });
+});
+
+describe("family channel: protections", () => {
+  const three = [0, 1, 2].map((i) => msg({ text: `message ${i}`, at: new Date(NOW.getTime() + i * 60000) }).message);
+  const boxWith = () => three.reduce((b, m, i) => F.receive(b, "v1", m, new Date(NOW.getTime() + i * 60000)).box, {});
+  it("when paused, messages are still kept but nothing announces them", () => {
+    let box = boxWith();
+    assert.equal(F.announced(box, "v1"), 3);
+    box = F.setPaused(box, "v1", true);
+    assert.equal(F.announced(box, "v1"), 0);
+    assert.equal(F.waiting(box, "v1"), 3, "still there, sealed");
+    assert.equal(F.isPaused(F.cleanBox(JSON.parse(JSON.stringify(box))), "v1"), true);
+    box = F.receive(box, "v1", msg({ text: "one more" }).message, NOW).box;
+    assert.equal(F.waiting(box, "v1"), 4);
+    assert.equal(F.setPaused(box, "v1", false)._prefs, undefined);
+  });
+  it("suggests talking to someone only after two reads in a row left them more homesick", () => {
+    let box = boxWith();
+    three.forEach((m, i) => { box = F.setState(box, "v1", m.id, "open", new Date(NOW.getTime() + (i + 5) * 60000)); });
+    box = F.setFeel(box, "v1", three[0].id, "worse");
+    assert.equal(F.homesick(box, "v1"), false);
+    box = F.setFeel(box, "v1", three[1].id, "worse");
+    assert.equal(F.homesick(box, "v1"), true);
+    box = F.setFeel(box, "v1", three[2].id, "better");
+    assert.equal(F.homesick(box, "v1"), false);
+    assert.deepEqual(F.setFeel(box, "v1", three[2].id, "angry"), box);
+  });
+});
