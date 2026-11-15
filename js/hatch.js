@@ -5,6 +5,8 @@ import * as core from "./access-core.js";
 import { current, getCrew, setActive } from "./store.js";
 import { logKeyFor } from "./crew-core.js";
 import { DEMO_CODES } from "./demo-core.js";
+import { avatarHtml, AVATARS, avatarSrc } from "./avatar.js";
+import { saveCrew } from "./store.js";
 
 const STORE = "geosfera.crew-access";
 const OPEN_DURATION = 3800;
@@ -48,9 +50,10 @@ function crewHtml(members, store) {
     const demo = DEMO_CODES[m.id];
     const line = demo ? `<span class="hs-code">Demo code <b>${spaced(demo)}</b></span>` : rec ? `<span class="hs-code">Code set</span>` : `<span class="hs-code">First time: choose a code</span>`;
     return `<li style="--i:${i}"><button type="button" class="hs-prof" data-pick="${esc(m.id)}">
-      <span class="hs-avatar big" data-body="${m.body ?? ""}" aria-hidden="true">${initials(m.name)}</span>
+      ${avatarHtml(m, "hs-pic")}
       <span class="hs-prof-txt"><strong>${esc(m.name)}</strong><small>${esc(m.role)}${m.age ? ` · ${m.age}` : ""}${m.home ? ` · ${esc(m.home)}` : ""}</small>${line}</span>
-      <span class="hs-go" aria-hidden="true">›</span></button></li>`;
+      <span class="hs-go" aria-hidden="true">›</span></button>
+      <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose a picture for ${esc(m.name)}">✎ Picture</button></li>`;
   }).join("")}</ul>
   ${members.some((m) => DEMO_CODES[m.id]) ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them.</p>` : ""}`;
 }
@@ -414,9 +417,29 @@ export class Hatch {
     }
   }
 
+  /** A small sheet of portraits to choose from (only the ones whose file exists show). */
+  chooseAvatar(id) {
+    const m = this.members.find((x) => x.id === id);
+    if (!m) return;
+    const sheet = this.ui.crew.querySelector(".hs-avs") ?? Object.assign(document.createElement("div"), { className: "hs-avs" });
+    sheet.innerHTML = `<p><strong>Picture for ${esc(m.name.split(" ")[0])}</strong></p>
+      <div class="hs-av-grid">${AVATARS.map((a) => `<button type="button" class="hs-av-opt" data-avatar="${a.id}" data-for="${esc(id)}" aria-pressed="${m.avatar === a.id}"><img src="${avatarSrc(a.id)}" alt="Portrait ${a.id}" onerror="this.closest('button').hidden=true"></button>`).join("")}
+        <button type="button" class="hs-av-opt ini" data-avatar="" data-for="${esc(id)}" aria-pressed="${!m.avatar}">${avatarHtml({ ...m, avatar: null }, "hs-pic")}<small>Initials</small></button></div>`;
+    this.ui.crew.append(sheet);
+    sheet.scrollIntoView({ block: "nearest" });
+  }
+
   async onClick(e) {
     const btn = e.target.closest("button");
     if (!btn) return;
+    if (btn.dataset.avatarFor !== undefined) { this.chooseAvatar(btn.dataset.avatarFor); return; }
+    if (btn.dataset.avatar !== undefined) {
+      const crew = getCrew();
+      const m = crew.members.find((x) => x.id === btn.dataset.for);
+      if (m) { if (btn.dataset.avatar) m.avatar = btn.dataset.avatar; else delete m.avatar; saveCrew(crew); this.members = crew.members; }
+      this.goTo("who");
+      return;
+    }
     if (btn.dataset.pick !== undefined) { if (!this.working) await this.pick(btn.dataset.pick); return; }
     if (btn.dataset.key !== undefined) { if (Date.now() - (this.pointerAt ?? 0) > 700) this.press(Number(btn.dataset.key)); return; }
 

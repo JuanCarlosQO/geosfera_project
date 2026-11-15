@@ -314,7 +314,7 @@ export function binActivity(samples) {
  *  - each event-marker press is kept as the crew member's own mark, made on the watch;
  *  - activity counts are kept in 15-minute bins.
  */
-export function parseActiwareEpochs(text) {
+export function parseActiwareEpochs(text, opts = {}) {
   const lines = String(text ?? "").replace(/^\uFEFF/, "").split(/\r?\n/);
   for (let i = 0; i < lines.length; i += 1) {
     const sep = [",", ";", "\t"].find((c) => lines[i].includes(c));
@@ -340,50 +340,85 @@ export function parseActiwareEpochs(text) {
     }
     if (rows.length < 2) return { ok: false, why: "The file has the epoch table, but too few rows could be read." };
     rows.sort((a, b) => a.t - b.t);
-    const gaps = rows.slice(1).map((r, k) => r.t - rows[k].t).filter((g) => g > 0).sort((a, b) => a - b);
-    const step = gaps[Math.floor(gaps.length / 2)] ?? MIN;
-    const events = [];
-    const src = "actiware";
-    // runs of a condition -> [start, end) pairs
-    const runs = (test) => {
-      const out = [];
-      let start = null;
-      rows.forEach((r, k) => {
-        const on = test(r);
-        if (on && start == null) start = r.t;
-        const last = k === rows.length - 1 || rows[k + 1].t - r.t > step * 1.5;
-        if (start != null && (!on || last)) { out.push([start, on ? r.t + step : r.t]); start = null; }
-      });
-      return out;
-    };
-    for (const [a, b] of runs((r) => r.off === 1)) events.push({ kind: "off", at: iso(a), until: iso(b), src }, { kind: "on", at: iso(b), src });
-    const rests = runs((r) => r.int === "REST" || r.int === "REST-SLEEP" || r.int === "REST-S");
-    for (const [a, b] of rests) events.push({ kind: "bed", at: iso(a), src: "actiware-rest" }, { kind: "up", at: iso(b), src: "actiware-rest" });
-    for (const r of rows) if (r.mark) events.push({ kind: "press", at: iso(r.t), src });
-    // sleep: inside each rest interval when there is one, otherwise each run of sleep longer than 3 hours
-    const windows = rests.length ? rests : runs((r) => r.sw === "S").filter(([a, b]) => b - a >= 3 * 60 * MIN);
-    for (const [a, b] of windows) {
-      const inside = rows.filter((r) => r.t >= a && r.t < b && r.sw);
-      const sleeps = inside.filter((r) => r.sw === "S");
-      if (!sleeps.length) continue;
-      const s0 = sleeps[0].t, s1 = sleeps[sleeps.length - 1].t + step;
-      events.push({ kind: "asleep", at: iso(s0), src }, { kind: "wake", at: iso(s1), src });
-      let w0 = null;
-      for (const r of inside.filter((x) => x.t >= s0 && x.t < s1)) {
-        if (r.sw === "W" && w0 == null) w0 = r.t;
-        if (r.sw === "S" && w0 != null) { if (r.t - w0 >= AWAKE_MIN * MIN) events.push({ kind: "awake", at: iso(w0), until: iso(r.t), src }); w0 = null; }
-      }
-    }
-    const clean = cleanEvents(events);
-    const nights = [...new Set(clean.filter((e) => e.kind === "wake" || e.kind === "up").map((e) => dayOf(e.at)))].map((d) => nightSummary(clean, d)).filter(Boolean);
-    return { ok: true, kind: "epoch", events: clean, nights, rows: rows.length, epochSec: Math.round(step / 1000), activity: binActivity(rows) };
+    return { ok: true, kind: "epoch", ...fromRows(rows, opts), packed: packRows(rows, rows[rows.length - 1].t - 4 * 24 * 60 * MIN) };
   }
   return { ok: false, why: "No epoch table (date, time and activity, off-wrist or sleep/wake columns)." };
 }
 
+/* ---------- calibration: Actiware's own sleep/wake scoring with a chosen wake threshold ---------- */
+
+// Actiware's manual: an epoch is WAKE when its "total activity counts" exceed the wake threshold;
+// for 1-minute epochs the total weighs the two minutes on each side: 1/25, 1/5, 1, 1/5, 1/25.
+// Thresholds: Low 20, Medium 40, High 80 ("The higher the Wake Threshold, the fewer the number of
+// epochs scored as wake"). Only the 1-minute formula is written out in the manual, so other epoch
+// lengths keep the score already in the file. Raising the threshold for microgravity (floating
+// arms) is a team hypothesis, NOT validated.
+export const WAKE_THRESHOLDS = { low: 20, medium: 40, high: 80 };
+const WEIGHTS_1MIN = [1 / 25, 1 / 5, 1, 1 / 5, 1 / 25];
+
+/** Rescored copy of the rows (1-minute epochs only); off-the-wrist minutes get no score. */
+export function scoreSleepWake(rows, step, threshold) {
+  if (!Number.isFinite(threshold) || Math.round(step / 1000) !== 60) return { rows, rescored: false };
+  const out = rows.map((r, i) => {
+    if (r.off === 1 || r.ac == null) return { ...r, sw: null };
+    let total = 0;
+    for (let k = -2; k <= 2; k += 1) {
+      const n = rows[i + k];
+      if (!n || n.off === 1 || n.ac == null || Math.abs(n.t - r.t - k * step) > step / 2) continue; // only true neighbours
+      total += n.ac * WEIGHTS_1MIN[k + 2];
+    }
+    return { ...r, sw: total <= threshold ? "S" : "W" };
+  });
+  return { rows: out, rescored: true };
+}
+
+/** Everything the reader builds from the epoch rows; `threshold` rescores sleep/wake. */
+export function fromRows(rows0, { threshold = null } = {}) {
+  const gaps = rows0.slice(1).map((r, k) => r.t - rows0[k].t).filter((g) => g > 0).sort((a, b) => a - b);
+  const step = gaps[Math.floor(gaps.length / 2)] ?? MIN;
+  const { rows, rescored } = scoreSleepWake(rows0, step, threshold);
+  const events = [];
+  const src = "actiware";
+  const runs = (test) => {
+    const out = [];
+    let start = null;
+    rows.forEach((r, k) => {
+      const on = test(r);
+      if (on && start == null) start = r.t;
+      const last = k === rows.length - 1 || rows[k + 1].t - r.t > step * 1.5;
+      if (start != null && (!on || last)) { out.push([start, on ? r.t + step : r.t]); start = null; }
+    });
+    return out;
+  };
+  for (const [a, b] of runs((r) => r.off === 1)) events.push({ kind: "off", at: iso(a), until: iso(b), src }, { kind: "on", at: iso(b), src });
+  const rests = runs((r) => r.int === "REST" || r.int === "REST-SLEEP" || r.int === "REST-S");
+  for (const [a, b] of rests) events.push({ kind: "bed", at: iso(a), src: "actiware-rest" }, { kind: "up", at: iso(b), src: "actiware-rest" });
+  for (const r of rows) if (r.mark) events.push({ kind: "press", at: iso(r.t), src });
+  const windows = rests.length ? rests : runs((r) => r.sw === "S").filter(([a, b]) => b - a >= 3 * 60 * MIN);
+  for (const [a, b] of windows) {
+    const inside = rows.filter((r) => r.t >= a && r.t < b && r.sw);
+    const sleeps = inside.filter((r) => r.sw === "S");
+    if (!sleeps.length) continue;
+    const s0 = sleeps[0].t, s1 = sleeps[sleeps.length - 1].t + step;
+    events.push({ kind: "asleep", at: iso(s0), src }, { kind: "wake", at: iso(s1), src });
+    let w0 = null;
+    for (const r of inside.filter((x) => x.t >= s0 && x.t < s1)) {
+      if (r.sw === "W" && w0 == null) w0 = r.t;
+      if (r.sw === "S" && w0 != null) { if (r.t - w0 >= AWAKE_MIN * MIN) events.push({ kind: "awake", at: iso(w0), until: iso(r.t), src }); w0 = null; }
+    }
+  }
+  const clean = cleanEvents(events);
+  const nights = [...new Set(clean.filter((e) => e.kind === "wake" || e.kind === "up").map((e) => dayOf(e.at)))].map((d) => nightSummary(clean, d)).filter(Boolean);
+  return { events: clean, nights, rows: rows.length, epochSec: Math.round(step / 1000), activity: binActivity(rows), scoredBy: rescored ? threshold : "file" };
+}
+
+/** The rows kept on the device so the night can be rescored later: [t, ac, off, sw, mark, int]. */
+export const packRows = (rows, keepFrom = 0) => rows.filter((r) => r.t >= keepFrom).map((r) => [r.t, r.ac, r.off, r.sw === "S" ? 0 : r.sw === "W" ? 1 : null, r.mark ? 1 : 0, r.int?.[0] === "R" ? (r.int.includes("S") ? "RS" : "R") : r.int?.[0] === "E" ? "E" : "A"]);
+export const unpackRows = (packed) => (Array.isArray(packed) ? packed : []).filter((x) => Array.isArray(x) && Number.isFinite(x[0])).map(([t, ac, off, sw, mark, int]) => ({ t, ac: Number.isFinite(ac) ? ac : null, off: off === 1 ? 1 : off === 0 ? 0 : null, sw: sw === 0 ? "S" : sw === 1 ? "W" : null, mark: mark === 1, int: int === "R" ? "REST" : int === "RS" ? "REST-SLEEP" : int === "E" ? "EXCLUDED" : "ACTIVE" }));
+
 /** Reads either Actiware export: the epoch-by-epoch list or the interval statistics. */
-export function readActiwareFile(text) {
-  const e = parseActiwareEpochs(text);
+export function readActiwareFile(text, opts = {}) {
+  const e = parseActiwareEpochs(text, opts);
   if (e.ok) return e;
   const r = parseActiware(text);
   return r.ok ? { ...r, kind: "intervals" } : { ok: false, why: "This file is neither Actiware's epoch-by-epoch list nor its interval statistics." };

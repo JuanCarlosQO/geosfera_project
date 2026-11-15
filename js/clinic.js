@@ -3,6 +3,7 @@
 // gauge and today's readings. It shows only what the crew member logged; nothing here is
 // a health score. The night theme keeps the Cupola.
 
+import { avatarHtml } from "./avatar.js";
 import { figureSvg } from "./anatomy.js";
 import { WINDOWS, series, EXERCISE_GOAL_MIN } from "./today-core.js";
 import { STATUS } from "./data/body-systems.js";
@@ -73,7 +74,7 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
   const info = `<section class="cl-card cl-info" aria-labelledby="cl-info-h">
         <div class="cl-info-head"><h2 id="cl-info-h">Crew member</h2><button type="button" class="cl-signout" data-action="signout">Sign out</button></div>
         <div class="cl-info-grid">
-          <div class="cl-avatar" aria-hidden="true"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="26" r="15"/><path d="M22 26a10 8 0 0 1 20 0v3a10 6 0 0 1-20 0z"/><path d="M12 56c2-9 9-13 20-13s18 4 20 13"/><path d="M26 47v6M38 47v6"/></svg></div>
+          <div class="cl-avatar" aria-hidden="true">${avatarHtml(who, "cl-av")}</div>
           <dl>
             <div class="cl-who">${name}</div>
             <div><dt>Role</dt><dd>${role}</dd></div>

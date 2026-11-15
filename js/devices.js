@@ -15,6 +15,7 @@ import * as F from "./family-core.js";
 import { fold } from "./fold.js";
 import { LIMIT_FACTS } from "./data/telemetry.js";
 import { DEVICE_FACTS } from "./data/devices.js";
+import { setWatchAlerts } from "./alarm.js";
 
 export const WATCH_KEY = "geosfera.watch"; // { [memberId]: { mode, events, lastSync, file } }
 export const ACTIGRAPH_KEY = "geosfera.actigraph"; // { [memberId]: { subject, code } }, this device only
@@ -43,7 +44,8 @@ function cleanActivity(raw, now = Date.now()) {
 }
 function readWatch(id) {
   const w = readAll()[id] ?? {};
-  return { mode: MODES.some((m) => m.id === w.mode) ? w.mode : "sim", events: D.cleanEvents(w.events), lastSync: w.lastSync ?? null, file: typeof w.file === "string" ? w.file.slice(0, 80) : null, activity: cleanActivity(w.activity) };
+  return { mode: MODES.some((m) => m.id === w.mode) ? w.mode : "sim", events: D.cleanEvents(w.events), lastSync: w.lastSync ?? null, file: typeof w.file === "string" ? w.file.slice(0, 80) : null, activity: cleanActivity(w.activity),
+    epochs: Array.isArray(w.epochs) ? w.epochs : null, threshold: [20, 40, 80].includes(w.threshold) ? w.threshold : "file" };
 }
 function writeWatch(id, w) {
   const all = readAll();
@@ -95,6 +97,28 @@ export function followEva(feed) {
     finishEva(me.id);
   }
 }
+
+/* ---------- alerts from the watch, in the bar at the top of every screen ---------- */
+
+export const SHORT_NIGHT_H = 7; // NASA cites 7-9 hours for an adult (docs/SOURCES.md); below 7 is "Watch"
+const SEEN_KEY = "geosfera.watch-seen"; // { [memberId]: "YYYY-MM-DD" } the day the short-night alert was seen
+const readSeen = () => { try { return JSON.parse(localStorage.getItem(SEEN_KEY)) ?? {}; } catch { return {}; } };
+
+/** The watch alerts for the active crew member right now. */
+export function watchAlerts(now = new Date()) {
+  const me = current();
+  if (!me) return [];
+  const w = readWatch(me.id);
+  if (w.mode === "off") return [];
+  const out = [];
+  const off = D.offNow(w.events, now);
+  if (off?.remind) out.push({ id: "watch-off", status: "watch", title: `Watch off for ${dur(off.minutes)}: put it back on`, href: "#devices" });
+  const today = dateKey(now);
+  const n = D.nightSummary(w.events, today);
+  if (n && n.sleepHours < SHORT_NIGHT_H && readSeen()[me.id] !== today) out.push({ id: `short-night-${today}`, status: "watch", title: `Short night: ${n.sleepHours} h asleep (NASA cites 7–9 h)`, href: "#devices" });
+  return out;
+}
+export function refreshWatchAlerts() { setWatchAlerts(watchAlerts()); }
 
 let lastAuto = 0;
 /**
@@ -173,6 +197,17 @@ function eventsHtml(events) {
 }
 
 /** The crew member's own taps: they count even when the watch says nothing. */
+/** Calibration of the minute-by-minute file: Actiware's wake threshold. */
+function calibHtml(w) {
+  if (!w.epochs) return "";
+  const opt = (v, label) => `<label class="chip"><input type="radio" name="wake-threshold" value="${v}" ${String(w.threshold) === String(v) ? "checked" : ""}><span>${label}</span></label>`;
+  return `<div class="dv-calib">
+    <p class="mono dv-kind">CALIBRATION · HOW STILL MEANS ASLEEP</p>
+    <div class="chips" role="radiogroup" aria-label="Wake threshold">${opt("file", "As scored in the file")}${opt(20, "Low · 20")}${opt(40, "Medium · 40")}${opt(80, "High · 80")}</div>
+    <p class="fine">Actiware counts a minute as awake when its weighted activity (the minute and two on each side) is above this threshold; the higher it is, the fewer minutes count as awake. High (80) is the team's idea for microgravity, where arms float while asleep: <strong>a hypothesis, not validated</strong>. Applies to 1-minute files.</p>
+  </div>`;
+}
+
 function marksHtml(events, w) {
   const off = D.offNow(events);
   const last = [...events].reverse().find((e) => e.kind === "bed" || e.kind === "up");
@@ -212,6 +247,7 @@ function watchHtml(w, log, today) {
       ${s.rested ? `<div><strong>${s.rested}/5</strong><small>how rested you felt (you)</small></div>` : ""}
     </div>${timeline(w.events, s.day, w.activity)}
     <p class="tl-key"><span class="k-ac"></span>wrist activity <span class="k-sleep"></span>estimated asleep <span class="k-awake"></span>awake <span class="k-off"></span>watch off <span class="k-gap"></span>not counted <span class="k-pin"></span>your marks <span class="k-eva"></span>spacewalk</p>` : `<p class="fine">No night recorded yet.</p>`}
+    ${calibHtml(w)}
     ${w.mode === "off" ? "" : marksHtml(w.events, w)}
     ${fold("Everything the watch recorded", eventsHtml(w.events))}
     <div class="chips" role="radiogroup" aria-label="Where the watch data comes from">${MODES.map((m) => `<label class="chip"><input type="radio" name="watch-mode" value="${m.id}" ${w.mode === m.id ? "checked" : ""}><span>${m.label}</span></label>`).join("")}</div>
@@ -279,6 +315,7 @@ function liveHtml() {
 
 export function mountDevices(host) {
   const me = current();
+  try { const seen = readSeen(); seen[me.id] = dateKey(); localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch { /* storage blocked */ }
   autoSync({ force: true });
   const today = dateKey();
   const render = () => {
@@ -346,6 +383,21 @@ export function mountDevices(host) {
   }
 
   host.addEventListener("change", async (e) => {
+    if (e.target.name === "wake-threshold") {
+      const w = readWatch(me.id);
+      const threshold = e.target.value === "file" ? "file" : Number(e.target.value);
+      const r = D.fromRows(D.unpackRows(w.epochs), { threshold: threshold === "file" ? null : threshold });
+      const events = D.addEvents(w.events.filter((x) => x.src !== "actiware" && x.src !== "actiware-rest"), r.events, new Date(), 60);
+      let log = readLog(me.id);
+      for (const n of r.nights.map((x) => D.nightSummary(events, x.day)).filter(Boolean)) log = D.fillDay(log, n.day, { sleepHours: n.sleepHours }, "actiware").log;
+      writeLog(log, me.id);
+      writeWatch(me.id, { ...w, events, threshold });
+      render();
+      const n = D.nightSummary(events, r.nights.at(-1)?.day ?? dateKey());
+      $("watch-msg").textContent = r.scoredBy === "file" ? "Using the sleep/wake score already in the file." : `Rescored with a wake threshold of ${threshold}${n ? `: ${n.sleepHours} h asleep, ${n.awakenings} awakenings` : ""}.`;
+      refreshWatchAlerts();
+      return;
+    }
     if (e.target.name === "watch-mode") {
       const w = readWatch(me.id);
       writeWatch(me.id, { ...w, mode: e.target.value });
@@ -356,7 +408,7 @@ export function mountDevices(host) {
     if (e.target.matches('[data-ref="file"]')) {
       const f = e.target.files?.[0];
       if (!f) return;
-      const r = D.readActiwareFile(await f.text());
+      const r = D.readActiwareFile(await f.text(), { threshold: readWatch(me.id).threshold === "file" ? null : readWatch(me.id).threshold });
       if (!r.ok) { $("watch-msg").textContent = r.why; return; }
       const w = readWatch(me.id);
       const times = r.events.map((x) => Date.parse(x.at));
@@ -364,7 +416,7 @@ export function mountDevices(host) {
       let log = readLog(me.id);
       for (const n of r.nights.map((x) => D.nightSummary(events, x.day)).filter(Boolean)) log = D.fillDay(log, n.day, { sleepHours: n.sleepHours }, "actiware").log;
       writeLog(log, me.id);
-      writeWatch(me.id, { mode: "file", events: D.addEvents([], events, new Date(), 60), activity: cleanActivity({ ...(r.activity ?? {}) }), lastSync: new Date().toISOString(), file: f.name });
+      writeWatch(me.id, { mode: "file", events: D.addEvents([], events, new Date(), 60), activity: cleanActivity({ ...(r.activity ?? {}) }), lastSync: new Date().toISOString(), file: f.name, epochs: r.packed ?? null, threshold: w.threshold });
       render();
       $("watch-msg").textContent = r.kind === "epoch"
         ? `Read ${r.rows} epochs of ${r.epochSec} s: ${r.nights.length} ${r.nights.length === 1 ? "night" : "nights"}, wrist activity and time off the wrist added from the file.`
@@ -401,6 +453,7 @@ export function mountDevices(host) {
       const w = readWatch(me.id);
       writeWatch(me.id, { ...w, events: D.selfMark(w.events, "rated", new Date(), Number(rt.dataset.rate)) });
       render();
+      refreshWatchAlerts();
       $("watch-msg").textContent = `Noted: rested ${rt.dataset.rate} of 5.`;
       return;
     }
@@ -415,6 +468,7 @@ export function mountDevices(host) {
         if (n) { const r = D.fillDay(readLog(me.id), dateKey(now), { sleepHours: n.sleepHours }, n.basis === "marks" ? "marks" : w.mode === "sim" ? "simulated" : w.mode === "file" ? "actiware" : w.mode === "cloud" ? "centrepoint" : "marks"); if (r.filled.length) writeLog(r.log, me.id); }
       }
       render();
+      refreshWatchAlerts();
       $("watch-msg").textContent = { bed: "Noted: you went to bed.", up: "Noted: you got up.", off: "Noted: the watch is off. That time will not count as sleep.", on: "Noted: the watch is back on." }[mk.dataset.mark];
       return;
     }

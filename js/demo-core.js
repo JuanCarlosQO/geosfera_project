@@ -15,8 +15,8 @@ export const DEMO_NOTE = "Demo crew: fictional people, simulated values. Not rea
 // Two fictional astronauts for the demo and the judges: a woman and a man, each with their own
 // body picture and their own code (shown on the profile screen, since anyone may try the demo).
 export const DEMO_CREW = [
-  { id: "demo-vreyes", name: "Valentina Reyes", role: "Commander", body: "f", age: 41, home: "Colombia" },
-  { id: "demo-tokafor", name: "Tomás Okafor", role: "Flight Engineer", body: "m", age: 36, home: "Nigeria" }
+  { id: "demo-vreyes", name: "Valentina Reyes", role: "Commander", body: "f", age: 41, home: "Colombia", avatar: "f1" },
+  { id: "demo-tokafor", name: "Tomás Okafor", role: "Flight Engineer", body: "m", age: 36, home: "Nigeria", avatar: "m1" }
 ];
 export const DEMO_CODES = { "demo-vreyes": "3719", "demo-tokafor": "8264" };
 

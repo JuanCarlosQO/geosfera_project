@@ -98,3 +98,6 @@
 .dv-rate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .dv-rate .chip-btn { min-width: 44px; min-height: 44px; }
 .dv-acts .textlink + .textlink { margin-left: 4px; }
+.dv-calib { margin: 14px 0 6px; padding: 12px; border-radius: 14px; background: var(--soft, transparent); border: 1px solid var(--seam); }
+.dv-calib .chips { margin: 8px 0; }
+.dv-calib strong { color: var(--tone-watch); }

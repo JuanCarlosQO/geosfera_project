@@ -61,6 +61,18 @@ let openSleepScreen = () => {};
 /** Opens sleep mode (the bedside screen). */
 export const goToSleep = () => openSleepScreen();
 
+// Alerts that come from the watch, not from the live feed (devices.js decides them):
+// [{ id, status: "watch" | "act", title, href }]. They share the same bar and chime.
+let watchAlerts = [];
+let repaint = () => {};
+const chimed = new Set();
+export function setWatchAlerts(list) {
+  watchAlerts = Array.isArray(list) ? list : [];
+  for (const a of watchAlerts) if (!chimed.has(a.id)) { chimed.add(a.id); sound(a.status === "act" ? "act" : "watch"); }
+  for (const id of [...chimed]) if (!watchAlerts.some((a) => a.id === id)) chimed.delete(id); // it may sound again if it comes back
+  repaint();
+}
+
 export function mountAlarm() {
   const bar = Object.assign(document.createElement("div"), { className: "al-bar", hidden: true });
   bar.setAttribute("role", "alert");
@@ -89,20 +101,21 @@ export function mountAlarm() {
   }
 
   function paintBar(f) {
-    const top = acts(f)[0] ?? f.steady[0];
+    const all = [...f.steady, ...watchAlerts];
+    const top = acts(f)[0] ?? watchAlerts.find((a) => a.status === "act") ?? f.steady[0] ?? watchAlerts[0];
     document.body.classList.toggle("al-on", Boolean(top));
     document.body.classList.toggle("al-act", Boolean(top) && top.status === "act");
     if (!top) { bar.hidden = true; barSig = ""; return; }
     const quiet = acts(f).map((a) => a.id).join(",") === silenced || !acts(f).length;
-    const sig = `${f.steady.map((a) => `${a.id}:${a.status}`).join(",")}|${quiet}|${soundOn()}`;
+    const sig = `${all.map((a) => `${a.id}:${a.status}:${a.title ?? ""}`).join(",")}|${quiet}|${soundOn()}`;
     if (sig === barSig) return;
     barSig = sig;
     const st = STATUS[top.status];
-    const more = f.steady.length - 1;
+    const more = all.length - 1;
     bar.hidden = false;
     bar.dataset.level = top.status;
     bar.innerHTML = `<span class="al-icon" aria-hidden="true">${top.status === "act" ? "!" : st.shape}</span>
-      <a class="al-text" href="#live" data-al="open"><strong>${st.word}</strong><span>${esc(RESPONSES[top.id].title)}${more > 0 ? ` <small>+${more} more</small>` : ""}</span><small class="al-go">What to do →</small></a>
+      <a class="al-text" href="${top.href ?? "#live"}" data-al="open"><strong>${st.word}</strong><span>${esc(top.title ?? RESPONSES[top.id].title)}${more > 0 ? ` <small>+${more} more</small>` : ""}</span><small class="al-go">What to do →</small></a>
       ${top.status === "act" && !quiet && soundOn() ? `<button type="button" class="al-btn" data-al="silence">Silence</button>` : `<button type="button" class="al-btn al-ghost" data-al="sound" aria-pressed="${soundOn()}">${soundOn() ? "Sound on" : "Sound off"}</button>`}`;
   }
 
@@ -173,6 +186,7 @@ export function mountAlarm() {
   }
 
   subscribe((f, raised) => { soundLoop(f, raised); paintBar(f); paintBed(f); });
+  repaint = () => { const f = snapshot() ?? startFeed(); barSig = ""; paintBar(f); };
 
   bar.addEventListener("click", (e) => {
     const f = snapshot();

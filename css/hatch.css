@@ -194,3 +194,16 @@
 @media (prefers-reduced-motion: reduce) { .hs-crew-list li { animation: none; } }
 .hs-title .hs-who[hidden] { display: none; }
 .hs-top { gap: 14px; }
+.hs-crew-list li { position: relative; }
+.hs-pic { width: 54px; height: 54px; flex: none; font-size: 54px; }
+.hs-pic-btn { position: absolute; right: 44px; top: 10px; min-height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid var(--seam); background: var(--hull); color: var(--ink-2); font: 500 12px var(--sans); cursor: pointer; }
+.hs-avs { margin-top: 14px; padding: 14px; border-radius: 18px; border: 1px solid var(--seam); background: var(--hull); }
+.hs-avs p { margin: 0 0 10px; }
+.hs-av-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.hs-av-opt { aspect-ratio: 1; padding: 0; border-radius: 50%; border: 2px solid transparent; background: var(--soft, transparent); overflow: hidden; cursor: pointer; display: grid; place-items: center; position: relative; }
+.hs-av-opt[hidden] { display: none; }
+.hs-av-opt img { width: 100%; height: 100%; object-fit: cover; }
+.hs-av-opt[aria-pressed="true"] { border-color: var(--beacon); box-shadow: 0 0 0 3px color-mix(in srgb, var(--beacon) 25%, transparent); }
+.hs-av-opt.ini { border-radius: 16px; display: flex; flex-direction: column; gap: 4px; }
+.hs-av-opt.ini .hs-pic { width: 44px; height: 44px; font-size: 44px; }
+.hs-av-opt small { font-size: 11px; color: var(--ink-3); }

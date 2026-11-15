@@ -2,6 +2,7 @@
 // NASA's five hazards, what to do now, radiation and every reading with a trend and a reason.
 
 import { watchLine } from "./devices.js";
+import { sleepCheckHtml, bindSleepCheck } from "./sleepcheck.js";
 import { SOURCES } from "./devices-core.js";
 import { confirmHere } from "./ask.js";
 import {
@@ -244,6 +245,7 @@ export function mountToday(host, { go }, requested) {
       </div>
     </div>
 
+    ${isToday ? sleepCheckHtml(member, { missionDay: mday }) : ""}
     ${demoLoaded() ? demoNoticeHtml() : ""}
     ${crewStatusHtml(crew)}
 
@@ -288,6 +290,12 @@ export function mountToday(host, { go }, requested) {
       const b = e.target.closest(".pane-btn");
       if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPane(b); }
     });
+  });
+  // the morning sleep check: bound to this render's section, so repaints never double it
+  bindSleepCheck(host.querySelector(".today"), () => member, () => {
+    const n = watchLine(member.id)?.night;
+    const t = (x) => new Date(x).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    return n ? { asleep: t(n.asleep), wake: t(n.wake), awakenings: n.awakenings, awakeMin: n.awakeMin, offInSleepMin: n.offInSleepMin } : null;
   });
   host.querySelector(".stepper").addEventListener("click", (e) => {
     const b = e.target.closest("[data-day]");

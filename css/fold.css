@@ -125,3 +125,12 @@ a.cta-wide, a.cta-wide:visited, a.cta-wide:hover { color: #ffffff !important; }
 .cl-info-head h2 { margin: 0; }
 .cl-signout { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--seam-hi); background: transparent; color: var(--ink-2); font: 500 13px var(--sans); cursor: pointer; }
 .cl-signout:hover { border-color: var(--beacon); color: var(--beacon); }
+
+/* crew pictures: a chosen portrait, or initials on a colour that follows the body */
+.av { position: relative; display: inline-grid; place-items: center; overflow: hidden; border-radius: 50%; color: #ffffff; font-weight: 600; background: linear-gradient(135deg, #2f5bea, #28b3c9); }
+.av[data-body="f"] { background: linear-gradient(135deg, #5b7cff, #a46bff); }
+.av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.av-ini { font-size: .38em; letter-spacing: .02em; }
+.cl-avatar .cl-av { width: 100%; height: 100%; border-radius: 16px; font-size: 64px; }
+.cc-fig .cc-photo { height: 100%; width: auto; object-fit: contain; }
+.cc-fig .cc-av { position: absolute; right: -8px; bottom: -4px; width: 30px; height: 30px; font-size: 30px; border: 2px solid var(--hull); }

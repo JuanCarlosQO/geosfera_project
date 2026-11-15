@@ -282,3 +282,34 @@ describe("Actiware's epoch-by-epoch list (columns as the Actiware manual defines
     assert.deepEqual(D.selfMark([], "rated", new Date(), 9), []);
   });
 });
+
+describe("calibration: Actiware's sleep/wake scoring with a chosen wake threshold", () => {
+  it("weighs the minute and its neighbours as the Actiware manual's example does (37.68)", () => {
+    const t0 = new Date(2026, 10, 14, 11, 58).getTime();
+    const rows = [100, 42, 20, 13, 67].map((ac, i) => ({ t: t0 + i * 60000, ac, off: 0, sw: null }));
+    const at40 = D.scoreSleepWake(rows, 60000, 40).rows[2].sw;
+    const at20 = D.scoreSleepWake(rows, 60000, 20).rows[2].sw;
+    assert.equal(at40, "S", "37.68 <= 40 is sleep");
+    assert.equal(at20, "W", "37.68 > 20 is wake");
+    assert.deepEqual(D.WAKE_THRESHOLDS, { low: 20, medium: 40, high: 80 });
+  });
+  it("leaves other epoch lengths and off-wrist minutes alone", () => {
+    const rows = [{ t: 0, ac: 50, off: 0, sw: "W" }, { t: 30000, ac: 50, off: 1, sw: null }];
+    assert.equal(D.scoreSleepWake(rows, 30000, 80).rescored, false);
+    assert.equal(D.scoreSleepWake([{ t: 0, ac: 5, off: 1, sw: "S" }], 60000, 80).rows[0].sw, null);
+  });
+  it("a higher threshold scores fewer minutes awake, so more sleep (a hypothesis for microgravity, not validated)", () => {
+    const csv = require_sample();
+    const a = D.readActiwareFile(csv, { threshold: 20 }), b = D.readActiwareFile(csv, { threshold: 80 });
+    assert.equal(a.scoredBy, 20);
+    assert.equal(b.scoredBy, 80);
+    const sa = a.nights[0], sb = b.nights[0];
+    assert.ok(sb.sleepHours >= sa.sleepHours, `${sa.sleepHours} -> ${sb.sleepHours}`);
+    assert.ok(sb.awakeMin <= sa.awakeMin);
+    const again = D.fromRows(D.unpackRows(a.packed), { threshold: 80 });
+    assert.deepEqual(again.nights.map((n) => n.sleepHours), b.nights.map((n) => n.sleepHours), "kept rows rescore the same way");
+    assert.equal(D.readActiwareFile(csv).scoredBy, "file");
+  });
+});
+import { readFileSync as rfs } from "node:fs";
+function require_sample() { return rfs(new URL("../samples/actiware-epochs-sample.csv", import.meta.url), "utf8"); }

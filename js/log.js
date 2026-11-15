@@ -206,6 +206,8 @@ export function mountLog(host, { go }, day = L.dateKey()) {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const { entry, problems } = L.buildEntry(rawFromForm(form), log, day);
+    // how they felt this morning and their note stay with the day (sleepcheck.js)
+    for (const k of ["feel", "note"]) if (log[day]?.[k] != null) entry[k] = log[day][k];
     // a value left as the device gave it keeps its origin; one the person changed becomes theirs
     for (const [k, r] of Object.entries(entry)) {
       const before = log[day]?.[k];

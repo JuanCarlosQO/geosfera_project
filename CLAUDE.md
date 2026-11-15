@@ -52,6 +52,8 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `lib/actigraph-handler.js`, `api/actigraph.js` | ActiGraph CentrePoint through the server (OAuth client credentials; secret only in env, see `.env.example`), tested with a fake server |
 | `js/data/devices.js` | Quoted facts for the Devices screen (NASA, Philips, Chrome) |
 | `samples/actiware-sample.csv` | SIMULATED file in the layout of an Actiware interval export, for the demo |
+| `js/sleepcheck-core.js`, `js/sleepcheck.js` | Morning sleep check on Today, tested: when to ask, how they feel, reasons and note saved with the day's log, summary for the crew medical officer |
+| `js/avatar.js` | Crew pictures: selectable portraits in `assets/avatars` (f1-f3, m1-m3), initials fallback, body thumbnail |
 | `js/i18n-core.js` | Spanish look rules, tested: numbers taken out as `#`, template rules for names and dates, per-part " · " lines, dictionary check |
 | `js/i18n.js` | Spanish look on the page: walks text and labels, follows new content with a MutationObserver, skips quotes (`small.src`), ES/EN button |
 | `js/data/es.js` | Spanish dictionary and templates (machine-assisted, to be read by a Spanish speaker) |

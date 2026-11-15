@@ -4,7 +4,7 @@ import { Hatch } from "./hatch.js";
 import { mountBody } from "./body.js";
 import { mountToday } from "./today.js";
 import { mountLog } from "./log.js";
-import { mountDevices, autoSync, followEva } from "./devices.js";
+import { mountDevices, autoSync, followEva, refreshWatchAlerts } from "./devices.js";
 import { subscribe } from "./feed.js";
 import { mountMission } from "./mission.js";
 import { mountMeds } from "./meds.js";
@@ -54,6 +54,7 @@ function render() {
   const [view = "today", arg, rest] = location.hash.replace(/^#/, "").split("/");
   const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices"].includes(view) ? view : "today";
   if (["today", "log", "mind"].includes(name)) autoSync(); // readings from the devices arrive before the screen is drawn
+  setTimeout(refreshWatchAlerts, 0); // and the watch's alerts follow the profile that is open
   if (name === "devices") mountDevices(station);
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
@@ -101,6 +102,11 @@ if (new URLSearchParams(location.search).has("demo")) {
 const support = mountSupport(); // the support button works even with the hatch closed
 mountAlarm(); // telemetry alerts on every screen, with sound, and sleep mode
 subscribe(followEva); // a spacewalk in the simulator takes the watch off and holds family notices
+// the watch's own alerts (watch off too long, short night) join the alert bar on every screen
+refreshWatchAlerts();
+setInterval(refreshWatchAlerts, 60000);
+document.addEventListener("ergosphere:watch", refreshWatchAlerts);
+window.addEventListener("hashchange", () => setTimeout(refreshWatchAlerts, 50));
 mountFamilyNotify(); // a message from home is announced on whatever screen is open
 initFold(station); // tabs, and intros and sources tucked away on every screen
 window.addEventListener("hashchange", render);

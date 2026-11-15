@@ -3,7 +3,7 @@
 
 import * as S from "./store.js";
 import { ROLES, initials } from "./crew-core.js";
-import { silhouetteSvg } from "./anatomy.js";
+import { avatarHtml, bodyThumb } from "./avatar.js";
 import { summarise, series, sparkPath } from "./today-core.js";
 import { judgeReading, dateKey } from "./log-core.js";
 import { STATUS } from "./data/body-systems.js";
@@ -31,7 +31,7 @@ export function crewStatusHtml(crew) {
     const d = sparkPath(series(log, "heartRate", today, 14), 100, 26);
     return `<li>
       <button type="button" class="crew-card ${m.id === crew.active ? "on" : ""}" data-tone="${st.tone}" data-member="${m.id}" aria-pressed="${m.id === crew.active}" style="--i:${i}">
-        <span class="cc-fig">${silhouetteSvg()}<span class="cc-init">${initials(m.name)}</span></span>
+        <span class="cc-fig">${bodyThumb(m)}${avatarHtml(m, "cc-av")}</span>
         <span class="cc-body">
           <span class="cc-name">${m.name}</span>
           <span class="cc-role">${m.role}</span>
