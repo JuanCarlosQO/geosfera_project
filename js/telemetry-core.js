@@ -46,6 +46,7 @@ export const RULES = {
   // --- asleep; illustrative app rules ---
   sleepHr: [40, 100],               // heart rate outside this while asleep is worth a look (a slow pulse is expected)
   pocketGap: 1,                     // mmHg the air near the crew member must be above the cabin's to call it a pocket
+  wakeGrace: 30,                    // seconds after waking in which pulse and pressure are still judged as asleep
   wakeEscalate: 30,                 // seconds a wake alarm can go unanswered before the crew is alerted
   raiseAfter: 3,                    // readings in a row before an alert is raised
   clearAfter: 5                     // readings in a row back to normal before it is cleared
@@ -206,13 +207,15 @@ function contribution(id, c) {
   }
 }
 
-/** "exercise", "eva", "recovery" (just stopped an effort), "sleep" or "rest". */
-export function modeOf(active = {}, sleeping = false) {
+/** "exercise", "eva", "recovery" (just stopped an effort), "sleep", "waking" (just woken) or "rest". */
+export function modeOf(active = {}, sleeping = false, woke = null) {
   if (active.eva && active.eva.phase !== "rec") return "eva";
   if (active.exercise && active.exercise.phase !== "rec") return "exercise";
   if (EFFORT.some((id) => active[id]?.phase === "rec")) return "recovery";
-  return sleeping ? "sleep" : "rest";
+  return sleeping ? "sleep" : woke != null ? "waking" : "rest";
 }
+/** Asleep or just woken: a slow pulse and a lower pressure are expected, so they are judged the same way. */
+const drowsy = (mode) => mode === "sleep" || mode === "waking";
 /** Seconds since the last effort stopped (0 when not recovering). */
 export const recoveryTime = (active = {}) => Math.max(0, ...EFFORT.map((id) => (active[id]?.phase === "rec" ? active[id].t : 0)));
 
@@ -227,7 +230,9 @@ export function step(state, rand) {
     }
     s.active[id] = c;
   }
-  s.mode = modeOf(s.active, s.sleeping);
+  // just woken: pulse and pressure take a moment to come back up, so the first seconds are not judged as rest
+  s.woke = !s.sleeping && state.woke != null && state.woke + 1 < RULES.wakeGrace ? state.woke + 1 : null;
+  s.mode = modeOf(s.active, s.sleeping, s.woke);
   const asleep = s.mode === "sleep";
   const T = { hr: s.base.hr - (asleep ? 12 : 0), sys: s.base.sys - (asleep ? 8 : 0), dia: s.base.dia - (asleep ? 5 : 0), co2p: 0, co2: 2.2, temperature: 22.4, humidity: 46, pressure: LIMITS.pressureIss, smoke: 5, ammonia: 0, power: 100, hydration: 95 };
   for (const [id, c] of Object.entries(s.active)) for (const [k, v] of Object.entries(contribution(id, c))) T[k] += v;
@@ -280,9 +285,9 @@ export function stopScenario(state, id) {
 
 /** Going to sleep, or waking up. Waking and moving mixes the air again, so a pocket ends. */
 export function setSleeping(state, sleeping) {
-  if (sleeping) return { ...resetEfforts(state), sleeping: true };
+  if (sleeping) return { ...resetEfforts(state), sleeping: true, woke: null };
   const awake = state.active?.pocket ? stopScenario(state, "pocket") : state;
-  return { ...awake, sleeping: false, still: 0 };
+  return { ...awake, sleeping: false, still: 0, woke: state.sleeping ? 0 : state.woke ?? null, mode: state.sleeping ? "waking" : state.mode };
 }
 const resetEfforts = (state) => EFFORT.reduce((st, id) => { if (!st.active?.[id]) return st; const active = { ...st.active }; delete active[id]; return { ...st, active }; }, state);
 
@@ -356,11 +361,11 @@ export function judgeHeart(mode, hr, band, recovering = 0) {
   const max = maxHeartRate();
   if (mode === "exercise" || mode === "eva") { const [w, a] = mode === "exercise" ? RULES.hrExercise : RULES.hrEva; return hr > a * max ? "act" : hr > w * max ? "watch" : "normal"; }
   if (mode === "recovery") return recovering >= RULES.recoveryAfter && hr > RULES.hrRecovery ? "watch" : "normal";
-  if (mode === "sleep") return hr > RULES.hrRestAct ? "act" : hr < RULES.sleepHr[0] || hr > RULES.sleepHr[1] ? "watch" : "normal";
+  if (drowsy(mode)) return hr > RULES.hrRestAct ? "act" : hr < RULES.sleepHr[0] || hr > RULES.sleepHr[1] ? "watch" : "normal";
   return hr > RULES.hrRestAct ? "act" : judgeVital("heartRate", hr, band);
 }
 export function judgePressureArterial(mode, bp, band) {
-  if (mode === "sleep") return judgeVital("bloodPressure", bp, null); // asleep: the reference range only, a lower pressure is expected
+  if (drowsy(mode)) return judgeVital("bloodPressure", bp, null); // asleep or just woken: the reference range only, a lower pressure is expected
   if (mode !== "rest") return bp[0] > RULES.sysEffort ? "watch" : "normal";
   const st = judgeVital("bloodPressure", bp, band);
   return st === "normal" && bp[0] < RULES.sysLow ? "watch" : st;
@@ -387,7 +392,7 @@ export function conditions(typicalDose = 0) {
     { key: "power", basis: "app", watch: `below ${R.power[0]} %`, act: `below ${R.power[1]} %`, facts: [] },
     { key: "hydration", basis: "app", watch: `below ${R.hydration[0]} %`, act: `below ${R.hydration[1]} %`, facts: [] },
     { key: "co2Personal", name: "CO₂ pocket (the clip you wear)", basis: "app", watch: `the air near you above ${L.co2Standard} mmHg while the cabin is normal and at least ${R.pocketGap} mmHg lower`, act: `the same above ${L.co2Symptoms} mmHg`, facts: ["co2Pockets"] },
-    { key: "heartRate", name: "While asleep", basis: "app", watch: `heart rate under ${R.sleepHr[0]} or over ${R.sleepHr[1]} bpm; time without moving is not counted`, act: `any “Act now” alert sounds the wake alarm; not answered in ${R.wakeEscalate} s, the crew is alerted`, facts: [] },
+    { key: "heartRate", name: "While asleep", basis: "app", watch: `heart rate under ${R.sleepHr[0]} or over ${R.sleepHr[1]} bpm, also for ${R.wakeGrace} s after waking; time without moving is not counted`, act: `any “Act now” alert sounds the wake alarm; not answered in ${R.wakeEscalate} s, the crew is alerted`, facts: [] },
     { key: "heartRate", name: "A wearable sensor", basis: "app", watch: `no signal from it, or its battery at ${R.batteryLow} % or less`, act: `no data from any body sensor for ${R.linkAct} seconds`, facts: [] },
     { key: "heartRate", name: "Heart rate in effort", basis: "app", watch: `exercise: above ${Math.round(R.hrExercise[0] * 100)} % of an estimated maximum of ${220 - R.age} bpm; spacewalk: above ${Math.round(R.hrEva[0] * 100)} %; ${R.recoveryAfter} s after stopping: still above ${R.hrRecovery} bpm`, act: `exercise: above ${Math.round(R.hrExercise[1] * 100)} %; spacewalk: above ${Math.round(R.hrEva[1] * 100)} %; at rest: above ${R.hrRestAct} bpm`, facts: [] },
     { key: "heartRate", basis: "team", watch: `outside 60–100 bpm, or outside your usual range, on the ${R.smoothSeconds}-second average`, act: null, facts: [] },
@@ -417,7 +422,7 @@ const CABIN = ["co2", "pressure", "dose", "smoke", "ammonia", "temperature", "po
  */
 export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   const dose = doseRate(state);
-  const mode = state.mode ?? modeOf(state.active, state.sleeping), rec = recoveryTime(state.active);
+  const mode = state.mode ?? modeOf(state.active, state.sleeping, state.woke), rec = recoveryTime(state.active);
   const hr = round(state.heartRate);
   const bp = [round(state.systolic), round(state.diastolic)];
   // judge vital signs on a short average so one noisy second does not raise an alert

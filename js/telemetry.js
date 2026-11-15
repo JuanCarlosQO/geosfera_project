@@ -203,7 +203,7 @@ export function mountLive(host) {
   const $ = (r) => root.querySelector(`[data-ref="${r}"]`);
   let lastAlerts = null;
   let lastLog = null;
-  const MODES = { rest: "At rest", exercise: "Exercising", eva: "On a spacewalk", recovery: "Recovering from effort", sleep: "Asleep" };
+  const MODES = { rest: "At rest", exercise: "Exercising", eva: "On a spacewalk", recovery: "Recovering from effort", sleep: "Asleep", waking: "Just woken" };
   const clock = (t) => `T+${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 
   function paint(feed) {
@@ -231,7 +231,7 @@ export function mountLive(host) {
     root.querySelector('[data-extra="co2Personal"]').textContent = near.value == null ? "" : ` · ${near.gap > 0 ? "+" : ""}${near.gap} vs the cabin`;
     root.querySelector('[data-extra="still"]').textContent = r.channels.still.asleep ? " · asleep, not counted" : "";
     root.querySelector('[data-extra="pressure"]').textContent = Math.abs(r.channels.pressure.rate) >= 0.5 ? ` · ${r.channels.pressure.rate > 0 ? "+" : ""}${r.channels.pressure.rate} kPa/min` : "";
-    root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : r.mode === "sleep" ? " · asleep" : "";
+    root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : r.mode === "sleep" ? " · asleep" : r.mode === "waking" ? " · just woken" : "";
     root.querySelector('[data-extra="dose"]').textContent = r.channels.dose.time ? ` · ISS ${r.channels.dose.time} UTC` : "";
     root.querySelector('[data-tag="dose"]').textContent = r.channels.dose.real ? "REAL NASA DATA" : "REAL × SIMULATED EVENT";
     let linked = 0;

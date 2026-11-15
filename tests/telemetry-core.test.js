@@ -358,4 +358,20 @@ describe("asleep: the CO₂ pocket and the wake alarm", () => {
     assert.ok(T.conditions(5).some((c) => c.key === "co2Personal"));
     assert.equal(T.SCENARIOS.pocket.group, "crew");
   });
+  it("just woken, a pulse and pressure still coming up raise nothing", () => {
+    const bands = { hr: { low: 56.9, high: 70.8 }, sys: { low: 107.9, high: 121.7 } };
+    const rand = T.rng(4);
+    let s = T.setSleeping(T.startState({ hr: 64, sys: 115, dia: 71 }, RADLAB_ISS), true), h = {}, r;
+    const run = (n, seen = []) => { for (let i = 0; i < n; i++) { s = T.step(s, rand); r = T.readout(s, bands, 5, h); h = T.remember(h, r); seen.push(...r.alerts.map((a) => a.id).filter((id) => ["heartRate", "bloodPressure", "still"].includes(id))); } return seen; }; // only the body's own alerts matter here
+    run(60);
+    assert.ok(s.heartRate < bands.hr.low, "asleep the pulse is under the usual range");
+    s = T.setSleeping(s, false);
+    assert.equal(T.readout(s, bands, 5, h).mode, "waking");
+    assert.deepEqual(run(T.RULES.wakeGrace - 1), [], "nothing is raised while the body catches up");
+    assert.equal(r.mode, "waking");
+    run(3);
+    assert.equal(r.mode, "rest", "then it is judged as rest again");
+    assert.deepEqual(run(20), []);
+    assert.equal(T.judgeHeart("waking", 135), "act", "a racing heart still counts");
+  });
 });
