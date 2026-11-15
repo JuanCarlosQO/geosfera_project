@@ -1,6 +1,7 @@
 // Mind & support (#mind): the psychological side in one place. On top, a 3D brain that maps
 // five signals the crew member already produces in the app (sleep, mood, alertness, home,
-// support); tap a zone or a chip to read one. Under it: ask to talk (one tap), the family
+// support); tap a zone or a chip to read one. In the day look the brain is a realistic picture
+// (generated with AI) with the zones tinted on it; the night look keeps the 3D brain. Under it: ask to talk (one tap), the family
 // channel, and, folded away until wanted, requests, comfort settings, how SOS works and what
 // NASA does today. The brain is an illustration drawn by code, not a scan, and the zones are
 // a map, not anatomy. Rules: mind-core.js. NASA quotes: data/support.js and docs/SOURCES.md.
@@ -8,6 +9,7 @@
 import * as P from "./support-core.js";
 import * as M from "./mind-core.js";
 import { mountBrain } from "./brain3d.js";
+import { mountBrainGl } from "./brain-gl.js";
 import { fold } from "./fold.js";
 import { SUPPORT_FACTS, LEVELS, COMFORT, REASONS } from "./data/support.js";
 import { STATUS } from "./data/body-systems.js";
@@ -25,6 +27,49 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const src = (f) => `<small class="src">“${f.quote}” <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a></small>`;
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
 const tone = (status) => { const s = STATUS[status] ?? STATUS.none; return `<span class="tone-${s.tone}"><span aria-hidden="true">${s.shape}</span> ${s.word}</span>`; };
+
+/* ---------- day look: a realistic brain picture with the zones tinted on it ---------- */
+
+// The picture (a side view, front to the left) was GENERATED WITH AI: an illustration, not a
+// scan or an atlas. Each zone is an ellipse given in % of the picture: centre x, y and radii.
+// They are approximate, and they are a map of the five signals, not anatomy.
+const BRAIN_PHOTO = "assets/brain-side.webp";
+const ZONE_AT = { frontal: [23, 40, 21, 30], parietal: [61, 21, 23, 19], temporal: [45, 60, 22, 12], occipital: [83, 45, 11, 22], cerebellum: [69, 73, 13, 12], stem: [54, 87, 6, 12] };
+const PIN_AT = { sleep: [69, 74], mood: [45, 60], alert: [23, 40], home: [61, 21], support: [83, 45] };
+const TINT = { watch: "#ff8a1f", act: "#e11d2e", again: "#4f7fe8", none: "#98a2b3" }; // a zone in "normal" keeps its natural colour
+
+/**
+ * The day look's brain. It starts as the still picture, with the zones tinted over it, and
+ * becomes the 3D model (brain-gl.js) as soon as that has loaded: the same zones, painted on
+ * the model, and the same pins, now following it as it turns. Where WebGL or the files are
+ * missing it simply stays a picture. Same call as the night look's set().
+ */
+function photoBrain(stage) {
+  const tint = stage.querySelector('[data-ref="tint"]');
+  const pins = stage.querySelector('[data-ref="pins"]');
+  let last = { zones: {} };
+  let model = null;
+  mountBrainGl(stage.querySelector('[data-ref="gl"]'), {
+    mesh: "assets/brain3d.bin", texture: "assets/brain3d-tex.webp", zones: Object.keys(ZONE_AT), zonesAt: ZONE_AT, pinsAt: PIN_AT,
+    onFrame(at) { for (const b of pins.children) { const p = at[b.dataset.signal]; if (p) { b.style.left = `${p[0].toFixed(1)}%`; b.style.top = `${p[1].toFixed(1)}%`; } } }
+  }).then((m) => {
+    if (!stage.isConnected) { m.stop(); return; }
+    model = m;
+    stage.classList.add("gl-on");
+    stage.querySelector(".brain-tag").textContent = "AI-generated 3D model · not a scan";
+    m.set(last);
+  }).catch(() => { /* no WebGL here, or the model did not load: the picture stays */ });
+  return {
+    set({ zones = {}, signals = [], chosen = null }) {
+      last = { zones };
+      tint.style.backgroundImage = Object.entries(ZONE_AT).filter(([z]) => TINT[zones[z]])
+        .map(([z, [x, y, rx, ry]]) => `radial-gradient(ellipse ${rx}% ${ry}% at ${x}% ${y}%, ${TINT[zones[z]]} 0%, ${TINT[zones[z]]} 55%, transparent 100%)`).join(",") || "none";
+      pins.innerHTML = signals.map((x) => { const t = STATUS[x.status] ?? STATUS.none; const [px, py] = PIN_AT[x.id]; return `<button type="button" class="bp-pin" data-signal="${x.id}" data-tone="${t.tone}" aria-pressed="${x.id === chosen}" style="left:${px}%;top:${py}%"><span class="tone-${t.tone}" aria-hidden="true">${t.shape}</span>${x.label}<span class="sr-only">: ${t.word}</span></button>`; }).join("");
+      model?.set(last);
+    },
+    stop() { model?.stop(); }
+  };
+}
 
 const BASIS = {
   ref: `Judged against an Earth reference: <a href="${RANGES.sleepHours.url}" target="_blank" rel="noopener">${RANGES.sleepHours.source}</a>, pending team review.`,
@@ -56,6 +101,7 @@ function alertRow(a, me) {
 }
 
 export function mountMind(host, { talk }) {
+  const photo = document.documentElement.dataset.theme !== "night"; // day: the realistic picture; night: the 3D brain
   const me = current();
   const today = dateKey();
   const log = readLog();
@@ -80,12 +126,22 @@ export function mountMind(host, { talk }) {
     <p class="lede">Isolation, confinement and distance weigh on everyone, differently. Ergosphere compares you with yourself, never with an average, and makes asking for help one tap away.</p>
 
     <div class="brain-wrap">
-      <div class="brain-stage">
+      ${photo ? `<div class="brain-stage brain-photo" data-ref="stage">
+        <p class="brain-head" data-ref="head" aria-live="polite"></p>
+        <div class="bp-wrap">
+          <img class="bp-img" data-ref="brain" src="${BRAIN_PHOTO}" width="1200" height="800" alt="">
+          <div class="bp-tint" data-ref="tint" aria-hidden="true"></div>
+          <canvas class="bp-gl" data-ref="gl" aria-hidden="true"></canvas>
+          <div class="bp-pins" data-ref="pins"></div>
+        </div>
+        <p class="brain-tag mono">Picture generated with AI · not a scan</p>
+        <p class="brain-hint" aria-hidden="true">Drag to turn</p>
+      </div>` : `<div class="brain-stage">
         <canvas class="brain-canvas" data-ref="brain" role="img"></canvas>
         <p class="brain-head" data-ref="head" aria-live="polite"></p>
         <p class="brain-tag mono">Illustration · not a scan</p>
         <p class="brain-hint" aria-hidden="true">Drag to turn</p>
-      </div>
+      </div>`}
       <div class="brain-side">
         <div class="brain-signals scroll-row" role="group" aria-label="The five signals" data-ref="signals"></div>
         <div class="brain-detail data-card" data-ref="detail" aria-live="polite"></div>
@@ -106,12 +162,12 @@ export function mountMind(host, { talk }) {
       </ul>
       <p class="fine">All four: <a href="${SUPPORT_FACTS.ppc.url}" target="_blank" rel="noopener">${SUPPORT_FACTS.ppc.source}</a></p>`, { cls: "block" })}
 
-    <p class="fine rule-note">The brain is an illustration drawn by code: it is not a scan, and nothing is measured in anyone's brain. Its zones are a map of five signals from your own log, not a claim about where they happen. Ergosphere does not diagnose or treat. The mood rules, “two in a row” for homesickness, the buttons, reasons and comfort settings are app choices. Support requests reach crewmates' devices through the team's station sync; delivery to Mission Control is simulated in this prototype. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">${photo ? "The brain picture was generated with AI: it is an illustration, not a scan or an anatomical reference, and nothing is measured in anyone's brain. The coloured zones on it are approximate." : "The brain is an illustration drawn by code: it is not a scan, and nothing is measured in anyone's brain."} Its zones are a map of five signals from your own log, not a claim about where they happen. Ergosphere does not diagnose or treat. The mood rules, “two in a row” for homesickness, the buttons, reasons and comfort settings are app choices. Support requests reach crewmates' devices through the team's station sync; delivery to Mission Control is simulated in this prototype. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".mind");
   const $ = (r) => root.querySelector(`[data-ref="${r}"]`);
-  const brain = mountBrain($("brain"), {
+  const brain = photo ? photoBrain($("stage")) : mountBrain($("brain"), {
     onPick(zone) { const s = signalsNow().find((x) => x.zones.includes(zone)); if (s) { chosen = s.id; paintMap(); } }
   });
 
@@ -133,10 +189,10 @@ export function mountMind(host, { talk }) {
     const s = signals.find((x) => x.id === chosen) ?? signals[0];
     const st = STATUS[all.status] ?? STATUS.none;
     $("head").innerHTML = `<span class="tone-${st.tone}" aria-hidden="true">${st.shape}</span> ${esc(all.title)}`;
-    $("brain").setAttribute("aria-label", `3D illustration of a brain with five zones. ${all.title}. ${signals.map((x) => `${x.label}: ${(STATUS[x.status] ?? STATUS.none).word}`).join(". ")}.`);
+    $("brain").setAttribute(photo ? "alt" : "aria-label", `3D illustration of a brain with five zones. ${all.title}. ${signals.map((x) => `${x.label}: ${(STATUS[x.status] ?? STATUS.none).word}`).join(". ")}.`);
     $("signals").innerHTML = signals.map((x) => { const t = STATUS[x.status] ?? STATUS.none; return `<button type="button" class="bs-chip" data-signal="${x.id}" data-tone="${t.tone}" aria-pressed="${x.id === s.id}"><span class="tone-${t.tone}" aria-hidden="true">${t.shape}</span><span>${x.label}<small>${esc(x.value)}</small></span><span class="sr-only">${t.word}</span></button>`; }).join("");
     $("detail").innerHTML = detailHtml(s);
-    brain.set({ zones: M.zoneStatus(signals), selected: s.zones });
+    brain.set({ zones: M.zoneStatus(signals), selected: s.zones, signals, chosen: s.id });
   }
 
   const paintAlerts = () => {

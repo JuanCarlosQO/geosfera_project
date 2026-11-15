@@ -47,3 +47,41 @@
   .brain-stage { max-height: none; }
 }
 .brain-detail .tm-go, .brain-detail .tm-go:visited { color: var(--beacon); }
+
+/* ---------- day look: the realistic brain picture ---------- */
+.brain-stage.brain-photo {
+  aspect-ratio: auto; max-height: none; display: flex; flex-direction: column; gap: 6px; padding: 14px 10px 30px;
+  background: #ffffff; border: 1px solid var(--seam); box-shadow: var(--card-shadow);
+  --tone-normal: #0e9f6e; --tone-watch: #b45309; --tone-act: #dc2626; --tone-again: #3b6fe0; --tone-none: #64748b;
+}
+.brain-stage.brain-photo::after { display: none; }
+.brain-photo .brain-head { position: static; color: var(--ink); padding: 0 6px; }
+.brain-photo .brain-tag { color: var(--ink-3); left: 16px; bottom: 10px; }
+.bp-wrap { position: relative; isolation: isolate; width: 100%; aspect-ratio: 3 / 2; }
+.bp-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; filter: drop-shadow(0 12px 18px rgba(15, 23, 42, .16)); }
+/* the tint takes the picture's own shape (mask) and only changes its colour, so the folds stay visible */
+.bp-tint { position: absolute; inset: 0; mix-blend-mode: color; opacity: .85; -webkit-mask: url(../assets/brain-side.webp) center / 100% 100% no-repeat; mask: url(../assets/brain-side.webp) center / 100% 100% no-repeat; transition: opacity .3s; }
+.bp-pins { position: absolute; inset: 0; }
+.bp-pin {
+  position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px 0 10px;
+  border-radius: 20px; border: 1.5px solid var(--seam-hi); background: #ffffffee; color: var(--ink); font: 600 13px var(--sans); white-space: nowrap; cursor: pointer;
+  box-shadow: 0 6px 16px -8px rgba(15, 23, 42, .5);
+}
+.bp-pin[data-tone="watch"] { border-color: var(--tone-watch); }
+.bp-pin[data-tone="act"] { border-color: var(--tone-act); }
+.bp-pin[aria-pressed="true"] { background: var(--beacon); border-color: var(--beacon); color: #ffffff; }
+.bp-pin[aria-pressed="true"] span { color: #ffffff; }
+@media (min-width: 860px) { .brain-stage.brain-photo { padding-bottom: 34px; } }
+
+/* the 3D model takes over from the still picture once it has loaded */
+.bp-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: none; touch-action: pan-y; cursor: grab; }
+.bp-gl:active { cursor: grabbing; }
+.gl-on .bp-gl { display: block; }
+.gl-on .bp-img, .gl-on .bp-tint { visibility: hidden; }
+.brain-photo .brain-hint { display: none; color: var(--ink-3); right: 16px; bottom: 10px; }
+.brain-photo.gl-on .brain-hint { display: block; }
+.gl-on .bp-pin { transition: none; }
+.brain-photo .brain-tag, .brain-photo .brain-hint { letter-spacing: .05em; font-size: 10px; }
+/* the pins must not cover the model: drags reach the canvas between them */
+.bp-pins { pointer-events: none; }
+.bp-pin { pointer-events: auto; }
