@@ -11,6 +11,7 @@ import { figureSvg } from "./anatomy.js";
 import { dateKey } from "./log-core.js";
 import { readLog } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
+import { fold } from "./fold.js";
 
 const link = (f) => `<a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
 const src = (f) => `<small class="src">“${f.quote}” ${link(f)}</small>`;
@@ -83,20 +84,17 @@ export function mountFuture(host) {
         <div class="fb-habit"><span class="fb-ring" style="--p:${Math.round((h.exercise / h.days) * 100)}"><strong>${h.exercise}</strong></span><p><strong>Days with NASA's 1.5 hours of exercise</strong>${h.exerciseLogged ? ` · exercise logged on ${h.exerciseLogged} days` : " · no exercise logged yet"}</p></div>
         <div class="fb-habit"><span class="fb-ring" style="--p:${Math.round((h.vitaminD / h.days) * 100)}"><strong>${h.vitaminD}</strong></span><p><strong>Days with vitamin D taken</strong> · from the medication log</p></div>
       </div>
-      <p class="fine">Shown as habits only. NASA publishes no formula that turns minutes of exercise into a bone number, so Ergosphere does not invent one.</p>
+      ${fold("Why only habits", `<p class="fine">NASA publishes no formula that turns minutes of exercise into a bone number, so Ergosphere does not invent one.</p>`)}
       ${src(FUTURE_FACTS.exercise)}${src(FUTURE_FACTS.vitaminD)}
       <p class="fb-links"><a class="tm-go" href="#log">Log today's exercise →</a> <a class="tm-go" href="#meds">Vitamin D in the medication log →</a></p>
     </section>
 
-    <section class="data-card" aria-labelledby="fb-o-h">
-      <h2 id="fb-o-h">Also on NASA's list</h2>
-      <ul class="fb-facts">
+    ${fold("Also on NASA's list", `<ul class="fb-facts">
         <li><strong>Strength and fitness.</strong>${src(FUTURE_FACTS.fitness)}</li>
         <li><strong>Medication with exercise.</strong> For the flight surgeon to decide, not the app.${src(FUTURE_FACTS.drugs)}</li>
         <li><strong>Back on Earth.</strong>${src(FUTURE_FACTS.recovery)}</li>
         <li><strong>On Mars.</strong> Partial gravity is not modelled here.${src(FUTURE_FACTS.marsGravity)}</li>
-      </ul>
-    </section>
+      </ul>`, { cls: "block" })}
 
     <p class="fine rule-note">NASA measured 1–1.5 % a month on 4-to-6-month missions. Beyond 6 months the straight line is the app's extrapolation, not a NASA prediction, and real loss differs by person and by bone. This is an illustration for planning, not a medical assessment. Sources: docs/SOURCES.md.</p>
   </section>`;

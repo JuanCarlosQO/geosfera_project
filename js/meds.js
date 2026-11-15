@@ -17,6 +17,7 @@ import { figureSvg } from "./anatomy.js";
 import { pill3d, enableDrag } from "./pill3d.js";
 import { readLog } from "./store.js";
 import { sendAlert } from "./support.js";
+import { tabsHtml, showTab } from "./fold.js";
 
 const WORKED = {
   yes: { ...STATUS.normal, word: "It worked" },
@@ -228,7 +229,8 @@ export function mountMeds(host) {
 
     <div data-ref="due" aria-live="polite"></div>
 
-    <div class="meds-main">
+    ${tabsHtml("meds", [
+      { id: "log", label: "Log a dose", html: `<div class="meds-main">
       <div class="meds-left">
         ${stageHtml()}
         <form class="alarm" novalidate autocomplete="off">
@@ -246,14 +248,12 @@ export function mountMeds(host) {
           <p class="fine">Why follow up early: ${quote(KIT_FACTS.surveillance)}</p>
         </section>
       </div>
-    </div>
-
-    <section class="data-card" aria-labelledby="sp-h">
+    </div>` },
+      { id: "supps", label: "Supplements", html: `<section class="data-card" aria-labelledby="sp-h">
       <h2 id="sp-h">Supplements</h2>
       <div data-ref="supps"></div>
-    </section>
-
-    <section class="data-card" aria-labelledby="own-h" data-ref="own-card">
+    </section>` },
+      { id: "own", label: "Your own", html: `<section class="data-card" aria-labelledby="own-h" data-ref="own-card">
       <h2 id="own-h">Your own medications</h2>
       <p>From your personal pack, outside NASA's kit list, so they go in the same log. ${quote(KIT_FACTS.own)}</p>
       <div data-ref="own"></div>
@@ -267,14 +267,14 @@ export function mountMeds(host) {
         <p class="step-msg" data-ref="own-msg" role="status" aria-live="polite"></p>
       </form>
       <p class="fine">Every-day ones appear at the top each day: one tap if you took it as scheduled. Dose Tracker's chronic medications ${quote(KIT_FACTS.scheduled)}</p>
-    </section>
-
-    <section class="data-card" aria-labelledby="rec-h">
+    </section>` },
+      { id: "record", label: "History", html: `<section class="data-card" aria-labelledby="rec-h">
       <h2 id="rec-h">Your log</h2>
       <p>It stays on this device. ${KIT_FACTS.record.text}${quote(KIT_FACTS.record)}</p>
       <div data-ref="record"></div>
       <div class="data-btns"><button type="button" class="cta" data-med-act="csv">Export CSV</button><button type="button" class="textlink" data-med-act="reset">Clear the demo log</button></div>
-    </section>
+    </section>` }
+    ])}
 
     <a class="duty-link" href="#duty"><span>Fit for duty check<small>Before a spacewalk, docking or another critical task</small></span><span>Open →</span></a>
 
@@ -372,13 +372,13 @@ export function mountMeds(host) {
     const act = t.dataset.medAct;
     if (act === "close") { closeZone(); stage.scrollIntoView({ block: "nearest" }); return; }
     if (act === "csv") { download(`ergosphere-medications-${M.dayOf()}.csv`, M.toCsv(store.doses, LIST), "text/csv"); return; }
-    if (act === "goto-own") { $("own-card").scrollIntoView({ block: "start" }); root.querySelector('.own-form input[name="name"]').focus({ preventScroll: true }); return; }
+    if (act === "goto-own") { showTab(root, "meds", "own"); $("own-card").scrollIntoView({ block: "start" }); root.querySelector('.own-form input[name="name"]').focus({ preventScroll: true }); return; }
     if (act === "week-none" || act === "week-yes") {
       store = M.answerWeekly(store, act === "week-none" ? "none" : "yes");
       save(store);
       paint(true);
       $("msg").textContent = act === "week-none" ? "Noted for this week. Thank you." : "Tap what it was for on the figure, pick what you took, and choose the day under “When”.";
-      if (act === "week-yes") stage.scrollIntoView({ block: "nearest" });
+      if (act === "week-yes") { showTab(root, "meds", "log"); stage.scrollIntoView({ block: "nearest" }); }
       return;
     }
     if (act === "reset") { store = M.emptyStore(); save(store); paint(); $("msg").textContent = "Demo log cleared."; return; }

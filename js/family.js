@@ -5,6 +5,7 @@
 //  · #family/in/<data>  a message link being delivered to this device.
 // Rules: family-core.js. Messages stay on this device (sync-core LOCAL_ONLY) and are text only.
 
+import { fold } from "./fold.js";
 import * as F from "./family-core.js";
 import { SUPPORT_FACTS } from "./data/support.js";
 import { getCrew, current } from "./store.js";
@@ -63,18 +64,15 @@ function inboxHtml(me, box, notice) {
       <ul class="fm-list">${aside.map((m) => `<li class="fm-msg sealed"><div class="fm-body">${head(m)}
         <div class="fm-acts"><button type="button" class="cta" data-fm="open" data-id="${m.id}">Open it</button><button type="button" class="textlink" data-fm="reseal" data-id="${m.id}">Back to waiting</button><button type="button" class="textlink danger" data-fm="delete" data-id="${m.id}">Delete unread</button></div></div></li>`).join("")}</ul></details>` : ""}
 
-    <section class="data-card" aria-labelledby="fm-how">
-      <h2 id="fm-how">How a message gets here</h2>
-      <ol class="fm-steps">
+    <div class="fm-acts fm-in"><button type="button" class="cta" data-fm="copy-write">Copy the writing page's link</button><button type="button" class="cta" data-fm="import">Open a message file</button><input type="file" accept=".json,application/json" data-ref="file" hidden></div>
+    ${fold("How a message gets here", `<ol class="fm-steps">
         <li>Your family opens the writing page on their own phone: <a href="#family/write">Write a message</a>.</li>
         <li>The page turns what they wrote into a link. Nothing is uploaded: the message travels inside the link.</li>
         <li>The link is opened on your device and the message lands here, sealed.</li>
       </ol>
-      <div class="fm-acts"><button type="button" class="cta" data-fm="copy-write">Copy the writing page's link</button><button type="button" class="cta" data-fm="import">Open a message file</button><input type="file" accept=".json,application/json" data-ref="file" hidden></div>
       <p class="fine">A message with a photo or a voice note is too big for a link, so it comes as a small file: open it here with “Open a message file”.</p>
       <p class="fine">In a mission the link would travel with Mission Control's uplink and its delay; in this prototype whoever has the link delivers it. For serious or urgent news, families go through the mission's support team, not this channel (app rule).</p>
-      ${src(SUPPORT_FACTS.familyContact)}${src(SUPPORT_FACTS.carePackages)}
-    </section>
+      <p class="fine">“${SUPPORT_FACTS.familyContact.quote}” “${SUPPORT_FACTS.carePackages.quote}” <a href="${SUPPORT_FACTS.familyContact.url}" target="_blank" rel="noopener">${SUPPORT_FACTS.familyContact.source}</a></p>`, { cls: "block" })}
     <p class="fine rule-note">The family channel is an app idea, not a NASA system. Messages are text, a photo or a short voice note; they stay on this device and are not sent to the other crew devices. It does not replace “I'd like to talk to someone” or the SOS button. <a href="#mind">Back to Mind &amp; support</a></p>
   </section>`;
 }
@@ -245,7 +243,7 @@ export function mountFamily(host, { arg, payload } = {}) {
 
   /* the crew member's inbox */
   const me = current();
-  if (!me) { host.innerHTML = `<section class="family"><h1 tabindex="-1">Messages from home</h1><p class="lede">Register the crew first: <a href="#today">open Today</a>. Family writing a message? <a href="#family/write">Write it here</a>.</p></section>`; return; }
+  if (!me) { host.innerHTML = `<section class="family"><h1 tabindex="-1">Messages from home</h1><p class="lede keep">Register the crew first: <a href="#today">open Today</a>. Family writing a message? <a href="#family/write">Write it here</a>.</p></section>`; return; }
   const paint = (notice) => {
     host.innerHTML = inboxHtml(me, read(), notice);
     host.querySelector('[data-ref="file"]').addEventListener("change", async (e) => {

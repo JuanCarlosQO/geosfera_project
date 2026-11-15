@@ -15,6 +15,8 @@ import { STATUS } from "./data/body-systems.js";
 import { sparkPath } from "./today-core.js";
 import { dateKey } from "./log-core.js";
 import { readLog, current } from "./store.js";
+import { fold, tabsHtml } from "./fold.js";
+import { figureSvg } from "./anatomy.js";
 
 const DONKI = "https://ccmc.gsfc.nasa.gov/DONKI-API/get/FLR";
 const TYPICAL_DOSE = T.median(RADLAB_ISS.values);
@@ -53,7 +55,40 @@ const LIMIT_TEXT = {
 
 const link = (f) => `<a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
 const src = (f) => `<small class="src">“${f.quote}” ${link(f)}</small>`;
-const fmt = (k, c) => (k === "bloodPressure" ? `${c.value[0]}/${c.value[1]}` : c.value == null ? "—" : String(c.value));
+const fmt = (k, c) => (c.value == null ? "—" : k === "bloodPressure" ? `${c.value[0]}/${c.value[1]}` : String(c.value));
+
+/* ---------- the wearables on the body, and their link to this tablet ---------- */
+
+// The figure is 200 x 450 units and sits in the middle 46 % of the stage (as in the medication log).
+const FIG = { left: 27, width: 46 };
+const px = (x) => FIG.left + (x / 200) * FIG.width;
+const py = (y) => (y / 450) * 100;
+const HUB = [84, 80];                                   // where the tablet sits on the stage, in %
+const LABELS = { chest: { side: "left", top: 12 }, cuff: { side: "left", top: 40 }, wrist: { side: "right", top: 30 } };
+const LINK_WORDS = { ok: "Linked", off: "Sensor off", lost: "Link lost" };
+
+function sensorsHtml() {
+  const list = Object.entries(T.SENSORS);
+  const lines = list.map(([id, sn]) => { const x = px(sn.at[0]), y = py(sn.at[1]); return `<path data-sn-line="${id}" d="M${x.toFixed(1)} ${y.toFixed(1)} Q${((x + HUB[0]) / 2).toFixed(1)} ${(Math.max(y, HUB[1]) + 8).toFixed(1)} ${HUB[0]} ${HUB[1]}"/>`; }).join("");
+  return `<div class="sn-stage" role="group" aria-label="Wearable sensors on the body and their link to this tablet">
+    <span class="tm-tag sn-sim">SIMULATED</span>
+    <div class="sn-fig" aria-hidden="true">${figureSvg()}</div>
+    <svg class="sn-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
+    ${list.map(([id, sn]) => `<span class="sn-dot" data-sn-dot="${id}" style="left:${px(sn.at[0]).toFixed(1)}%;top:${py(sn.at[1]).toFixed(1)}%" aria-hidden="true"></span>`).join("")}
+    ${list.map(([id, sn]) => `<div class="sn-label" data-sn="${id}" data-side="${LABELS[id].side}" style="top:${LABELS[id].top}%"><strong>${sn.name}</strong><span data-sn-val="${id}">—</span><small data-sn-link="${id}"></small></div>`).join("")}
+    <div class="sn-hub" style="left:${HUB[0]}%;top:${HUB[1]}%"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M10 18h4"/></svg><strong>This tablet</strong><small data-ref="hub" aria-live="polite"></small></div>
+  </div>
+  <ol class="sn-chain" aria-label="Where the data goes"><li>Body sensors</li><li>This tablet<small>judges on board</small></li><li>Station computer</li><li>Mission Control<small>up to 20 min away</small></li></ol>`;
+}
+
+const realHtml = () => `<p>On the International Space Station the same chain exists today:</p>
+  <ul class="sn-real">
+    <li><strong>Worn on the body.</strong> Canada's Bio-Monitor: “${LIMIT_FACTS.wearParts.quote}”. Among what it measures: “${LIMIT_FACTS.wearHeart.quote}”. ${link(LIMIT_FACTS.wearParts)}</li>
+    <li><strong>To the station, then to Earth.</strong> “${LIMIT_FACTS.wearBase.quote}”, which sends the data down through the station's communications. ${link(LIMIT_FACTS.wearBase)}</li>
+    <li><strong>Paired with a tablet.</strong> NASA's clip-on CO₂ monitor: “${LIMIT_FACTS.wearPaired.quote}”. “${LIMIT_FACTS.wearUpload.quote}” ${link(LIMIT_FACTS.wearPaired)}</li>
+    <li><strong>On a spacewalk.</strong> “${LIMIT_FACTS.suitSensors.quote}” “${LIMIT_FACTS.suitData.quote}” ${link(LIMIT_FACTS.suitSensors)}</li>
+  </ul>
+  <p class="fine">In this prototype the sensors are simulated and nothing is paired. The pages quoted here say “paired” and “tablet application” but do not name the radio; a short-range link such as Bluetooth Low Energy is the usual choice for wearables, and that detail is pending a source. On a mission far from Earth the first three steps stay on board, so the tablet has to judge by itself: the answer from Earth can take 20 minutes each way.</p>`;
 
 function card(k) {
   const c = CARDS[k];
@@ -72,7 +107,7 @@ function alertHtml(a) {
     <p class="tm-a-head"><strong>${st.shape} ${r.title}</strong><span>${st.word}</span></p>
     <ol>${r.steps.map((s) => `<li>${s}</li>`).join("")}</ol>
     ${r.facts.map((f) => src(LIMIT_FACTS[f])).join("")}
-    ${r.illustrative ? `<p class="fine">Threshold and steps: illustrative app rule from the team simulator, not a NASA procedure. On a real vehicle the crew follows its own emergency procedures.</p>` : ""}
+    ${r.illustrative ? `<p class="tm-ill"><span class="tm-tag">APP RULE</span> Illustrative, not a NASA procedure.</p>` : ""}
     ${r.link ? `<a class="tm-go" href="${r.link.href}">${r.link.text} →</a>` : ""}
   </li>`;
 }
@@ -107,6 +142,38 @@ export function mountLive(host) {
   let history = {};
   let paused = false;
 
+  const crewTab = `<h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
+    ${sensorsHtml()}
+    ${fold("How real sensors connect", realHtml(), { cls: "block" })}
+    <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration"].map(card).join("")}</ul>
+    ${fold("Your usual range", `<p class="fine">${bands.hr ? `App rule, last ${T.RULES.baselineDays} days, ${bands.hr.n} readings: heart rate ${bands.hr.low}–${bands.hr.high} bpm${bands.sys ? `, top blood pressure ${bands.sys.low}–${bands.sys.high} mmHg` : ""}. Values outside it are flagged even inside the reference range.` : `Log heart rate and blood pressure on ${T.RULES.baselineMin} days and the feed will also compare you with yourself.`}</p>`)}`;
+
+  const cabinTab = `<h2 class="tm-h">Cabin</h2>
+    <ul class="tm-grid">${["co2", "temperature", "humidity", "pressure", "smoke", "ammonia", "power"].map(card).join("")}</ul>`;
+
+  const radTab = `<h2 class="tm-h">Radiation</h2>
+    <ul class="tm-grid tm-one">${card("dose")}</ul>
+    <div class="tm-weather" data-ref="weather"><p class="fine">Asking NASA's DONKI service for real space weather…</p></div>
+    ${fold("Where this data comes from", `<p class="fine">Replay of NASA OSDR RadLab, ISS DosTel1, ${RADLAB_ISS.from.slice(0, 10)} ${RADLAB_ISS.from.slice(11, 16)}–${RADLAB_ISS.to.slice(11, 16)} UTC, one reading per second. <a href="${RADLAB_ISS.docs}" target="_blank" rel="noopener">RadLab</a>. For scale, NASA reports ISS crews “${LIMIT_FACTS.doseIss.quote}” ${link(LIMIT_FACTS.doseIss)}</p>`)}
+    ${fold("Space radiation: where it comes from", `<div class="tm-info"><div class="tm-kinds">
+        <div><p class="mono">ALWAYS THERE</p><h3>Galactic cosmic rays</h3><p>High-energy protons and heavy ions from outside the solar system. The dose-rate replay above is mostly this, plus the particles trapped in Earth's magnetic field.</p></div>
+        <div><p class="mono">IN BURSTS</p><h3>Solar particle events</h3><p>Particles shot out by the Sun during a flare. The “Solar particle event” button simulates one; the real flare list above comes from NASA.</p></div>
+      </div>
+      ${fact("radKinds")}${fact("radSolar")}</div>`, { cls: "block" })}
+    ${fold("During a solar particle event: take shelter", `<div class="tm-info">
+      <p>NASA's plan for Orion uses what is already on board as shielding: the crew will ${factInline("shelter")}. Those bags hold the mission's own cargo: ${factInline("shelterBags")}.</p>
+      ${fact("shelterTime")}${fact("shelterWhy")}
+      <p class="fine">This is NASA's 2016 plan for the Orion spacecraft, not an ISS procedure. On any vehicle the crew follows its own flight rules.</p></div>`, { cls: "block" })}`;
+
+  const rulesTab = `<section class="tm-info tm-rules" aria-labelledby="tm-cond-h">
+      <h2 class="tm-h" id="tm-cond-h">Exactly when an alert fires</h2>
+      <div class="tm-table" role="table" aria-label="Alert conditions">
+        <div class="tm-tr tm-th" role="row"><span role="columnheader">Channel</span><span role="columnheader">${STATUS.watch.shape} Watch when</span><span role="columnheader">${STATUS.act.shape} Act now when</span><span role="columnheader">Based on</span></div>
+        ${T.conditions(TYPICAL_DOSE).map((c) => `<div class="tm-tr" role="row"><span role="cell"><strong>${c.name ?? CARDS[c.key].name}</strong></span><span role="cell">${c.watch ?? "—"}</span><span role="cell">${c.act ?? "—"}</span><span role="cell">${BASIS[c.basis]}${[...new Map(c.facts.map((f) => [LIMIT_FACTS[f].source, LIMIT_FACTS[f]])).values()].map((f) => ` <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`).join(",")}</span></div>`).join("")}
+      </div>
+      ${fold("How readings are averaged", `<p class="fine">NASA's CO₂ limit is a 1-hour average. The simulator compares the current value so the demo reacts in seconds; a real detector would average over the hour. Crew vital signs are judged on a ${T.RULES.smoothSeconds}-second average so one noisy reading raises nothing. An alert is raised after ${T.RULES.raiseAfter} readings in a row and cleared after ${T.RULES.clearAfter} back to normal.</p>`)}
+    </section>`;
+
   host.innerHTML = `
   <section class="live" aria-labelledby="lv-title">
     <p class="eyebrow">Module 10 · Live telemetry</p>
@@ -115,8 +182,8 @@ export function mountLive(host) {
 
     <div class="tm-status" data-ref="status" aria-live="polite"></div>
 
-    <p class="fine">Simulations can be combined: tap one or several. Tap again to stop one.</p>
-    ${[["cabin", "Cabin"], ["crew", "Crew member"]].map(([g, label]) => `<div class="tm-controls" role="group" aria-label="${label} simulations"><span class="tm-glabel mono">${label}</span>
+    <p class="fine tm-how">Simulate: tap one or several. Tap again to stop.</p>
+    ${[["cabin", "Cabin"], ["crew", "Crew member"], ["sensor", "Sensors"]].map(([g, label]) => `<span class="tm-glabel mono">${label}</span><div class="tm-controls scroll-row" role="group" aria-label="${label} simulations">
       ${Object.entries(T.SCENARIOS).filter(([, x]) => x.group === g).map(([id, x]) => `<button type="button" class="tm-scn" data-scn="${id}" data-group="${g}" aria-pressed="false">${x.label}</button>`).join("")}</div>`).join("")}
     <div class="tm-controls"><button type="button" class="tm-scn tm-reset" data-scn="nominal">${T.SCENARIOS.nominal.label}</button>
       <button type="button" class="tm-pause" data-ref="pause" aria-pressed="false">Pause</button></div>
@@ -124,43 +191,16 @@ export function mountLive(host) {
 
     <ul class="tm-alerts" data-ref="alerts" aria-live="polite"></ul>
     <details class="tm-log"><summary>Event log · <span data-ref="logn">0</span></summary><ol data-ref="log"></ol>
-      <p class="fine">An alert is raised after ${T.RULES.raiseAfter} readings in a row and cleared after ${T.RULES.clearAfter} back to normal, so one odd reading raises nothing. The log lasts while this screen is open.</p></details>
+      <p class="fine">The log lasts while this screen is open.</p></details>
 
-    <h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
-    <p class="fine">${bands.hr ? `Your usual range (app rule, last ${T.RULES.baselineDays} days, ${bands.hr.n} readings): heart rate ${bands.hr.low}–${bands.hr.high} bpm${bands.sys ? `, top blood pressure ${bands.sys.low}–${bands.sys.high} mmHg` : ""}. Values outside it are flagged even inside the reference range.` : `Log heart rate and blood pressure on ${T.RULES.baselineMin} days and the feed will also compare you with yourself.`}</p>
-    <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration"].map(card).join("")}</ul>
+    ${tabsHtml("live", [
+      { id: "crew", label: "Crew", html: crewTab },
+      { id: "cabin", label: "Cabin", html: cabinTab },
+      { id: "rad", label: "Radiation", html: radTab },
+      { id: "rules", label: "Alert rules", html: rulesTab }
+    ])}
 
-    <h2 class="tm-h">Cabin</h2>
-    <ul class="tm-grid">${["co2", "temperature", "humidity", "pressure", "smoke", "ammonia", "power"].map(card).join("")}</ul>
-
-    <h2 class="tm-h">Radiation</h2>
-    <ul class="tm-grid tm-one">${card("dose")}</ul>
-    <p class="fine">Replay of NASA OSDR RadLab, ISS DosTel1, ${RADLAB_ISS.from.slice(0, 10)} ${RADLAB_ISS.from.slice(11, 16)}–${RADLAB_ISS.to.slice(11, 16)} UTC, one reading per second. <a href="${RADLAB_ISS.docs}" target="_blank" rel="noopener">RadLab</a>. For scale, NASA reports ISS crews ${src(LIMIT_FACTS.doseIss)}</p>
-    <div class="tm-weather" data-ref="weather"><p class="fine">Asking NASA's DONKI service for real space weather…</p></div>
-
-    <section class="tm-info" aria-labelledby="tm-rad-h">
-      <h2 class="tm-h" id="tm-rad-h">Space radiation: where it comes from, what the crew does</h2>
-      <div class="tm-kinds">
-        <div><p class="mono">ALWAYS THERE</p><h3>Galactic cosmic rays</h3><p>High-energy protons and heavy ions from outside the solar system. The dose-rate replay above is mostly this, plus the particles trapped in Earth's magnetic field.</p></div>
-        <div><p class="mono">IN BURSTS</p><h3>Solar particle events</h3><p>Particles shot out by the Sun during a flare. The “Solar particle event” button simulates one; the real flare list above comes from NASA.</p></div>
-      </div>
-      ${fact("radKinds")}${fact("radSolar")}
-      <h3 class="tm-h3">During a solar particle event: take shelter</h3>
-      <p>NASA's plan for Orion uses what is already on board as shielding: the crew will ${factInline("shelter")}. Those bags hold the mission's own cargo: ${factInline("shelterBags")}.</p>
-      ${fact("shelterTime")}${fact("shelterWhy")}
-      <p class="fine">This is NASA's 2016 plan for the Orion spacecraft, not an ISS procedure. On any vehicle the crew follows its own flight rules.</p>
-    </section>
-
-    <section class="tm-info" aria-labelledby="tm-cond-h">
-      <h2 class="tm-h" id="tm-cond-h">Exactly when an alert fires</h2>
-      <div class="tm-table" role="table" aria-label="Alert conditions">
-        <div class="tm-tr tm-th" role="row"><span role="columnheader">Channel</span><span role="columnheader">${STATUS.watch.shape} Watch when</span><span role="columnheader">${STATUS.act.shape} Act now when</span><span role="columnheader">Based on</span></div>
-        ${T.conditions(TYPICAL_DOSE).map((c) => `<div class="tm-tr" role="row"><span role="cell"><strong>${c.name ?? CARDS[c.key].name}</strong></span><span role="cell">${c.watch ?? "—"}</span><span role="cell">${c.act ?? "—"}</span><span role="cell">${BASIS[c.basis]}${[...new Map(c.facts.map((f) => [LIMIT_FACTS[f].source, LIMIT_FACTS[f]])).values()].map((f) => ` <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`).join(",")}</span></div>`).join("")}
-      </div>
-      <p class="fine">NASA's CO₂ limit is a 1-hour average. The simulator compares the current value so the demo reacts in seconds; a real detector would average over the hour. Crew vital signs are judged on a ${T.RULES.smoothSeconds}-second average so one noisy reading raises nothing.</p>
-    </section>
-
-    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules. "Your usual range", the movement reminder and the dose-rate alert are app rules. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The three wearables (chest band, arm cuff, wrist unit), their batteries and their link are simulated; where they sit on the figure is an illustration. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".live");
@@ -202,6 +242,16 @@ export function mountLive(host) {
     root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : "";
     root.querySelector('[data-extra="dose"]').textContent = r.channels.dose.time ? ` · ISS ${r.channels.dose.time} UTC` : "";
     root.querySelector('[data-tag="dose"]').textContent = r.channels.dose.real ? "REAL NASA DATA" : "REAL × SIMULATED EVENT";
+    let linked = 0;
+    for (const [id, sn] of Object.entries(r.sensors)) {
+      const c = r.channels[sn.feeds];
+      if (sn.link === "ok") linked += 1;
+      for (const el of root.querySelectorAll(`[data-sn="${id}"], [data-sn-dot="${id}"], [data-sn-line="${id}"]`)) { el.dataset.link = sn.link; el.dataset.low = String(sn.low && sn.link === "ok"); }
+      root.querySelector(`[data-sn-val="${id}"]`).innerHTML = c.value == null ? "No data" : `${fmt(sn.feeds, c)} <i>${CARDS[sn.feeds].unit}</i>`;
+      root.querySelector(`[data-sn-link="${id}"]`).textContent = sn.link === "ok" ? `${LINK_WORDS.ok} · bat. ${sn.battery} %` : sn.link === "lost" ? `${LINK_WORDS.lost} · ${r.silent} s` : sn.battery <= 0 ? "Off · battery empty" : "Off · no skin contact";
+    }
+    $("hub").textContent = `${linked} of ${Object.keys(r.sensors).length} sensors linked`;
+    for (const k of ["heartRate", "bloodPressure", "still"]) root.querySelector(`[data-ch="${k}"]`).dataset.nodata = String(r.channels[k].value == null);
     for (const k of ["heartRate", "bloodPressure"]) {
       const mine = r.channels[k].mine;
       if (mine && mine !== "inside") root.querySelector(`[data-st="${k}"]`).insertAdjacentHTML("beforeend", ` <small>${mine} your usual</small>`);

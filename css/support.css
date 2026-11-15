@@ -84,7 +84,7 @@ html.comfort-calm .sp-fab.holding .sp-ring circle { transition: stroke-dashoffse
 /* comfort settings */
 html.comfort-calm *, html.comfort-calm *::before, html.comfort-calm *::after { animation: none !important; transition: none !important; }
 html.comfort-large body { zoom: 1.15; }
-html.comfort-focus .src, html.comfort-focus .fine:not(.rule-note) { display: none; }
+html.comfort-focus .src, html.comfort-focus .src-fold, html.comfort-focus .fine:not(.rule-note) { display: none; }
 html.comfort-focus .rule-note { opacity: .8; }
 
 /* leave room under the last card so the Support button never hides content */

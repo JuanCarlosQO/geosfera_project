@@ -49,6 +49,9 @@ const NAMED = {
   "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-043-longitudinal-health-surveillance.pdf": ["NASA OCHMO-TB-043 — Longitudinal Health Surveillance", "standard"],
   "https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf": ["NASA Lifetime Surveillance of Astronaut Health newsletter, Oct 2023", "hrp"],
   "https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp": ["Canadian Space Agency — Monitoring radiation for astronaut health", "partner"],
+  "https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp": ["Canadian Space Agency — Bio-Monitor: keeping an eye on astronauts' vital signs", "partner"],
+  "https://www.nasa.gov/blogs/stationreport/2016/07/19/iss-daily-summary-report-07-19-16/": ["NASA ISS Daily Summary Report, 19 July 2016 — Personal CO2 Monitor", "hrp"],
+  "https://spinoff.nasa.gov/astronaut-remote-health-monitoring": ["NASA Spinoff — Artificial Intelligence for Astronauts Monitors Patients at Home (2020)", "hrp"],
   "https://www.nccih.nih.gov/health/melatonin-what-you-need-to-know": ["NIH NCCIH — Melatonin: what you need to know", "earth"]
 };
 

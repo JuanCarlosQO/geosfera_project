@@ -233,3 +233,57 @@ describe("the team's engine: several scenarios, effort and steady alerts", () =>
     }
   });
 });
+
+describe("wearable sensors: measurement before health", () => {
+  const start = () => T.startState({}, RADLAB_ISS);
+  const play = (s, n, seed = 5) => { const rand = T.rng(seed); let h = {}; let r; for (let i = 0; i < n; i++) { s = T.step(s, rand); r = T.readout(s, {}, 5, h); h = T.remember(h, r); } return { s, r, h }; };
+  const ids = (r) => r.alerts.map((a) => a.id);
+
+  it("starts with three linked sensors, each feeding one channel", () => {
+    const { r } = play(start(), 3);
+    assert.deepEqual(Object.keys(r.sensors), ["chest", "cuff", "wrist"]);
+    for (const sn of Object.values(r.sensors)) { assert.equal(sn.link, "ok"); assert.ok(r.channels[sn.feeds].value != null); }
+    assert.deepEqual(ids(r).filter((x) => x.startsWith("sensor")), []);
+  });
+  it("shows no heart rate when the chest sensor is loose, and raises the sensor, not the heart", () => {
+    const { r, h } = play(T.startScenario(T.startScenario(start(), "tachy"), "leadoff"), 40);
+    assert.equal(r.sensors.chest.link, "off");
+    assert.equal(r.channels.heartRate.value, null);
+    assert.equal(r.channels.heartRate.status, "again");
+    assert.ok(ids(r).includes("sensorChest"));
+    assert.ok(!ids(r).includes("heartRate"), "a racing heart nobody can measure raises no heart alert");
+    assert.equal(h.heartRate, undefined, "nothing is added to the trend while the sensor is silent");
+    assert.ok(r.channels.bloodPressure.value != null, "the cuff keeps working");
+  });
+  it("warns of a low battery before the cuff stops, then shows no blood pressure", () => {
+    let s = T.startScenario(start(), "battery");
+    const low = play(s, 30);
+    assert.ok(low.r.sensors.cuff.battery <= T.RULES.batteryLow && low.r.sensors.cuff.battery > 0);
+    assert.ok(ids(low.r).includes("sensorBattery"));
+    assert.ok(low.r.channels.bloodPressure.value != null, "still measuring while the battery is only low");
+    const dead = play(low.s, 20);
+    assert.equal(dead.r.sensors.cuff.link, "off");
+    assert.equal(dead.r.channels.bloodPressure.value, null);
+    assert.ok(ids(dead.r).includes("sensorCuff") && !ids(dead.r).includes("sensorBattery"));
+    s = T.stopScenario(dead.s, "battery");
+    assert.equal(T.sensorState(s).cuff.link, "ok", "a charged battery goes back in");
+  });
+  it("judges nothing from the body while the wireless link is lost, and escalates with time", () => {
+    const first = play(T.startScenario(T.startScenario(start(), "tachy"), "linkdrop"), 10);
+    for (const k of ["heartRate", "bloodPressure", "still"]) { assert.equal(first.r.channels[k].value, null); assert.equal(first.r.channels[k].status, "again"); }
+    assert.deepEqual(first.r.alerts.filter((a) => a.id === "sensorLink").map((a) => a.status), ["watch"]);
+    assert.ok(!ids(first.r).some((x) => ["heartRate", "bloodPressure", "still"].includes(x)));
+    assert.ok(first.r.channels.co2.value != null, "the cabin sensors are wired and keep reporting");
+    const later = play(first.s, T.RULES.linkAct);
+    assert.deepEqual(later.r.alerts.filter((a) => a.id === "sensorLink").map((a) => a.status), ["act"]);
+    const back = play(T.stopScenario(later.s, "linkdrop"), 2);
+    assert.equal(back.r.silent, 0);
+    assert.ok(back.r.channels.heartRate.value > 0);
+  });
+  it("has words and a condition for every sensor alert, and a place on the figure for every sensor", () => {
+    for (const id of ["sensorChest", "sensorCuff", "sensorBattery", "sensorLink"]) { assert.ok(RESPONSES[id]?.title && RESPONSES[id].steps.length, id); assert.equal(RESPONSES[id].illustrative, true); }
+    assert.ok(T.conditions(5).some((c) => c.name === "A wearable sensor" && c.basis === "app"));
+    for (const sn of Object.values(T.SENSORS)) { assert.ok(sn.at[0] >= 0 && sn.at[0] <= 200 && sn.at[1] >= 0 && sn.at[1] <= 450); assert.ok(["heartRate", "bloodPressure", "still"].includes(sn.feeds)); }
+    for (const id of ["leadoff", "battery", "linkdrop"]) assert.equal(T.SCENARIOS[id].group, "sensor");
+  });
+});

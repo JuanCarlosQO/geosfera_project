@@ -13,6 +13,7 @@ import { mountSources } from "./sources.js";
 import { mountSupport } from "./support.js";
 import { mountMind } from "./mind.js";
 import { startSync, mountSyncButton } from "./sync.js";
+import { initFold } from "./fold.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -82,6 +83,7 @@ if (new URLSearchParams(location.search).has("demo")) {
   history.replaceState(null, "", location.pathname + location.hash); // so a reload after "Remove demo crew" stays empty
 }
 const support = mountSupport(); // the support button works even with the hatch closed
+initFold(station); // tabs, and intros and sources tucked away on every screen
 window.addEventListener("hashchange", render);
 window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });
 mountSyncButton(document.querySelector('[data-action="sync"]'), document.body);

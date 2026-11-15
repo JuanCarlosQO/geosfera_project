@@ -59,8 +59,9 @@ function chartCard(title, key, kind, log, day, entry) {
 
 /**
  * props: { log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps, who: { name, role } }
+ * part: "all" (default), "overview" (figure and crew member card) or "charts" (charts, gauge and readings).
  */
-export function clinicHero({ log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps = 0, reminders = [], family = 0, who = {}, stage = "" }) {
+export function clinicHero({ log, day, entry, summary, mday, streak, exercise, actions, isToday, followUps = 0, reminders = [], family = 0, who = {}, stage = "", part = "all" }) {
   const name = esc(who.name || "Crew member");
   const role = esc(who.role || "Crew");
   const done = completion(entry);
@@ -68,15 +69,7 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
   const rows = readingList(entry, judgeReading);
   const next = actions[0];
   const checkIn = isToday ? "#log" : `#log/${day}`;
-  return `<div class="clinic">
-    <div class="cl-stage${stage ? " cl-stage-cupola" : ""}">
-      ${stage || `<div class="cl-figure" aria-hidden="true">${figureSvg()}</div>
-      <div class="cl-callouts">${CALLOUTS.map((id) => callout(id, summary, entry)).join("")}</div>`}
-      <p class="cl-plate">${name} · Mission day ${mday}</p>
-    </div>
-
-    <div class="cl-side">
-      <section class="cl-card cl-info" aria-labelledby="cl-info-h">
+  const info = `<section class="cl-card cl-info" aria-labelledby="cl-info-h">
         <h2 id="cl-info-h">Crew member</h2>
         <div class="cl-info-grid">
           <div class="cl-avatar" aria-hidden="true"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="26" r="15"/><path d="M22 26a10 8 0 0 1 20 0v3a10 6 0 0 1-20 0z"/><path d="M12 56c2-9 9-13 20-13s18 4 20 13"/><path d="M26 47v6M38 47v6"/></svg></div>
@@ -96,9 +89,8 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
           </div>
         </div>
         <a class="cl-cta" href="${checkIn}">${isToday ? (done.filled ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
-      </section>
-
-      <div class="cl-charts">
+      </section>`;
+  const charts = `<div class="cl-charts">
         ${chartCard("Blood pressure", "bloodPressure", "bp", log, day, entry)}
         ${chartCard("Heart rate", "heartRate", "hr", log, day, entry)}
       </div>
@@ -111,15 +103,24 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
           </svg>
           <p class="cl-g-num">${done.percent}%</p>
           <p class="cl-g-word">${done.filled} of ${done.total} check-in steps logged</p>
-          <p class="cl-g-note">How complete ${isToday ? "today's" : "this day's"} check-in is. It is not a health score.</p>
+          <p class="cl-g-note">Check-in completeness, not a health score.</p>
         </div>
         <div class="cl-list">
           <h2 id="cl-comp-h">${isToday ? "Today's readings" : "Readings on this day"}</h2>
           <ul>${rows.map((r) => `<li><span>${r.label}</span><span class="cl-val tone-${STATUS[r.status].tone}"><strong>${r.value}</strong> ${r.unit}<span class="cl-shape" title="${STATUS[r.status].word}" aria-label="${STATUS[r.status].word}">${STATUS[r.status].shape}</span></span></li>`).join("")}</ul>
-          <p class="cl-g-note">The shape beside each value is its status. Ranges and their sources are in the readings table below.</p>
         </div>
-      </section>
+      </section>`;
+  if (part === "charts") return `<div class="clinic clinic-charts"><div class="cl-side">${charts}</div></div>`;
+  return `<div class="clinic">
+    <div class="cl-stage${stage ? " cl-stage-cupola" : ""}">
+      ${stage || `<div class="cl-figure" aria-hidden="true">${figureSvg()}</div>
+      <div class="cl-callouts">${CALLOUTS.map((id) => callout(id, summary, entry)).join("")}</div>`}
+      <p class="cl-plate">${name} · Mission day ${mday}</p>
+    </div>
+
+    <div class="cl-side">
+      ${info}
+      ${part === "overview" ? "" : charts}
     </div>
   </div>`;
 }
-

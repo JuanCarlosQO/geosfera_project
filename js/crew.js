@@ -52,7 +52,7 @@ export function crewStatusHtml(crew) {
 export function crewFormHtml(first = false) {
   return `<form class="crew-form" data-ref="crew-form" novalidate>
     ${first ? `<p class="eyebrow">Crew registration</p><h1 id="today-title" tabindex="-1">Who is on board?</h1>
-      <p class="lede">Register each crew member. Everyone gets their own daily log on this station device, and the dashboard shows the whole crew at a glance.</p>` : `<h2>Add a crew member</h2>`}
+      <p class="lede keep">Register each crew member. Everyone gets their own daily log on this station device, and the dashboard shows the whole crew at a glance.</p>` : `<h2>Add a crew member</h2>`}
     <div class="cf-row">
       <label class="cf-field"><span>Name</span><input name="name" type="text" autocomplete="off" maxlength="40" placeholder="e.g. Ana Ruiz" required></label>
       <label class="cf-field"><span>Role</span><select name="role">${ROLES.map((r) => `<option>${r}</option>`).join("")}</select></label>

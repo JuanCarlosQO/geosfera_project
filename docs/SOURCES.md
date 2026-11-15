@@ -236,6 +236,25 @@ Kept from before, with their NASA quotes: CO₂ (3 mmHg 1-hour average, not the 
 
 **To verify:** the ammonia values match what NASA's Spacecraft Maximum Allowable Concentrations list is remembered to give for 7 days and 24 hours; the document has not been read and quoted yet.
 
+### Wearable sensors and how they connect (read 14 Nov 2026)
+
+The Live screen draws three simulated wearables on the body figure (chest band, arm cuff, wrist unit) with their link to the tablet, and a folded block, "How real sensors connect", quotes how this is done on the International Space Station today.
+
+| Fact | Exact words | Source |
+| --- | --- | --- |
+| What Bio-Monitor is made of | "This system, which includes a smart shirt, headband and dedicated tablet application" | Canadian Space Agency, Bio-Monitor (page modified 26 Feb 2026): https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp |
+| One thing it measures | "pulse and electrical activity of the heart" | same page |
+| How its data leaves the garment | "Once finished, the astronaut disconnects the battery pack and plugs it into a base" | same page |
+| A wearable paired with a tablet | "The Personal CO2 Monitor was then paired to the iPad" | NASA ISS Daily Summary Report, 19 Jul 2016: https://www.nasa.gov/blogs/stationreport/2016/07/19/iss-daily-summary-report-07-19-16/ |
+| From the tablet to the station | "The data collected will be uploaded to the Space Station Computer via the iPad app before being powered off and stowed." | same report |
+| Sensors in the spacesuit | "their spacesuits contain numerous sensors that monitor body temperature, heart rate, how much they sweat, and more." | NASA Spinoff, "Artificial Intelligence for Astronauts Monitors Patients at Home" (2020): https://spinoff.nasa.gov/astronaut-remote-health-monitoring |
+| Who receives that data | "That data is automatically sent to NASA and distributed to the flight surgeon, biomedical engineers, and others." | same page |
+
+- **Pending:** which radio the wearables use. None of the three pages names it (the word "Bluetooth" is not on them). NASA technical reports on the Personal CO2 Monitor and on the Astroskin garment appear to mention Bluetooth, but they were seen only in search summaries, not read word for word, so the app says "pending a source" and does not state it as fact.
+- **Not used:** NASA's Crew Active Dosimeter (worn radiation detector) was found in the LSAH newsletter but is not quoted in the app yet.
+- **Simulated, and labelled so:** the three wearables, their batteries, the link and the three sensor simulations (chest sensor loose, cuff battery dying, wireless link lost). Where each sensor sits on the figure is an illustration. "Estimated hydration" has no sensor on the figure.
+- **App rules, illustrative (`js/telemetry-core.js`):** a channel whose sensor is silent shows no value and "Measure again"; it is never judged normal and never raises a health alert. The sensor raises its own alert: no signal, battery at 20 % or less, or no data from any body sensor for 30 seconds ("Act now": a crewmate checks in person). The steps shown with these alerts are app rules, not a NASA procedure.
+
 ## Module 5 — future body
 
 NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 39, [V1 4027], its rationale, and [V1 4028]); the others are already listed above.
@@ -272,6 +291,10 @@ NASA OCHMO-TB-016 Rev B (Behavioral Health and Performance, 24 Oct 2023) read on
 **Family channel (app idea, not a NASA system):** a family member writes a short text message that travels inside a link; on the crew member's device it arrives sealed, showing only who it is from and what kind it is; the crew member opens it, sets it aside or deletes it, and nothing is marked overdue or reported back. Messages stay on the device (never synced to other crew devices), are text only and capped at 600 characters. The demo crew has two messages marked SIMULATED. Serious or urgent news is out of scope: families go through the mission's support team.
 
 **Family channel protections (app choices, pending review by the team's psychology lead):** a message from home can also deepen homesickness, so the crew member can pause the channel (messages are kept sealed and nothing is announced anywhere in the app); after reading, one tap records how it left them (better, about the same, more homesick), and two "more homesick" in a row suggest talking to someone or pausing; the writing page gives the family three pieces of guidance before they write. A photo (JPEG, shrunk in the browser to about 125 KB) or a voice note (up to 45 seconds) can travel with the message as a small file instead of a link; only those two formats are accepted, video is not supported, and nothing is uploaded.
+
+**Mind map — the 3D brain (illustration and app rules):** the brain on the Mind page is drawn by the app's own code (`js/brain-core.js`: a cloud of points over a few rounded shapes, with dark wavy lines for the folds). It is not a scan, not taken from an anatomical atlas or any medical image, and nothing is measured in anyone's brain; the lobes are approximate. Its zones are a map of five signals the crew member already produces in the app, not a claim about where those things happen in a brain, and the screen says so ("Illustration · not a scan"). The signals and their rules (`js/mind-core.js`): sleep, judged with the same Earth reference as the readings table (CDC — About Sleep, under 7 h, pending team review); mood, flagged at 1 or 2 of 5 or when the last 3 days average 1 point or more under the member's own average of the 14 days before (app rules, illustrative; "your usual" needs 5 readings); alertness, a logged medication whose NASA kit-list entry cautions about performance, inside the counting window already used by Fit for duty; home, from the family channel (sealed messages, a pause, or the "two in a row" app rule); support, the member's own open request. The headline names what to look at and is never a score. Pending review by someone on the team with psychology training.
+
+**Less text on screen (design choice):** from 14 Nov 2026 every screen tucks its introduction and closing note into "About this screen" under the title, and each quoted source into a "Source" block beside what it supports; long screens are split into tabs. No quote, label ("SIMULATED", "REAL NASA DATA", "App rule") or disclaimer was removed: the words are one tap away, and the labels stay visible.
 
 **App choices (not NASA rules):** the SOS button (press and hold 2 seconds, one gesture, cancel within 10 seconds if sent by mistake) and the one-tap "talk to someone" button, the list of reasons, showing an unanswered alert on crewmates' screens for 12 hours, and the comfort settings (calm motion, larger text, one thing at a time) for different sensory and attention needs. Alerts reach crewmates' devices only through the team's station sync; delivery to Mission Control is simulated in this prototype and the screen says so.
 

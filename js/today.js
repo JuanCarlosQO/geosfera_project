@@ -19,6 +19,10 @@ import { SUPPLEMENTS } from "./data/supplements.js";
 import { familyWaiting } from "./family.js";
 import { KIT } from "./data/med-kit.js";
 import { demoLoaded, loadDemo, removeDemo, demoNoticeHtml, demoOfferHtml } from "./demo.js";
+import { fold, tabsHtml } from "./fold.js";
+import { mindSignals, overall } from "./mind-core.js";
+import { getAlerts } from "./support.js";
+import { FAMILY_KEY, cleanBox } from "./family-core.js";
 
 const MISSION_KEY = "geosfera.mission";
 const UNITS = { heartRate: "bpm", bloodOxygen: "%", glucose: "mg/dL", radiationDose: "mSv", temperature: "°C", sleepHours: "h sleep", mood: "/5" };
@@ -91,7 +95,7 @@ function readingRows(log, day, entry) {
     const st = r?.value == null ? "none" : judgeReading(f.key, r);
     const d = sparkPath(series(log, f.key, day, 14));
     return `<li class="rd" style="--i:${i}">
-      <div class="rd-name">${f.label}<small>${reasonFor(f.key, r)}</small></div>
+      <div class="rd-name">${f.label}<small class="rd-why">${reasonFor(f.key, r)}</small></div>
       <svg class="spark" viewBox="0 0 120 32" aria-hidden="true">${d ? `<path d="${d}" pathLength="1"/>` : `<line x1="0" y1="16" x2="120" y2="16" class="flat"/>`}</svg>
       <div class="rd-val"><strong>${r?.value != null ? fmt(f.key, r.value) : "—"}</strong><span>${f.unit}</span></div>
       <div class="rd-st">${chip(st)}</div>
@@ -130,6 +134,66 @@ export function mountToday(host, { go }, requested) {
   const medStore = cleanStore(readJson(MEDS_KEY, null), KIT, SUPPLEMENTS);
   const rem = reminders(medStore, medList(KIT, medStore), SUPPLEMENTS);
 
+  const heroProps = { log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, reminders: rem, family: familyWaiting(member.id), who: member, stage: cupola(summary, entry) };
+  const mind = overall(mindSignals({ log, today, me: member, doses: medStore.doses, kit: KIT, alerts: getAlerts(), box: cleanBox(readJson(FAMILY_KEY, {})) }));
+  const mindSt = STATUS[mind.status] ?? STATUS.none;
+
+  const overviewTab = `${day_theme ? clinicHero({ ...heroProps, part: "overview" }) : `<div class="hero">
+      ${cupola(summary, entry)}
+      <div class="hero-side">
+        <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
+        <a class="strip" href="#mission" aria-label="Mission progress">
+          <span class="mini-ring" style="--p:${(exFrac * 100).toFixed(0)}"><span>${ex}</span></span>
+          <span class="strip-text"><strong>${ex} of ${EXERCISE_GOAL_MIN} min</strong><small>Exercise · NASA's 1.5 hours</small></span>
+          <span class="strip-text"><strong>${streak} ${streak === 1 ? "day" : "days"}</strong><small>Check-in streak</small></span>
+        </a>
+      </div>
+    </div>`}
+    ${isToday ? `<a class="fb-link today-mind" href="#mind"><span><span class="tone-${mindSt.tone}" aria-hidden="true">${mindSt.shape}</span> Mind map<small>${mind.title}</small></span><span>Open →</span></a>` : ""}`;
+
+  const readingsTab = `${day_theme ? clinicHero({ ...heroProps, part: "charts" }) : ""}
+    <section aria-labelledby="rd-h">
+      <div class="rd-head"><h2 id="rd-h">Readings</h2><span class="mono">last 14 days</span></div>
+      <ul class="readings" data-ref="readings">${readingRows(log, day, entry)}</ul>
+      <button type="button" class="textlink rd-toggle" data-action="ranges" aria-expanded="false">Show ranges and sources</button>
+      <p class="fine rd-note" hidden>Ranges: ${REVIEW_NOTE}</p>
+    </section>`;
+
+  const hazardsTab = `<section class="hazards" aria-labelledby="hz-h">
+      <h2 id="hz-h">The five hazards</h2>
+      <div class="hz-row" role="group" aria-label="NASA's five hazards of human spaceflight">
+        ${HAZARDS.map((h) => `<button type="button" class="hz" data-hazard="${h.id}" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HAZARD_ICONS[h.id]}</svg>
+          <span>${h.name}</span></button>`).join("")}
+      </div>
+      <div class="hz-detail" data-ref="hz" aria-live="polite"><p class="fine">Tap a hazard to read NASA's description.</p></div>
+    </section>
+
+    <div class="panels">
+      <section class="panel" aria-labelledby="todo-h">
+        <h2 id="todo-h">What to do now</h2>
+        ${actions.length ? `<ol class="todo">${actions.map((a) => `<li class="tone-${a.tone}"><strong>${a.tone === "again" ? "◌ " : ""}${a.title}</strong><span>${a.text}</span></li>`).join("")}</ol>`
+          : `<p class="calm">● Nothing to do. Keep your routine: exercise, meals and sleep on schedule.</p>`}
+        <p class="fine">Measuring steps only, not medical advice.</p>
+      </section>
+      <section class="panel" aria-labelledby="rad-h">
+        <h2 id="rad-h">Radiation</h2>
+        <div class="rad-nums">
+          <div><strong>${rad.today ?? "—"}</strong><small>mSv this day</small></div>
+          <div><strong data-count-dec="${rad.total}">0</strong><small>mSv logged in total · ${rad.days} ${rad.days === 1 ? "day" : "days"}</small></div>
+        </div>
+        <div class="limit">
+          <div class="limit-bar"><span style="width:${Math.min(100, (rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(2)}%"></span></div>
+          <p class="fine">${rad.total} of ${RADIATION_LIMITS.careerMSv} mSv career limit (${((rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(1)} %)</p>
+        </div>
+        ${fold("About these numbers", `<ul class="rad-facts">
+          <li>Missions to the space station are “entirely within the magnetosphere”; Moon and Mars missions “will extend beyond this protective bubble”. <a href="https://www.nasa.gov/reference/risk-of-radiation-induced-cancers/" target="_blank" rel="noopener">NASA</a></li>
+          <li>“Neutron radiation, which contributes to about 30% of total radiation on the ISS”. <a href="https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp" target="_blank" rel="noopener">Canadian Space Agency</a></li>
+        </ul>
+        <p class="fine">Career limit: ${RADIATION_LIMITS.source}. Doses from earlier missions are not included.</p>`)}
+      </section>
+    </div>`;
+
   host.innerHTML = `
   <section class="today" aria-labelledby="today-title">
     <div class="today-head">
@@ -148,57 +212,11 @@ export function mountToday(host, { go }, requested) {
     ${demoLoaded() ? demoNoticeHtml() : ""}
     ${crewStatusHtml(crew)}
 
-    ${day_theme ? clinicHero({ log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, reminders: rem, family: familyWaiting(member.id), who: member, stage: cupola(summary, entry) }) : `<div class="hero">
-      ${cupola(summary, entry)}
-      <div class="hero-side">
-        <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
-        <a class="strip" href="#mission" aria-label="Mission progress">
-          <span class="mini-ring" style="--p:${(exFrac * 100).toFixed(0)}"><span>${ex}</span></span>
-          <span class="strip-text"><strong>${ex} of ${EXERCISE_GOAL_MIN} min</strong><small>Exercise · NASA's 1.5 hours</small></span>
-          <span class="strip-text"><strong>${streak} ${streak === 1 ? "day" : "days"}</strong><small>Check-in streak</small></span>
-        </a>
-      </div>
-    </div>`}
-
-    <section class="hazards" aria-labelledby="hz-h">
-      <h2 id="hz-h">The five hazards</h2>
-      <div class="hz-row" role="group" aria-label="NASA's five hazards of human spaceflight">
-        ${HAZARDS.map((h) => `<button type="button" class="hz" data-hazard="${h.id}" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HAZARD_ICONS[h.id]}</svg>
-          <span>${h.name}</span></button>`).join("")}
-      </div>
-      <div class="hz-detail" data-ref="hz" aria-live="polite"><p class="fine">Tap a hazard to read NASA's description and see which body systems it touches.</p></div>
-    </section>
-
-    <div class="panels">
-      <section class="panel" aria-labelledby="todo-h">
-        <h2 id="todo-h">What to do now</h2>
-        ${actions.length ? `<ol class="todo">${actions.map((a) => `<li class="tone-${a.tone}"><strong>${a.tone === "again" ? "◌ " : ""}${a.title}</strong><span>${a.text}</span></li>`).join("")}</ol>`
-          : `<p class="calm">● Nothing to do. Keep your routine: exercise, meals and sleep on schedule.</p>`}
-        <p class="fine">Measuring steps only. Ergosphere does not give medical advice; follow your flight surgeon.</p>
-      </section>
-      <section class="panel" aria-labelledby="rad-h">
-        <h2 id="rad-h">Radiation</h2>
-        <div class="rad-nums">
-          <div><strong>${rad.today ?? "—"}</strong><small>mSv this day</small></div>
-          <div><strong data-count-dec="${rad.total}">0</strong><small>mSv logged in total · ${rad.days} ${rad.days === 1 ? "day" : "days"}</small></div>
-        </div>
-        <ul class="rad-facts">
-          <li>Missions to the space station are “entirely within the magnetosphere”; Moon and Mars missions “will extend beyond this protective bubble”. <a href="https://www.nasa.gov/reference/risk-of-radiation-induced-cancers/" target="_blank" rel="noopener">NASA</a></li>
-          <li>“Neutron radiation, which contributes to about 30% of total radiation on the ISS”. <a href="https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp" target="_blank" rel="noopener">Canadian Space Agency</a></li>
-        </ul>
-        <div class="limit">
-          <div class="limit-bar"><span style="width:${Math.min(100, (rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(2)}%"></span></div>
-          <p class="fine">${rad.total} of ${RADIATION_LIMITS.careerMSv} mSv career limit (${((rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(1)} %) · ${RADIATION_LIMITS.source}. Doses from earlier missions are not included.</p>
-        </div>
-      </section>
-    </div>
-
-    <section aria-labelledby="rd-h">
-      <div class="rd-head"><h2 id="rd-h">Readings</h2><span class="mono">last 14 days</span></div>
-      <ul class="readings">${readingRows(log, day, entry)}</ul>
-      <p class="fine">Ranges: ${REVIEW_NOTE}</p>
-    </section>
+    ${tabsHtml("today", [
+      { id: "overview", label: "Overview", html: overviewTab },
+      { id: "readings", label: "Readings", html: readingsTab, badge: `${summary.measured}/${summary.total}` },
+      { id: "hazards", label: "Hazards", html: hazardsTab }
+    ])}
   </section>`;
 
   const rerender = () => mountToday(host, { go }, requested);
@@ -231,13 +249,20 @@ export function mountToday(host, { go }, requested) {
     const b = e.target.closest("[data-day]");
     if (b && !b.disabled) go(b.dataset.day === today ? "today" : `today/${b.dataset.day}`);
   });
+  host.querySelector('[data-action="ranges"]').addEventListener("click", (e) => {
+    const on = e.currentTarget.getAttribute("aria-expanded") !== "true";
+    e.currentTarget.setAttribute("aria-expanded", String(on));
+    e.currentTarget.textContent = on ? "Hide ranges and sources" : "Show ranges and sources";
+    host.querySelector('[data-ref="readings"]').classList.toggle("show-why", on);
+    host.querySelector(".rd-note").hidden = !on;
+  });
   const hzBox = host.querySelector('[data-ref="hz"]');
   host.querySelector(".hz-row").addEventListener("click", (e) => {
     const b = e.target.closest(".hz");
     if (!b) return;
     const open = b.getAttribute("aria-expanded") !== "true";
     host.querySelectorAll(".hz").forEach((x) => x.setAttribute("aria-expanded", "false"));
-    if (!open) { hzBox.innerHTML = `<p class="fine">Tap a hazard to read NASA's description and see which body systems it touches.</p>`; return; }
+    if (!open) { hzBox.innerHTML = `<p class="fine">Tap a hazard to read NASA's description.</p>`; return; }
     b.setAttribute("aria-expanded", "true");
     const h = HAZARDS.find((x) => x.id === b.dataset.hazard);
     const sys = h.systems.map((id) => SYSTEMS.find((s) => s.id === id)).filter(Boolean);

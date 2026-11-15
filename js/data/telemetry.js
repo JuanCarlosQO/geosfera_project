@@ -8,6 +8,9 @@ const ATM = "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-003-habita
 const LSAH = "https://www.nasa.gov/wp-content/uploads/2023/10/lsah-newsletter-2023-vol28-issue2.pdf";
 const EXERCISE = "https://www.nasa.gov/reference/risk-of-reduced-cardiorespiratory-and-musculoskeletal-fitness/";
 const RADIATION = "https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/";
+const BIOMON = "https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp";
+const PCO2M = "https://www.nasa.gov/blogs/stationreport/2016/07/19/iss-daily-summary-report-07-19-16/";
+const SUITS = "https://spinoff.nasa.gov/astronaut-remote-health-monitoring";
 const SHELTER = "https://www.nasa.gov/missions/artemis/orion/scientists-and-engineers-evaluate-orion-radiation-protection-plan/";
 
 export const LIMIT_FACTS = {
@@ -28,6 +31,13 @@ export const LIMIT_FACTS = {
   shelterBags: { quote: "Using the stowage bags on board that will contain supplies, food and water", url: SHELTER, source: "NASA — Orion radiation protection plan (2016)" },
   shelterTime: { quote: "If the warning were to sound, the crew would create the shelter within an hour and in some cases would need to stay inside for as long as 24 hours.", url: SHELTER, source: "NASA — Orion radiation protection plan (2016)" },
   shelterWhy: { quote: "The method protects the crew by increasing mass directly surrounding them", url: SHELTER, source: "NASA — Orion radiation protection plan (2016)" },
+  wearParts: { quote: "This system, which includes a smart shirt, headband and dedicated tablet application", url: BIOMON, source: "Canadian Space Agency — Bio-Monitor" },
+  wearHeart: { quote: "pulse and electrical activity of the heart", url: BIOMON, source: "Canadian Space Agency — Bio-Monitor" },
+  wearBase: { quote: "Once finished, the astronaut disconnects the battery pack and plugs it into a base", url: BIOMON, source: "Canadian Space Agency — Bio-Monitor" },
+  wearPaired: { quote: "The Personal CO2 Monitor was then paired to the iPad", url: PCO2M, source: "NASA ISS Daily Summary Report, 19 Jul 2016" },
+  wearUpload: { quote: "The data collected will be uploaded to the Space Station Computer via the iPad app before being powered off and stowed.", url: PCO2M, source: "NASA ISS Daily Summary Report, 19 Jul 2016" },
+  suitSensors: { quote: "their spacesuits contain numerous sensors that monitor body temperature, heart rate, how much they sweat, and more.", url: SUITS, source: "NASA Spinoff (2020)" },
+  suitData: { quote: "That data is automatically sent to NASA and distributed to the flight surgeon, biomedical engineers, and others.", url: SUITS, source: "NASA Spinoff (2020)" },
   exercise: { quote: "Six to seven days a week … resistance training and aerobic exercises for 1.5 hours per day", url: EXERCISE, source: "NASA HRP" }
 };
 
@@ -35,6 +45,10 @@ export const LIMIT_FACTS = {
 export const RESPONSES = {
   co2: { title: "Cabin CO₂ above NASA's limit", steps: ["Tell the crew and Mission Control: CO₂ removal may be failing.", "Move to a ventilated module and keep the air moving.", "Headache? Open Meds › Head for what to try first."], link: { href: "#meds", text: "Open Meds" }, facts: ["co2Standard", "co2Headache", "co2Above"] },
   dose: { title: "Dose rate far above the usual", steps: ["Tell the crew and Mission Control.", "Follow the flight rules for a solar particle event: move to the most shielded part of the vehicle. NASA's plan for Orion is a shelter built from the stowage bags.", "Log your dosimeter reading in today's check-in."], link: { href: "#log", text: "Open the check-in" }, facts: ["shelter", "shelterTime", "doseEvent"] },
+  sensorChest: { title: "Chest sensor: no signal", steps: ["This is the sensor, not the heart: no heart rate is shown until it reads again.", "Press the chest band flat against the skin, or moisten its contacts.", "Still nothing? Measure by hand and log it in the check-in."], link: { href: "#log", text: "Open the check-in" }, facts: [], illustrative: true },
+  sensorCuff: { title: "Arm cuff is off: battery empty", steps: ["No blood pressure is shown until the cuff is back.", "Change or charge the battery, then measure again."], link: null, facts: [], illustrative: true },
+  sensorBattery: { title: "Arm cuff battery is low", steps: ["Change or charge it at the next break, before it stops.", "Readings are still good for now."], link: null, facts: [], illustrative: true },
+  sensorLink: { title: "No data from the body sensors", steps: ["No reading is not a normal reading: nothing from the body is being judged.", "Bring the tablet closer and check that the sensors are on.", "Out of reach for long? A crewmate checks on them in person."], link: null, facts: [], illustrative: true },
   heartRate: { title: "Heart rate outside the range", steps: ["Stop and rest for five minutes, then look again.", "If it stays out, tell your crew medical officer."], link: { href: "#duty", text: "Fit for duty check" }, facts: [] },
   bloodPressure: { title: "Blood pressure outside the range", steps: ["Sit still and measure again with the cuff.", "If it stays out, tell your crew medical officer."], link: { href: "#log", text: "Open the check-in" }, facts: [] },
   still: { title: "A long time without moving", steps: ["Stand up, stretch or do a short exercise block.", "Exercise counts toward NASA's daily 1.5 hours."], link: { href: "#mission", text: "Open Mission" }, facts: ["exercise"] },

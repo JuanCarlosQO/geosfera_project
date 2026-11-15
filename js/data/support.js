@@ -36,5 +36,5 @@ export const LEVELS = {
 export const COMFORT = [
   { id: "calm", label: "Calm motion", help: "Stops animations, blinking dots and moving scan lines." },
   { id: "large", label: "Larger text", help: "Makes all text about 15 % bigger." },
-  { id: "focus", label: "One thing at a time", help: "Hides sources and side notes until you open them." }
+  { id: "focus", label: "One thing at a time", help: "Hides sources and side notes completely." }
 ];
