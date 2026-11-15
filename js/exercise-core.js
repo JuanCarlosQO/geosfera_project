@@ -13,15 +13,23 @@ export const DEVICES = {
   t2: { name: "T2", label: "Treadmill (T2)", kind: "aerobic" }
 };
 
+// the two halves of the daily countermeasure, as NASA names them: resistance training (strength,
+// on ARED) and aerobic exercise (endurance and conditioning, on T2 and CEVIS)
+export const BLOCKS = {
+  strength: { label: "Strength training", sub: "Resistance on ARED: muscle and bone" },
+  endurance: { label: "Endurance & conditioning", sub: "Aerobic on T2 and CEVIS: heart and lungs" }
+};
+
 // what a session works on; ARED sessions list their lifts so the loads can be logged
 export const FOCUS = {
-  lower: { device: "ared", label: "Lower body", moves: ["squat", "deadlift", "heel"] },
-  upper: { device: "ared", label: "Upper body", moves: ["bench", "press", "row"] },
-  intervals: { device: "cevis", label: "Intervals" },
-  steady: { device: "cevis", label: "Steady ride" },
-  run: { device: "t2", label: "Run in the harness" },
-  walk: { device: "t2", label: "Walk in the harness" }
+  lower: { device: "ared", block: "strength", label: "Lower body", moves: ["squat", "deadlift", "heel"] },
+  upper: { device: "ared", block: "strength", label: "Upper body", moves: ["bench", "press", "row"] },
+  run: { device: "t2", block: "endurance", label: "Run in the harness" },
+  walk: { device: "t2", block: "endurance", label: "Walk in the harness" },
+  intervals: { device: "cevis", block: "endurance", label: "Intervals" },
+  steady: { device: "cevis", block: "endurance", label: "Steady ride" }
 };
+export const blockOf = (focus) => FOCUS[focus]?.block ?? null;
 
 export const MOVES = {
   squat: "Squat", deadlift: "Deadlift", heel: "Heel raise",
@@ -175,3 +183,11 @@ export const openFaults = (store) => store.faults.filter((f) => !f.fixed);
 
 export const sessionLabel = (s) => `${DEVICES[FOCUS[s.focus].device].name} · ${FOCUS[s.focus].label}`;
 export const symptomLabel = (id) => SYMPTOMS.find((s) => s.id === id)?.label ?? id;
+
+/** Today's sessions split into the two blocks: { strength: [{ session, done }], endurance: [...] }. */
+export function byBlock(rows) {
+  const out = { strength: [], endurance: [] };
+  for (const r of rows) out[blockOf(r.session.focus)]?.push(r);
+  return out;
+}
+

@@ -86,3 +86,15 @@ describe("exercise facts are verified", () => {
     }
   });
 });
+
+describe("strength training and endurance & conditioning", () => {
+  it("puts every session in one of the two blocks", () => {
+    for (const [id, f] of Object.entries(X.FOCUS)) assert.ok(X.BLOCKS[f.block], id);
+    assert.equal(X.blockOf("lower"), "strength");
+    assert.equal(X.blockOf("run"), "endurance");
+    assert.equal(X.blockOf("intervals"), "endurance");
+    const b = X.byBlock(X.dayStatus(X.cleanStore({}), "a", "2026-11-15"));
+    assert.deepEqual([b.strength.length, b.endurance.length], [1, 1]); // the starting plan has one of each
+  });
+});
+

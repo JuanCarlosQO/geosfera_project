@@ -10,8 +10,9 @@ export const REVIEW_NOTE = "Earth clinical reference, pending team review. In fl
 
 export const RANGES = {
   bloodPressure: {
-    source: "CDC — About High Blood Pressure",
-    url: "https://www.cdc.gov/high-blood-pressure/about/index.html",
+    // the same categories in AHA/ACC's 2025 guideline, quoted word for word in docs/SOURCES.md
+    source: "AHA/ACC 2025 guideline; CDC — About High Blood Pressure",
+    url: "https://professional.heart.org/en/science-news/2025-high-blood-pressure-guideline/top-things-to-know",
     judge: ([s, d]) => {
       if (s > 180 || d > 120) return { status: "act", band: "Severe" };
       if (s >= 140 || d >= 90) return { status: "act", band: "Stage 2" };

@@ -48,7 +48,7 @@ const fact = (k) => `<small class="src">“${LIMIT_FACTS[k].quote}” <a href="$
 const factInline = (k) => `“${LIMIT_FACTS[k].quote}”`;
 const LIMIT_TEXT = {
   heartRate: "Team reference 60–100 bpm",
-  bloodPressure: "Team reference: CDC categories",
+  bloodPressure: "Reference: AHA/ACC 2025 categories",
   still: "App rule: move after 60 min",
   co2Personal: "App rule: NASA's cabin limit, 3 mmHg, near you",
   co2: "NASA: no more than 3 mmHg (1-hour average)",

@@ -44,6 +44,25 @@ function sessionForm(s, done) {
   </form>`;
 }
 
+/** The two halves of the day's countermeasure, each with its sessions (or a line saying none). */
+function blocksHtml(rows, item, cls) {
+  const g = X.byBlock(rows);
+  return Object.entries(X.BLOCKS).map(([b, info]) => {
+    const done = g[b].filter((r) => r.done).length;
+    return `<div class="ex-block ex-${b}">
+      <div class="ex-block-head"><h3>${info.label}</h3><span class="mono ex-count">${g[b].length ? `${done} of ${g[b].length}` : "—"}</span></div>
+      <p class="fine">${info.sub}</p>
+      ${g[b].length ? `<ul class="${cls}">${g[b].map(item).join("")}</ul>` : `<p class="fine ex-none">None prescribed today.</p>`}
+    </div>`;
+  }).join("");
+}
+
+const rowHtml = ({ session: s, done }, open) => `<li class="ex-row${done ? " done" : ""}">
+      <div class="ex-what"><strong>${X.sessionLabel(s)}</strong><small><span>${s.minutes} min</span>${done ? `<span>✓ ${done.minutes} min</span>${done.sets.length ? `<span>${done.sets.length} ${done.sets.length === 1 ? "lift logged" : "lifts logged"}</span>` : ""}${done.symptoms.length ? `<span class="rep">Reported:</span>${done.symptoms.map((x) => `<span>${X.symptomLabel(x)}</span>`).join("")}` : ""}` : ""}</small></div>
+      <button type="button" class="${done ? "textlink" : "cta main"}" data-ex="open" data-sid="${esc(s.id)}">${done ? "Edit" : "Done"}</button>
+      ${open === s.id ? sessionForm(s, done) : ""}
+    </li>`;
+
 /** The crew member's card: today's prescribed sessions. */
 export function crewExerciseHtml(member, { open = null, faultOpen = false, msg = "" } = {}) {
   const store = read(), today = dateKey();
@@ -53,11 +72,7 @@ export function crewExerciseHtml(member, { open = null, faultOpen = false, msg =
   return `<section class="ch-card ex-card" aria-labelledby="ex-h">
     <div class="ex-head"><h2 id="ex-h">Today's exercise</h2><span class="mono ex-count">${doneN} of ${rows.length} done</span></div>
     <p class="fine">${plan.set ? `Prescribed by the ground medical team${plan.at ? ` · ${hhmm(plan.at)}` : ""}` : "The station's starting plan until the ground team writes yours: 1.5 hours a day, as NASA asks."}</p>
-    <ul class="ex-list">${rows.map(({ session: s, done }) => `<li class="ex-row${done ? " done" : ""}">
-      <div class="ex-what"><strong>${X.sessionLabel(s)}</strong><small><span>${s.minutes} min</span>${done ? `<span>✓ ${done.minutes} min</span>${done.sets.length ? `<span>${done.sets.length} ${done.sets.length === 1 ? "lift logged" : "lifts logged"}</span>` : ""}${done.symptoms.length ? `<span class="rep">Reported:</span>${done.symptoms.map((x) => `<span>${X.symptomLabel(x)}</span>`).join("")}` : ""}` : ""}</small></div>
-      <button type="button" class="${done ? "textlink" : "cta main"}" data-ex="open" data-sid="${esc(s.id)}">${done ? "Edit" : "Done"}</button>
-      ${open === s.id ? sessionForm(s, done) : ""}
-    </li>`).join("")}</ul>
+    ${blocksHtml(rows, (r) => rowHtml(r, open), "ex-list")}
     <p class="ch-msg" role="status">${msg}</p>
     ${faultOpen ? `<form class="ex-fault" data-ex-fault novalidate autocomplete="off">
         <label class="when"><span>Machine</span><select name="device">${Object.entries(X.DEVICES).map(([id, d]) => `<option value="${id}">${d.label}</option>`).join("")}</select></label>
@@ -110,7 +125,7 @@ export function bindCrewExercise(host, member, paint) {
 /* ---------------- the ground team (on Mission) ---------------- */
 
 function planEditor(plan) {
-  const opt = (s) => Object.entries(X.FOCUS).map(([id, f]) => `<option value="${id}" ${s.focus === id ? "selected" : ""}>${X.DEVICES[f.device].name} · ${f.label}</option>`).join("");
+  const opt = (s) => Object.entries(X.BLOCKS).map(([b, info]) => `<optgroup label="${info.label}">${Object.entries(X.FOCUS).filter(([, f]) => f.block === b).map(([id, f]) => `<option value="${id}" ${s.focus === id ? "selected" : ""}>${X.DEVICES[f.device].name} · ${f.label}</option>`).join("")}</optgroup>`).join("");
   return `<form class="ex-plan" data-ex-plan novalidate>
     ${plan.sessions.map((s, i) => `<div class="ex-plan-row" data-row="${i}">
       <select name="focus-${i}" aria-label="Session ${i + 1}">${opt(s)}</select>
@@ -136,7 +151,7 @@ export function groundExerciseHtml(member, { draft = null, msg = "" } = {}) {
     <div class="ex-grid">
       <div class="cl-card ex-box">
         <h3>Today</h3>
-        <ul class="ex-today">${rows.map(({ session: s, done }) => `<li class="${done ? "done" : ""}"><span>${X.sessionLabel(s)} · ${s.minutes} min</span><strong>${done ? `✓ ${done.minutes} min` : "Not yet"}</strong></li>`).join("")}</ul>
+        ${blocksHtml(rows, ({ session: s, done }) => `<li class="${done ? "done" : ""}"><span>${X.sessionLabel(s)} · ${s.minutes} min</span><strong>${done ? `✓ ${done.minutes} min` : "Not yet"}</strong></li>`, "ex-today")}
         <div class="ex-week" role="img" aria-label="Sessions done each day of the last 7">${c.days.map((d) => `<span class="${d.done >= d.planned ? "full" : d.done ? "part" : ""}" title="${d.day}: ${d.done} of ${d.planned}"><i style="height:${Math.round((d.done / Math.max(1, d.planned)) * 100)}%"></i><small>${short(d.day)}</small></span>`).join("")}</div>
       </div>
       <div class="cl-card ex-box">
