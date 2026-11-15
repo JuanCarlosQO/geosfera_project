@@ -251,3 +251,5 @@
 
 /* yellow numbers on the white featured cards of the dark look would not read: they stay dark */
 .look-new[data-mode="dark"] .mc-kpi:first-child.watch b, .look-new[data-mode="dark"] .an-outs .an-out:first-child.warn b { color: var(--solid-ink); }
+/* css/dark.css paints the wide buttons with a gradient: in the new dark look they are white */
+.look-new[data-mode="dark"] :is(.cta-wide, .transmit) { background: var(--solid); color: var(--solid-ink); border-color: transparent; box-shadow: none; }
