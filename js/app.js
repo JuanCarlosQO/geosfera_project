@@ -46,7 +46,7 @@ function render() {
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
-  if (name === "live") mountLive(station);
+  if (name === "live") mountLive(station, arg);
   if (name === "future") mountFuture(station);
   if (name === "sources") mountSources(station);
   if (name === "family") mountFamily(station, { arg, payload: rest });

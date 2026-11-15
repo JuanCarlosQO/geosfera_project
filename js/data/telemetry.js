@@ -11,6 +11,7 @@ const RADIATION = "https://www.nasa.gov/missions/analog-field-testing/why-space-
 const BIOMON = "https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp";
 const PCO2M = "https://www.nasa.gov/blogs/stationreport/2016/07/19/iss-daily-summary-report-07-19-16/";
 const SUITS = "https://spinoff.nasa.gov/astronaut-remote-health-monitoring";
+const DNA = "https://www.nasa.gov/humans-in-space/space-radiation-is-risky-business-for-the-human-body/";
 const SHELTER = "https://www.nasa.gov/missions/artemis/orion/scientists-and-engineers-evaluate-orion-radiation-protection-plan/";
 
 export const LIMIT_FACTS = {
@@ -40,6 +41,11 @@ export const LIMIT_FACTS = {
   wearUpload: { quote: "The data collected will be uploaded to the Space Station Computer via the iPad app before being powered off and stowed.", url: PCO2M, source: "NASA ISS Daily Summary Report, 19 Jul 2016" },
   suitSensors: { quote: "their spacesuits contain numerous sensors that monitor body temperature, heart rate, how much they sweat, and more.", url: SUITS, source: "NASA Spinoff (2020)" },
   suitData: { quote: "That data is automatically sent to NASA and distributed to the flight surgeon, biomedical engineers, and others.", url: SUITS, source: "NASA Spinoff (2020)" },
+  dnaDamage: { quote: "The primary means by which radiation effects cells is by damaging DNA", url: DNA, source: "NASA — Space Radiation is Risky Business for the Human Body (2017)" },
+  dnaBases: { quote: "DNA bases (adenine, guanine, cytosine, and thymine) can also be knocked out.", url: DNA, source: "NASA — Space Radiation is Risky Business for the Human Body (2017)" },
+  dnaRepair: { quote: "The cell will make an attempt to repair these damages.", url: DNA, source: "NASA — Space Radiation is Risky Business for the Human Body (2017)" },
+  dnaCancer: { quote: "Genes that have been misrepaired can become mutations, and the accumulation of these mutations over time can potentially lead to cancer.", url: DNA, source: "NASA — Space Radiation is Risky Business for the Human Body (2017)" },
+  dnaHard: { quote: "It’s difficult to quantify exactly how radiation is interacting with tissues and cells", url: DNA, source: "NASA — Space Radiation is Risky Business for the Human Body (2017)" },
   exercise: { quote: "Six to seven days a week … resistance training and aerobic exercises for 1.5 hours per day", url: EXERCISE, source: "NASA HRP" }
 };
 

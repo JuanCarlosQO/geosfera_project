@@ -186,6 +186,7 @@ export function mountToday(host, { go }, requested) {
           <div class="limit-bar"><span style="width:${Math.min(100, (rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(2)}%"></span></div>
           <p class="fine">${rad.total} of ${RADIATION_LIMITS.careerMSv} mSv career limit (${((rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(1)} %)</p>
         </div>
+        <a class="tm-go rad-dna" href="#live/rad">Radiation and your DNA →</a>
         ${fold("About these numbers", `<ul class="rad-facts">
           <li>Missions to the space station are “entirely within the magnetosphere”; Moon and Mars missions “will extend beyond this protective bubble”. <a href="https://www.nasa.gov/reference/risk-of-radiation-induced-cancers/" target="_blank" rel="noopener">NASA</a></li>
           <li>“Neutron radiation, which contributes to about 30% of total radiation on the ISS”. <a href="https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp" target="_blank" rel="noopener">Canadian Space Agency</a></li>

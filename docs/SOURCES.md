@@ -270,6 +270,22 @@ NASA OCHMO-TB-004 Rev D (Carbon Dioxide), read in the PDF text on 14 November 20
 - **Alerts on every screen (`js/feed.js`, `js/alarm.js`):** the simulated feed keeps running after leaving Live. A bar across the top of any screen names the most serious alert; "Act now" pulses red once a second (below the rate that can trigger photosensitive seizures; it stops with "Calm motion" or reduced motion) and sounds every 3 seconds until it clears or is silenced; "Watch" chimes once. Sounds are generated in the browser. A new "Act now" alert is never silent because an earlier one was silenced.
 - **Limit, stated on the sleep screen:** a web page cannot sound with the phone locked or the app closed, so sleep mode needs the app open (it asks the browser to keep the screen on). Waking a locked phone would need an installed app or a notification server.
 
+### Radiation and your DNA (read 14 Nov 2026)
+
+NASA, "Space Radiation is Risky Business for the Human Body" (19 Sep 2017, page updated 12 Oct 2023), read on the page itself and each quote checked against its text. The first four are a NASA Space Radiation Laboratory biologist's words as NASA printed them ("effects" is NASA's own spelling).
+
+| Fact | Exact words | Source |
+| --- | --- | --- |
+| Radiation acts on cells through DNA | "The primary means by which radiation effects cells is by damaging DNA" | https://www.nasa.gov/humans-in-space/space-radiation-is-risky-business-for-the-human-body/ |
+| Bases can be lost | "DNA bases (adenine, guanine, cytosine, and thymine) can also be knocked out." | same page |
+| The cell tries to repair | "The cell will make an attempt to repair these damages." | same page |
+| Bad repairs and cancer | "Genes that have been misrepaired can become mutations, and the accumulation of these mutations over time can potentially lead to cancer." | same page |
+| Hard to put a number on it | "It’s difficult to quantify exactly how radiation is interacting with tissues and cells" | same page |
+
+- **The helix is an illustration (`js/helix-core.js`, `js/helix3d.js`):** a double helix drawn by code, labelled "Illustration · not your DNA". Nothing in the app measures DNA, and no number is shown for DNA damage; the only real numbers on that card are the dose rate (real ISS data, or the simulated solar event) and the crew member's own dosimeter log against NASA's 600 mSv career limit.
+- **Drawing choice, not data:** streaks cross the helix at a rate that follows the live dose rate compared with its usual value (0.5 a second at the usual rate, between 0.12 and 9). They are not counted particles, and a rung that flashes is not damage found in anyone. The screen says so under "What this picture is not".
+- The three short steps beside the helix paraphrase the quotes above and add nothing to them.
+
 ## Module 5 — future body
 
 NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 39, [V1 4027], its rationale, and [V1 4028]); the others are already listed above.

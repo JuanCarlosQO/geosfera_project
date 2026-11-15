@@ -16,7 +16,13 @@ import { sparkPath } from "./today-core.js";
 import { current } from "./store.js";
 import { startFeed, subscribe, toggle, setPaused, TYPICAL_DOSE } from "./feed.js";
 import { goToSleep } from "./alarm.js";
-import { fold, tabsHtml } from "./fold.js";
+import { fold, tabsHtml, showTab } from "./fold.js";
+import { mountHelix } from "./helix3d.js";
+import { versusUsual } from "./helix-core.js";
+import { radiationTotals } from "./today-core.js";
+import { dateKey } from "./log-core.js";
+import { readLog } from "./store.js";
+import { RADIATION_LIMITS } from "./data/vital-ranges.js";
 import { figureSvg } from "./anatomy.js";
 
 const DONKI = "https://ccmc.gsfc.nasa.gov/DONKI-API/get/FLR";
@@ -133,9 +139,10 @@ async function spaceWeather(box) {
   }
 }
 
-export function mountLive(host) {
+export function mountLive(host, openTab) {
   const member = current();
   const { bands } = startFeed(); // the feed is shared: it keeps running, and alerting, after leaving this screen
+  const rad = member ? radiationTotals(readLog(member.id), dateKey()) : { total: 0, days: 0 };
 
   const crewTab = `<h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
     ${sensorsHtml()}
@@ -149,6 +156,28 @@ export function mountLive(host) {
   const radTab = `<h2 class="tm-h">Radiation</h2>
     <ul class="tm-grid tm-one">${card("dose")}</ul>
     <div class="tm-weather" data-ref="weather"><p class="fine">Asking NASA's DONKI service for real space weather…</p></div>
+    <section class="dna-card" aria-labelledby="dna-h">
+      <h3 class="tm-h3" id="dna-h">Radiation and your DNA</h3>
+      <div class="dna-stage">
+        <canvas class="dna-canvas" data-ref="dna" role="img" aria-label="3D illustration of a DNA double helix turning. Streaks cross it more often when the dose rate rises, and the rung they cross flashes."></canvas>
+        <p class="brain-tag mono">Illustration · not your DNA</p>
+        <p class="dna-rate" data-ref="dna-rate" aria-live="off"></p>
+      </div>
+      <ol class="dna-steps">
+        <li><strong>A particle crosses a cell</strong><span>and can break or knock out pieces of its DNA.</span></li>
+        <li><strong>The cell tries to repair it</strong><span>sometimes it works, sometimes it does not.</span></li>
+        <li><strong>A bad repair can become a mutation</strong><span>and mutations that add up over time can lead to cancer.</span></li>
+      </ol>
+      <p class="dna-you">${rad.days ? `Your dosimeter log: <strong>${rad.total} mSv</strong> in ${rad.days} ${rad.days === 1 ? "day" : "days"}, ${((rad.total / RADIATION_LIMITS.careerMSv) * 100).toFixed(1)} % of NASA's ${RADIATION_LIMITS.careerMSv} mSv career limit.` : "No dosimeter reading logged yet."} <a href="#log">Log today's</a></p>
+      ${fold("NASA's words", `<ul class="dna-quotes">
+          <li>“${LIMIT_FACTS.dnaDamage.quote}”</li>
+          <li>“${LIMIT_FACTS.dnaBases.quote}”</li>
+          <li>“${LIMIT_FACTS.dnaRepair.quote}”</li>
+          <li>“${LIMIT_FACTS.dnaCancer.quote}”</li>
+        </ul>
+        <p class="fine">All four: ${link(LIMIT_FACTS.dnaDamage)}, quoting a biologist of NASA's Space Radiation Laboratory.</p>`)}
+      ${fold("What this picture is not", `<p class="fine">It is not a measurement. Nothing in Ergosphere measures DNA, and it shows no number for DNA damage: NASA's own scientists say “${LIMIT_FACTS.dnaHard.quote}”. The streaks follow the dose rate above (more radiation, more streaks); they are not counted particles, and a flash is not damage found in you. The only real numbers here are the dose rate and your dosimeter log.</p>`)}
+    </section>
     ${fold("Where this data comes from", `<p class="fine">Replay of NASA OSDR RadLab, ISS DosTel1, ${RADLAB_ISS.from.slice(0, 10)} ${RADLAB_ISS.from.slice(11, 16)}–${RADLAB_ISS.to.slice(11, 16)} UTC, one reading per second. <a href="${RADLAB_ISS.docs}" target="_blank" rel="noopener">RadLab</a>. For scale, NASA reports ISS crews “${LIMIT_FACTS.doseIss.quote}” ${link(LIMIT_FACTS.doseIss)}</p>`)}
     ${fold("Space radiation: where it comes from", `<div class="tm-info"><div class="tm-kinds">
         <div><p class="mono">ALWAYS THERE</p><h3>Galactic cosmic rays</h3><p>High-energy protons and heavy ions from outside the solar system. The dose-rate replay above is mostly this, plus the particles trapped in Earth's magnetic field.</p></div>
@@ -196,7 +225,7 @@ export function mountLive(host) {
       { id: "rules", label: "Alert rules", html: rulesTab }
     ])}
 
-    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The four wearables (chest band, arm cuff, wrist unit, CO₂ clip), their batteries and their link are simulated; where they sit on the figure is an illustration. Sleep mode, the CO₂ pocket alert, the wake alarm and its sounds are app rules; a web page cannot sound with the phone locked, so sleep mode needs this app open. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The four wearables (chest band, arm cuff, wrist unit, CO₂ clip), their batteries and their link are simulated; where they sit on the figure is an illustration. The DNA helix is an illustration: nothing measures DNA. Sleep mode, the CO₂ pocket alert, the wake alarm and its sounds are app rules; a web page cannot sound with the phone locked, so sleep mode needs this app open. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".live");
@@ -234,6 +263,9 @@ export function mountLive(host) {
     root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : r.mode === "sleep" ? " · asleep" : r.mode === "waking" ? " · just woken" : "";
     root.querySelector('[data-extra="dose"]').textContent = r.channels.dose.time ? ` · ISS ${r.channels.dose.time} UTC` : "";
     root.querySelector('[data-tag="dose"]').textContent = r.channels.dose.real ? "REAL NASA DATA" : "REAL × SIMULATED EVENT";
+    const dose = r.channels.dose;
+    helix.set({ rate: dose.value, usual: TYPICAL_DOSE });
+    $("dna-rate").textContent = dose.value == null ? "" : `${dose.value} µGy/h · ${versusUsual(dose.value, TYPICAL_DOSE)}${dose.real ? "" : " · simulated solar event"}`;
     let linked = 0;
     for (const [id, sn] of Object.entries(r.sensors)) {
       const c = r.channels[sn.feeds];
@@ -261,8 +293,9 @@ export function mountLive(host) {
     if (sig !== lastAlerts) { $("alerts").innerHTML = steady.map(alertHtml).join(""); lastAlerts = sig; }
   }
 
+  const helix = mountHelix($("dna"));
   const stop = subscribe((feed) => {
-    if (!root.isConnected) { stop(); return; } // left the screen: stop painting; the feed itself carries on
+    if (!root.isConnected) { stop(); helix.stop(); return; } // left the screen: stop painting; the feed itself carries on
     paint(feed);
   }, { screen: true });
 
@@ -274,5 +307,6 @@ export function mountLive(host) {
   });
 
   paint(startFeed());
+  if (openTab) showTab(host, "live", openTab); // #live/rad opens straight on a tab
   spaceWeather($("weather"));
 }

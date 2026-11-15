@@ -52,6 +52,7 @@ const NAMED = {
   "https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp": ["Canadian Space Agency — Bio-Monitor: keeping an eye on astronauts' vital signs", "partner"],
   "https://www.nasa.gov/blogs/stationreport/2016/07/19/iss-daily-summary-report-07-19-16/": ["NASA ISS Daily Summary Report, 19 July 2016 — Personal CO2 Monitor", "hrp"],
   "https://spinoff.nasa.gov/astronaut-remote-health-monitoring": ["NASA Spinoff — Artificial Intelligence for Astronauts Monitors Patients at Home (2020)", "hrp"],
+  "https://www.nasa.gov/humans-in-space/space-radiation-is-risky-business-for-the-human-body/": ["NASA — Space Radiation is Risky Business for the Human Body (2017)", "hrp"],
   "https://www.nccih.nih.gov/health/melatonin-what-you-need-to-know": ["NIH NCCIH — Melatonin: what you need to know", "earth"]
 };
 
