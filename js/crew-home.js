@@ -16,6 +16,11 @@ import { EMERGENCY_REASONS, EMERGENCY_MIN } from "./role-core.js";
 import { openEmergency } from "./role.js";
 import { avatarHtml } from "./avatar.js";
 import { crewExerciseHtml, bindCrewExercise } from "./exercise.js";
+import { crewShareHtml, bindCrewShare } from "./share.js";
+import { checkEmergencyCode, reasonLabel } from "./role-core.js";
+import { clocksHtml } from "./clock.js";
+import { snapshot } from "./feed.js";
+import { crewCheckinHtml, bindCrewCheckin } from "./checkin.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
@@ -36,6 +41,7 @@ function html(me) {
   const mday = missionDay(missionStart(), new Date());
   const focus = F.focusNow(readFocus(), me.id);
   const fam = familyWaiting(me.id);
+  const alarmOn = Boolean(snapshot()?.steady?.some((a) => a.status === "act"));
   return `<section class="crew-home">
     <header class="ch-head">
       <div class="ch-pic" aria-hidden="true">${avatarHtml(me, "ch-av")}</div>
@@ -47,7 +53,13 @@ function html(me) {
       </div>
     </header>
 
+    ${clocksHtml({ compact: true })}
+
     ${sleepCheckHtml(me, { missionDay: mday, view: "crew" })}
+
+    <div data-ref="ci-wrap">${crewCheckinHtml(me)}</div>
+
+    <div data-ref="sh-wrap">${crewShareHtml(me)}</div>
 
     <section class="ch-card" aria-labelledby="ch-watch-h">
       <h2 id="ch-watch-h">Your watch</h2>
@@ -64,11 +76,15 @@ function html(me) {
       <button type="button" class="ch-tile${focus ? " on" : ""}" data-ch="${focus ? "focus-end" : "focus"}"><strong>${focus ? "I'm done with the task" : "Starting a critical task"}</strong><small>${focus ? "Messages from home are held until you finish" : "Holds messages from home until you finish"}</small></button>
     </div>
 
-    <section class="ch-card ch-emergency" aria-labelledby="ch-em-h">
-      <h2 id="ch-em-h">Emergency: see my own data</h2>
-      <p>In an emergency you can open your readings for ${EMERGENCY_MIN} minutes. The ground medical team sees that you opened them, when, and why.</p>
-      <div class="ch-em-row" role="group" aria-label="Why are you opening your data">${EMERGENCY_REASONS.filter((r) => r.id !== "alarm").map((r) => `<button type="button" class="cta${r.id === "medical" ? " stop" : ""}" data-em="${r.id}">${r.label}</button>`).join("")}</div>
-      <p class="fine">If you need help now, press and hold SOS. An “Act now” alarm opens your data by itself.</p>
+    <section class="ch-card ch-emergency${alarmOn ? " ch-alarm" : ""}" aria-labelledby="ch-em-h">
+      <h2 id="ch-em-h">${alarmOn ? "Alarm: open your data with the emergency code" : "Emergency: open the data with the crew's code"}</h2>
+      <p>Only in an emergency, such as CPR on a crewmate: the crew's emergency code opens the readings for ${EMERGENCY_MIN} minutes, without waiting for the ground. The ground medical team sees who opened them, when, and why.</p>
+      <form class="ch-em-form" data-em-form>
+        <div class="ch-em-row" role="radiogroup" aria-label="Why are you opening the data">${EMERGENCY_REASONS.filter((r) => r.id !== "alarm" || alarmOn).map((r, i) => `<label class="ch-em-r"><input type="radio" name="reason" value="${r.id}"${(alarmOn ? r.id === "alarm" : i === 0) ? " checked" : ""}><span>${r.label}</span></label>`).join("")}</div>
+        <div class="sh-row"><input name="code" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="000 000" aria-label="Crew emergency code" required><button type="submit" class="cta stop">Open the data</button></div>
+        <p class="sh-msg" role="status" data-em-msg></p>
+      </form>
+      <p class="fine">If you need help now, press and hold SOS. To rehearse, <a href="#drill">run a cardiac arrest drill</a> (simulated).</p>
     </section>
   </section>`;
 }
@@ -79,6 +95,21 @@ export function mountCrewHome(host) {
   host.innerHTML = html(me);
   const say = (t) => { const m = host.querySelector('[data-ref="ch-msg"]'); if (m) m.textContent = t; };
   bindSleepCheck(host.querySelector(".crew-home"), () => current()); // the card is redrawn with each mount
+  const ciWrap = host.querySelector('[data-ref="ci-wrap"]');
+  const redrawCheckin = () => { ciWrap.innerHTML = crewCheckinHtml(me); ciWrap.querySelector(".ci-opt, [data-ci]")?.focus({ preventScroll: true }); };
+  bindCrewCheckin(ciWrap, me, redrawCheckin);
+  const shWrap = host.querySelector('[data-ref="sh-wrap"]');
+  const redrawShare = () => { shWrap.innerHTML = crewShareHtml(me); bindCrewShare(shWrap, me, redrawShare); document.dispatchEvent(new CustomEvent("ergosphere:role")); };
+  bindCrewShare(shWrap, me, redrawShare);
+  let tries = 0;
+  host.querySelector("[data-em-form]").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = e.target, msg = f.querySelector("[data-em-msg]");
+    if (tries >= 5) { msg.textContent = "Too many wrong codes. Press and hold SOS, or ask a crewmate."; return; }
+    if (!checkEmergencyCode(missionInfo(), f.code.value)) { tries += 1; msg.textContent = missionInfo().emergencyCode ? "Wrong code." : "No emergency code is set for this mission: ask the ground."; f.code.select(); return; }
+    const reason = f.reason.value;
+    if (openEmergency(reason, me.id)) { msg.textContent = `Open: ${reasonLabel(reason)}`; location.hash = "#today"; }
+  });
   const exWrap = host.querySelector('[data-ref="ex-wrap"]');
   bindCrewExercise(exWrap, me, (o) => { exWrap.innerHTML = crewExerciseHtml(me, o); exWrap.querySelector("form input, form select")?.focus({ preventScroll: true }); });
   host.onclick = (e) => {
@@ -86,8 +117,6 @@ export function mountCrewHome(host) {
     if (mk) { const t = applyMark(me.id, mk.dataset.mark); mountCrewHome(host); say(t); return; }
     const rt = e.target.closest("[data-rate]");
     if (rt) { const t = rateMark(me.id, Number(rt.dataset.rate)); mountCrewHome(host); say(t); return; }
-    const em = e.target.closest("[data-em]");
-    if (em) { if (openEmergency(em.dataset.em, me.id)) location.hash = "#today"; return; }
     const b = e.target.closest("[data-ch]");
     if (!b) return;
     if (b.dataset.ch === "talk") {

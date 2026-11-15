@@ -26,6 +26,8 @@ import { FLOW_FACTS } from "./data/med-flow.js";
 import { snapshot, startFeed } from "./feed.js";
 import { current } from "./store.js";
 import { missionDay } from "./today-core.js";
+import { clocksHtml } from "./clock.js";
+import { stamp } from "./clock-core.js";
 
 const WORKED = {
   yes: { ...STATUS.normal, word: "It worked" },
@@ -298,7 +300,7 @@ function recordHtml(store) {
     const how = d.recalled ? " · remembered later" : "";
     const rated = w ? `<span class="tone-${w.tone}">${w.shape} ${w.word}${fx.length ? ` · ${esc(fx.join(", ").toLowerCase())}${sev}` : ""}</span>`
       : d.scheduled ? `<span class="tone-normal">${STATUS.logged?.shape ?? "✓"} Taken as scheduled</span>` : `<span class="tone-none">${STATUS.pending.shape} Not rated yet</span>`;
-    return `<li><span class="mono">${d.recalled ? `${d.at.slice(0, 10)} (day)` : `${d.at.slice(0, 16).replace("T", " ")} UTC`}</span>
+    return `<li><span class="mono">${d.recalled ? `${d.at.slice(0, 10)} (day)` : `${d.at.slice(0, 10)} · ${stamp(d.at)}`}</span>
       <span>${esc(m.name)} · ${units(m, d.units)}${d.reason ? ` · ${esc(d.reason.toLowerCase())}` : ""}${how}</span>
       ${rated}</li>`;
   }).join("")}</ul>`;
@@ -315,6 +317,7 @@ export function mountMeds(host) {
     <p class="eyebrow">Module 8 · Medication log</p>
     <h1 id="md-title" tabindex="-1">What did you take?</h1>
     <p class="lede">It does not prescribe. It logs what you took, follows up on whether it worked, and flags patterns worth raising with your crew medical officer.</p>
+    ${clocksHtml({ compact: true, note: "Every dose is saved in UTC, with the time in Houston and in Florida beside it, so the crew and the ground read the same time." })}
 
     <div data-ref="due" aria-live="polite"></div>
 

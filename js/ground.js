@@ -19,12 +19,40 @@ import * as X from "./exercise-core.js";
 import { exerciseStore } from "./exercise.js";
 import { getAlerts } from "./support.js";
 import * as C from "./sleepcheck-core.js";
+import { clocksHtml } from "./clock.js";
+import { exportHtml, bindExport } from "./export.js";
+import { newEmergencyCode, EMERGENCY_CODE_LEN } from "./role-core.js";
+import { DRILLS_KEY, cleanDrills, timings, clockOf, outcomeLabel } from "./drill-core.js";
+import { stamp } from "./clock-core.js";
+
+const readJson = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
+const spaced = (c) => String(c).replace(/(\d{3})(\d{3})/, "$1 $2");
+
+/** The crew's emergency code, the drills run, and a button to run one. */
+function emergencyHtml(members) {
+  const m = mission();
+  const drills = cleanDrills(readJson(DRILLS_KEY, [])).slice(0, 3);
+  const name = (id) => members.find((x) => x.id === id)?.name ?? id;
+  return `<div class="mc-two">
+    <section class="an-card mc-code" aria-labelledby="mc-code-h">
+      <h2 id="mc-code-h">Crew emergency code</h2>
+      <p class="fine">Given to the whole crew before flight. In an emergency such as CPR on a crewmate, it opens that person's data at once, without waiting for the ground. Every opening shows here.</p>
+      ${m.emergencyCode ? `<p class="mc-code-row"><b data-mc-code data-no-i18n aria-live="polite">••• •••</b><button type="button" class="cta" data-mc="show-code">Show</button><button type="button" class="cta" data-mc="new-code">New code</button></p>` : `<p class="mc-code-row"><button type="button" class="cta main" data-mc="new-code">Set an emergency code</button></p>`}
+    </section>
+    <section class="an-card mc-drill" aria-labelledby="mc-drill-h">
+      <h2 id="mc-drill-h">Emergency drills</h2>
+      <p class="fine">Rehearse a cardiac arrest on board (simulated): alarm, emergency code, data open, time it took.</p>
+      ${drills.length ? `<ul class="dr-past">${drills.map((d) => { const t = timings(d); return `<li><strong data-no-i18n>${esc(name(d.patient))}</strong><span>${stamp(d.startedAt)}</span><span>${d.endedAt ? `Data open in ${clockOf(t.toOpen)} · ${t.wrongCodes} wrong` : "Running now"}</span>${d.outcome ? `<span>${outcomeLabel(d.outcome)}</span>` : ""}</li>`; }).join("")}</ul>` : ""}
+      <a class="cta stop" href="#drill">Run a drill</a>
+    </section>
+  </div>`;
+}
 
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const quote = (f) => `“${f.quote}” <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
 const SIM = ["simulated", "sensors"];
 export const LEVEL_WORDS = { act: { word: "Act now", cls: "act" }, watch: { word: "Take a look", cls: "watch" }, ok: { word: "Nothing to look at", cls: "ok" } };
-export const KIND = { request: "Request", opening: "Own data", answer: "Morning answer", exercise: "Exercise", meds: "Medication", trend: "Readings" };
+export const KIND = { request: "Request", mind: "Check-in", access: "Data access", opening: "Own data", answer: "Morning answer", exercise: "Exercise", meds: "Medication", trend: "Readings" };
 
 export function missionLine(crew) {
   const m = mission();
@@ -77,7 +105,7 @@ export function mountGround(host) {
   const requests = getAlerts().filter((a) => !a.closed && members.some((m) => m.id === a.from?.id)).length;
   const sessions = all.reduce((a, s) => ({ done: a.done + s.exToday.done, total: a.total + s.exToday.total }), { done: 0, total: 0 });
   // most urgent first; then what crew members said or asked before what the readings show
-  const ORDER = ["request", "opening", "exercise", "meds", "answer", "trend"];
+  const ORDER = ["request", "mind", "opening", "access", "exercise", "meds", "answer", "trend"];
   const look = all.flatMap((s) => shown(s).map((i) => ({ ...i, member: s.member })))
     .sort((a, b) => (a.level !== b.level ? (a.level === "act" ? -1 : 1) : ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind)));
   const needs = all.filter((s) => s.level !== "ok").length;
@@ -88,6 +116,7 @@ export function mountGround(host) {
       <h1 tabindex="-1">Crew this morning</h1>
       ${missionLine(members.length)}
     </header>
+    ${clocksHtml()}
     ${demoLoaded() ? demoNoticeHtml() : ""}
 
     <div class="mc-kpis">
@@ -105,6 +134,9 @@ export function mountGround(host) {
     <h2 class="mc-h2">Crew</h2>
     <ul class="mc-grid">${all.map(card).join("")}</ul>
 
+    ${emergencyHtml(members)}
+    ${exportHtml()}
+
     ${fold("How Mission Control reads the crew", `<p>Each crew member is compared with <strong>their own</strong> last two weeks, not with anyone else: their usual is the average and spread of those days, and a reading counts as away from usual when it is two spreads or more from it. The week's direction is a straight line through the last seven days; carried forward, it gives the next days, with a band that widens with the scatter. These are app rules for a first look, not a diagnosis: the flight surgeon decides.</p>
       <p>${quote(DEVICE_FACTS.groundDownload)}</p>
       <p>${quote(DEVICE_FACTS.nonDominant)}</p>
@@ -112,7 +144,24 @@ export function mountGround(host) {
       ${researchHtml(["Sleep_ISS12", "Comm_Delay"])}
       <p class="fine">On the ISS today the watch is read every 32 days. Ergosphere proposes a daily download so the morning question can be asked the same day: that is our proposal, not NASA's schedule. The 60-minute emergency opening is an app rule.</p>`)}
   </section>`;
+  bindExport(host);
   host.onclick = (e) => {
+    const mc = e.target.closest("[data-mc]");
+    if (mc?.dataset.mc === "show-code") {
+      const el = host.querySelector("[data-mc-code]");
+      const shown = el.textContent.includes("•");
+      el.textContent = shown ? spaced(mission().emergencyCode) : "••• •••";
+      mc.textContent = shown ? "Hide" : "Show";
+      return;
+    }
+    if (mc?.dataset.mc === "new-code") {
+      const m = mission();
+      try { localStorage.setItem("geosfera.mission", JSON.stringify({ ...m, emergencyCode: newEmergencyCode() })); } catch { /* storage blocked */ }
+      mountGround(host);
+      const el = host.querySelector("[data-mc-code]");
+      if (el) { el.textContent = spaced(mission().emergencyCode); host.querySelector('[data-mc="show-code"]').textContent = "Hide"; }
+      return;
+    }
     const b = e.target.closest("[data-open]");
     if (!b) return;
     setActive(b.dataset.open);

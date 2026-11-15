@@ -43,6 +43,7 @@ function timeOfDay() {
   return "Good evening";
 }
 
+const missionCode = () => { try { return JSON.parse(localStorage.getItem("geosfera.mission"))?.emergencyCode ?? null; } catch { return null; } };
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 const initials = (n) => esc(n.split(" ").map((w) => w[0]).slice(0, 2).join(""));
@@ -69,7 +70,7 @@ function crewHtml(members, store) {
       <span class="hs-go" aria-hidden="true">›</span></button>
       <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose an avatar for ${esc(m.name)}">✎<span> Avatar</span></button></li>`;
   }).join("")}</ul>
-  ${demo ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them. Crew members see only what they report; the ground team sees the readings.</p>` : ""}`;
+  ${demo ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them. Crew members see only what they report; the ground team sees the readings. <span class="hs-em">Crew emergency code: <b data-no-i18n>${esc(String(missionCode() ?? "").replace(/(\d{3})(\d{3})/, "$1 $2"))}</b> (only for an emergency or a drill).</span></p>` : ""}`;
 }
 
 function markup() {

@@ -6,6 +6,7 @@
 // typical ISS dose the team verified (about 0.5 mSv per day, data/vital-ranges.js).
 // Pure functions, no DOM: same date in, same demo out (tests/demo-core.test.js).
 
+import { makeCheckin } from "./screen-core.js";
 import * as X from "./exercise-core.js";
 import { dateKey } from "./log-core.js";
 
@@ -24,7 +25,9 @@ export const DEMO_CREW = [
   { id: "demo-amehta", name: "Arjun Mehta", role: "Crew Medical Officer", body: "m", age: 44, home: "India", avatar: "m2" }
 ];
 export const DEMO_CODES = { "demo-vreyes": "3719", "demo-tokafor": "8264", "demo-amorimoto": "5081", "demo-amehta": "6427" };
-export const DEMO_VERSION = 2;
+export const DEMO_VERSION = 4;
+// the crew's emergency code for the demo mission (shown on the profiles screen so anyone can try it)
+export const DEMO_EMERGENCY_CODE = "246810";
 
 // small seeded generator so the demo is the same every time it is loaded on the same day
 function rng(seed) {
@@ -217,7 +220,19 @@ export function buildDemo(now = new Date()) {
     crew: { members: DEMO_CREW.map((m) => ({ ...m })), active: DEMO_CREW[0].id },
     logs,
     meds: { doses, supplements },
-    mission: { start: days[0], name: DEMO_MISSION.name, where: DEMO_MISSION.where, length: DEMO_MISSION.length },
+    mission: { start: days[0], name: DEMO_MISSION.name, where: DEMO_MISSION.where, length: DEMO_MISSION.length, emergencyCode: DEMO_EMERGENCY_CODE },
+    // the ground shares Valentina's sleep and mood with her; Tomás asked this morning to see his sleep and heart rate
+    sharing: { [DEMO_CREW[0].id]: { items: ["sleepHours", "mood"], at: at(yday, 16, 0).toISOString(), by: "Ground medical team" } },
+    // mental health check-ins (simulated answers): a baseline on day 1 for everyone (Tomás the day
+    // before launch, so his next one is due now); Valentina's stress up; Aiko's loneliness up;
+    // Arjun's anxiety screen positive this morning, so the GAD-7 followed
+    checkins: [
+      ...DEMO_CREW.map((m, k) => makeCheckin({ member: m.id, kind: "extra", at: new Date(at(days[0], 9, 10 + k).getTime() - (k === 1 ? 86400000 : 0)), answers: { phq: [0, k === 2 ? 1 : 0], gad: [k === 3 ? 1 : 0, k === 1 ? 1 : 0], pss: [1, 3, 3, 1], ucla: [1, k === 2 ? 2 : 1, 1] } })),
+      makeCheckin({ member: DEMO_CREW[0].id, kind: "extra", at: at(days[days.length - 4], 20, 15), answers: { phq: [1, 1], gad: [1, 1], pss: [2, 2, 2, 2], ucla: [1, 1, 1] } }),
+      makeCheckin({ member: aId, kind: "extra", at: at(yday, 21, 40), answers: { phq: [1, 1], gad: [1, 0], pss: [2, 3, 2, 1], ucla: [2, 3, 2] } }),
+      makeCheckin({ member: jId, kind: "core", at: at(today, 7, 20), answers: { phq: [1, 1], gad: [2, 2, 2, 2, 1, 1, 1] } })
+    ],
+    requests: [{ id: "req-demo-1", member: DEMO_CREW[1].id, items: ["sleepHours", "heartRate"], reason: "I want to see how my sleep is doing before the spacewalk prep.", at: at(today, 6, 40).toISOString(), status: "pending" }],
     // Aiko asked to talk to someone this morning (support channel)
     alerts: [{ id: "al-demo-1", at: at(today, 7, 5).toISOString(), level: "talk", from: { id: aId, name: "Aiko Morimoto", role: "Mission Specialist" }, reasons: ["low", "home"], note: "Long day outside yesterday. Would like a private call with home when possible.", acks: [], closed: null }],
     // Arjun opened his own data during a loss of signal two days ago, for 25 minutes

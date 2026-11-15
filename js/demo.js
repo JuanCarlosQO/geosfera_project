@@ -11,6 +11,9 @@ import { getCrew, saveCrew, writeLog, deleteMember } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
 import { FAMILY_KEY } from "./family-core.js";
 import { EXERCISE_KEY, cleanStore as cleanExercise } from "./exercise-core.js";
+import { SHARING_KEY, REQUESTS_KEY, cleanSharing, cleanRequests } from "./share-core.js";
+import { DRILLS_KEY, cleanDrills } from "./drill-core.js";
+import { CHECKINS_KEY, ASKS_KEY, cleanCheckins, cleanAsks } from "./screen-core.js";
 
 const MISSION_KEY = "geosfera.mission";
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
@@ -32,6 +35,9 @@ export function loadDemo(now = new Date(), { keep = false } = {}) {
   write(ALERTS_KEY, [...d.alerts, ...read(ALERTS_KEY, [])]);
   write(OPENINGS_KEY, [...d.openings, ...cleanOpenings(read(OPENINGS_KEY, []))]);
   write(MISSION_KEY, d.mission);
+  write(SHARING_KEY, { ...cleanSharing(read(SHARING_KEY, {})), ...d.sharing });
+  write(REQUESTS_KEY, [...d.requests, ...cleanRequests(read(REQUESTS_KEY, []))]);
+  write(CHECKINS_KEY, [...d.checkins, ...cleanCheckins(read(CHECKINS_KEY, []))]);
   write(FAMILY_KEY, { ...read(FAMILY_KEY, {}), ...d.family });
   const ex = cleanExercise(read(EXERCISE_KEY, {}));
   write(EXERCISE_KEY, { plans: { ...ex.plans, ...d.exercise.plans }, log: [...ex.log, ...d.exercise.log], faults: [...ex.faults, ...d.exercise.faults] });
@@ -79,6 +85,13 @@ export function removeDemo() {
   }
   write(ALERTS_KEY, read(ALERTS_KEY, []).filter((a) => !isDemoId(a?.from?.id)));
   write(OPENINGS_KEY, cleanOpenings(read(OPENINGS_KEY, [])).filter((o) => !isDemoId(o.member)));
+  const sh = cleanSharing(read(SHARING_KEY, {}));
+  for (const id of Object.keys(sh)) if (isDemoId(id)) delete sh[id];
+  write(SHARING_KEY, sh);
+  write(REQUESTS_KEY, cleanRequests(read(REQUESTS_KEY, [])).filter((r) => !isDemoId(r.member)));
+  write(DRILLS_KEY, cleanDrills(read(DRILLS_KEY, [])).filter((x) => !isDemoId(x.patient)));
+  write(CHECKINS_KEY, cleanCheckins(read(CHECKINS_KEY, [])).filter((c) => !isDemoId(c.member)));
+  write(ASKS_KEY, cleanAsks(read(ASKS_KEY, [])).filter((a) => !isDemoId(a.member)));
   drop(DEMO_KEY);
 }
 

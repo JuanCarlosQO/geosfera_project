@@ -13,8 +13,11 @@ export const GROUND = { id: GROUND_ID, name: "Ground medical team", role: "Fligh
 export const EMERGENCY_MIN = 60;                 // app rule: an opening lasts one hour, then the data hides again
 export const MAX_OPENINGS = 50;
 
+export const EMERGENCY_CODE_LEN = 6;            // the crew's emergency code: digits, set by the ground for the mission
+
 export const EMERGENCY_REASONS = [
   { id: "medical", label: "Medical emergency" },
+  { id: "cpr", label: "CPR on a crewmate" },
   { id: "los", label: "No contact with the ground" },
   { id: "asked", label: "The ground team asked me to look" },
   { id: "alarm", label: "An alarm is sounding" }
@@ -22,7 +25,7 @@ export const EMERGENCY_REASONS = [
 
 // What a crew member opens without an emergency: their own home, the medication log (they log
 // what they took) and the family channel. Everything else shows readings.
-export const CREW_ROUTES = ["crew", "meds", "family"];
+export const CREW_ROUTES = ["crew", "meds", "family", "drill"];
 // Never for the ground: the crew member's home and their messages from home.
 export const CREW_ONLY = ["crew", "family"];
 // The ground's own screen (the crew roster); a crew member never opens it.
@@ -59,13 +62,31 @@ export function startEmergency(state, reason, member, now = new Date(), minutes 
 
 export const endEmergency = (state) => ({ ...state, emergency: null });
 
-/** Whether this screen opens for whoever is signed in. */
-export function canSee(state, route, now = new Date()) {
+/**
+ * The crew's emergency code (mission.emergencyCode) is given to the crew before flight and opens
+ * a crew member's data at once in an emergency such as CPR, without waiting for the ground.
+ * Whether a typed code matches it (spaces and dashes ignored).
+ */
+export function checkEmergencyCode(mission, typed) {
+  const want = String(mission?.emergencyCode ?? "").replace(/\D/g, "");
+  const got = String(typed ?? "").replace(/\D/g, "");
+  return want.length === EMERGENCY_CODE_LEN && got === want;
+}
+
+/** A new emergency code for the mission (rand returns [0, 1)). */
+export function newEmergencyCode(rand = Math.random) {
+  let s = "";
+  for (let i = 0; i < EMERGENCY_CODE_LEN; i += 1) s += Math.floor(rand() * 10);
+  return s;
+}
+
+/** Whether this screen opens for whoever is signed in; `granted` are screens the ground shared with this crew member (share-core.js). */
+export function canSee(state, route, now = new Date(), granted = []) {
   // the family channel is the crew member's own, kept apart from the medical record
   if (state?.role === "ground") return !CREW_ONLY.includes(route);
   if (state?.role === "crew") {
     if (GROUND_ROUTES.includes(route)) return false;
-    return CREW_ROUTES.includes(route) || inEmergency(state, now);
+    return CREW_ROUTES.includes(route) || inEmergency(state, now) || granted.includes(route);
   }
   return true; // no crew yet on this device: the app is open, as before
 }
@@ -74,15 +95,15 @@ export function canSee(state, route, now = new Date()) {
 export const homeFor = (state) => (state?.role === "ground" ? "ground" : state?.role === "crew" ? "crew" : "today");
 
 /** Adds an opening to the shared list (newest first, capped). */
-export function addOpening(list, { member, reason, at = new Date() }) {
+export function addOpening(list, { member, reason, at = new Date(), drill = false, by = null }) {
   if (!member || !EMERGENCY_REASONS.some((r) => r.id === reason)) return cleanOpenings(list);
-  return [{ member: String(member), reason, at: iso(at) }, ...cleanOpenings(list)].slice(0, MAX_OPENINGS);
+  return [{ member: String(member), reason, at: iso(at), ...(drill ? { drill: true } : {}), ...(by ? { by: String(by) } : {}) }, ...cleanOpenings(list)].slice(0, MAX_OPENINGS);
 }
 
 export function cleanOpenings(list) {
   return (Array.isArray(list) ? list : [])
     .filter((o) => o && o.member && EMERGENCY_REASONS.some((r) => r.id === o.reason) && Number.isFinite(ms(o.at)))
-    .map((o) => ({ member: String(o.member), reason: o.reason, at: iso(o.at), ...(Number.isFinite(ms(o.closedAt)) && o.closedAt ? { closedAt: iso(o.closedAt) } : {}) }))
+    .map((o) => ({ member: String(o.member), reason: o.reason, at: iso(o.at), ...(Number.isFinite(ms(o.closedAt)) && o.closedAt ? { closedAt: iso(o.closedAt) } : {}), ...(o.drill ? { drill: true } : {}), ...(o.by ? { by: String(o.by) } : {}) }))
     .slice(0, MAX_OPENINGS);
 }
 

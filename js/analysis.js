@@ -14,6 +14,9 @@ import { sleepCheckHtml, bindSleepCheck } from "./sleepcheck.js";
 import { FUTURE_FACTS } from "./data/future.js";
 import { EXERCISE_FACTS } from "./data/exercise.js";
 import { fold } from "./fold.js";
+import { groundShareHtml, bindGroundShare } from "./share.js";
+import { exportHtml, bindExport } from "./export.js";
+import { groundCheckinHtml, bindGroundCheckin, checkinAboutHtml } from "./checkin.js";
 
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const quote = (f) => `“${f.quote}” <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
@@ -114,9 +117,18 @@ export function mountAnalysis(host) {
       </div>
     </section>
 
+    ${groundCheckinHtml(me)}
+    ${fold("About these questionnaires", checkinAboutHtml())}
+
+    ${groundShareHtml(me)}
+    ${exportHtml({ only: me.id })}
+
     ${fold("How this analysis works", `<p><strong>Their usual:</strong> the average and spread of their own readings over the 14 days before today (at least 5 days). <strong>Away from usual:</strong> two spreads or more from it. <strong>This week:</strong> a straight line fitted through the last 7 days; "steady" when it moves less than one spread a week or fits poorly. <strong>Forecast:</strong> that line carried forward 7 days, with a 95 % band that widens with the scatter and with distance. It says where the readings go if nothing changes; it is not a prediction of illness.</p>
       <p><strong>Bone outlook</strong> (app's illustrative model, not a NASA prediction): with no exercise, NASA's ${quote(FUTURE_FACTS.loss)}; with every prescribed session done, NASA's ${quote(FUTURE_FACTS.withCountermeasures)}; in between, a straight line by the share of sessions done. ${quote(EXERCISE_FACTS.daily)}</p>
       <p class="fine">All thresholds here are app rules for a first look (docs/SOURCES.md). The flight surgeon decides.</p>`)}
   </section>`;
   bindSleepCheck(host.querySelector(".analysis"), () => me, () => null);
+  bindGroundShare(host, me, () => { const y = scrollY; mountAnalysis(host); scrollTo(0, y); });
+  bindExport(host);
+  bindGroundCheckin(host, me, () => { const y = scrollY; mountAnalysis(host); scrollTo(0, y); });
 }

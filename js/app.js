@@ -22,7 +22,10 @@ import { initI18n } from "./i18n.js";
 import { mountCrewHome } from "./crew-home.js";
 import { mountGround } from "./ground.js";
 import { mountAnalysis } from "./analysis.js";
-import { getRole, setRole, isGround, openEmergency, closeEmergency } from "./role.js";
+import { mountDrill } from "./drill.js";
+import { startClocks } from "./clock.js";
+import { grantedRoutesFor } from "./share.js";
+import { getRole, setRole, isGround, closeEmergency } from "./role.js";
 import { canSee, homeFor, emergencyLeft, inEmergency, reasonLabel } from "./role-core.js";
 import { snapshot } from "./feed.js";
 import { avatarHtml } from "./avatar.js";
@@ -57,8 +60,8 @@ let savedTheme = null;
 try { savedTheme = localStorage.getItem(THEME_KEY); } catch { /* storage blocked */ }
 applyTheme(savedTheme);
 
-// Design: the new light look (css/look-new.css) or the previous one, to compare them side by
-// side. Only the light mode has two designs; the button hides in dark mode. Kept on this device.
+// Design: the new look (css/look-new.css, light and dark) or the previous one, to compare them
+// side by side. Kept on this device.
 const LOOK_KEY = "geosfera.look";
 function applyLook(look) {
   const fresh = look !== "old";
@@ -76,7 +79,6 @@ applyLook(savedLook);
 
 const roleBar = document.getElementById("role-bar");
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const actNow = () => Boolean(snapshot()?.steady?.some((a) => a.status === "act"));
 
 /** The strip under the masthead: whose record the ground is looking at, or a crew member's open emergency. */
 function paintRoleBar(name) {
@@ -102,24 +104,27 @@ function paintRoleBar(name) {
   roleBar.innerHTML = "";
 }
 
+/** Screens the ground shared with the crew member signed in (share-core.js). */
+const granted = (st = getRole()) => (st.role === "crew" && S.current() ? grantedRoutesFor(S.current().id) : []);
+
 function paintDock(name) {
   const st = getRole();
+  const g = granted(st);
   for (const a of nav.querySelectorAll("a")) {
     const v = a.dataset.view;
     // the ground has no "Home"; a crew member's dock is Home and Meds (everything, during an emergency)
     // the ground team works from Mission Control and each crew member's analysis: no Today or Log
-    a.hidden = !canSee(st, v) || (st.role !== "crew" && v === "crew") || (st.role !== "ground" && ["ground", "analysis"].includes(v)) || (st.role === "ground" && ["today", "log"].includes(v));
+    a.hidden = !canSee(st, v, new Date(), g) || (st.role !== "crew" && v === "crew") || (st.role !== "ground" && ["ground", "analysis"].includes(v)) || (st.role === "ground" && ["today", "log"].includes(v));
   }
 }
 
 function render() {
   const [view = "", arg, rest] = location.hash.replace(/^#/, "").split("/");
-  const known = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices", "crew", "ground", "analysis"];
+  const known = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices", "crew", "ground", "analysis", "drill"];
   const st = getRole();
   let name = known.includes(view) ? view : homeFor(st);
-  if (!canSee(st, name)) {
-    // a crew member whose alarm says "Act now" gets their data at once; otherwise, back home
-    if (st.role === "crew" && actNow() && S.current() && openEmergency("alarm", S.current().id)) return render();
+  if (!canSee(st, name, new Date(), granted(st))) {
+    // back home: an "Act now" alarm asks there for the crew's emergency code
     if (location.hash !== `#${homeFor(st)}`) { location.hash = homeFor(st); return; }
     name = homeFor(st);
   }
@@ -128,6 +133,7 @@ function render() {
   if (name === "crew") mountCrewHome(station);
   if (name === "ground") mountGround(station);
   if (name === "analysis") mountAnalysis(station);
+  if (name === "drill") mountDrill(station);
   if (["today", "log", "mind"].includes(name)) autoSync(); // readings from the devices arrive before the screen is drawn
   setTimeout(refreshWatchAlerts, 0); // and the watch's alerts follow the profile that is open
   if (name === "devices") mountDevices(station);
@@ -146,7 +152,7 @@ function render() {
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
   for (const a of nav.querySelectorAll("a")) {
-    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: getRole().role === "crew" ? "crew" : "body", devices: getRole().role === "ground" ? "analysis" : "log", today: getRole().role === "ground" ? "analysis" : "today" }[name] ?? name)) a.setAttribute("aria-current", "page");
+    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: getRole().role === "crew" ? "crew" : "body", drill: getRole().role === "ground" ? "ground" : "crew", devices: getRole().role === "ground" ? "analysis" : "log", today: getRole().role === "ground" ? "analysis" : "today" }[name] ?? name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (!station.inert) station.querySelector("h1")?.focus({ preventScroll: true });
@@ -208,14 +214,16 @@ roleBar.addEventListener("click", (e) => {
 });
 // an emergency opening ends by itself: check each minute
 setInterval(() => { const st = getRole(); if (st.emergency && !inEmergency(st)) { closeEmergency(); render(); } else if (inEmergency(st)) paintRoleBar(); }, 60000);
-// an "Act now" alarm while a crew member is on their own home opens their data
+// an "Act now" alarm brings a crew member to their home, where the emergency code opens the data
+// (the data no longer opens by itself: only with the crew's code)
 subscribe((f, raised) => {
   const st = getRole();
   if (st.role === "crew" && !inEmergency(st) && raised?.some((ev) => ev.type === "raised" && ev.status === "act") && S.current()) {
-    openEmergency("alarm", S.current().id);
-    render();
+    if (location.hash !== "#crew") location.hash = "#crew"; else render();
   }
 });
+document.addEventListener("ergosphere:share", () => paintDock()); // a shared screen appears in the dock at once
+startClocks();
 document.querySelector('[data-action="look"]').addEventListener("click", () => {
   const next = document.documentElement.classList.contains("look-new") ? "old" : "new";
   applyLook(next);

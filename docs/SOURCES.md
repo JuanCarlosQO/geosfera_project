@@ -571,3 +571,71 @@ The ground team's home is **Mission Control** (`#ground`): counts for the crew, 
 
 **Medication log, one per crew member:** each dose now carries the crew member it belongs to, so on a shared device each profile (and the ground team looking at it) sees only that crew member's doses; doses saved before profiles existed stay visible to everyone because they cannot be attributed.
 
+
+## Data access, emergency code, drill, clocks and export (15 Nov 2026)
+
+App rules, not NASA procedures:
+
+- A crew member sees none of their readings unless the ground medical team shares them, item by item, or approves a request. An approval gives a one-time 6-digit code that the ground reads to the crew member; typing it opens those items for 1 hour, 24 hours or 7 days, as the ground chose. Five wrong codes in a row stop the box until the screen is opened again.
+- The crew's emergency code (6 digits, set by the ground for the mission and given to the whole crew) opens a crew member's data for 60 minutes at once, without waiting for the ground, in an emergency such as CPR on a crewmate. An alarm no longer opens the data by itself: it asks for the code. Every opening is kept and shown to the ground. The demo mission's code is shown on the profiles screen.
+- The cardiac arrest drill is a simulation: no reading is written to anyone's log, and the opening it records carries a drill flag. It gives no medical instructions; the page says the crew follows the station's emergency procedures and the flight surgeon on the ground leads.
+- Clocks: records are kept in UTC; Houston, Texas and Cape Canaveral, Florida are shown beside it, converted by the browser's time-zone database (America/Chicago and America/New_York, daylight saving included). Which clocks to show is an app choice; the app does not claim which time zone the station's crew keeps.
+- Excel export: what the app already keeps, between two UTC dates (both included), for the crew members chosen. Simulated values keep their SIMULATED mark.
+
+## Mental health check-ins: validated questionnaires (15 Nov 2026)
+
+Screening, not diagnosis. Wording checked word for word on the pages below (University of Washington National HIV Curriculum pages for the PHQ and GAD; Carnegie Mellon University for the PSS-4; the authors manuscript on PubMed Central for the 3-item UCLA scale).
+
+**PHQ-2 / PHQ-9** (https://www.hiv.uw.edu/page/mental-health-screening/phq-2, https://www.hiv.uw.edu/page/mental-health-screening/phq-9). Lead-in: "Over the last 2 weeks, how often have you been bothered by the following problems?" Answers: Not at all = 0, Several days = 1, More than half the days = 2, Nearly every day = 3.
+
+1. Little interest or pleasure in doing things
+2. Feeling down, depressed or hopeless
+3. Trouble falling asleep, staying asleep, or sleeping too much
+4. Feeling tired or having little energy
+5. Poor appetite or overeating
+6. Feeling bad about yourself - or that you're a failure or have let yourself or your family down
+7. Trouble concentrating on things, such as reading the newspaper or watching television
+8. Moving or speaking so slowly that other people could have noticed. Or, the opposite - being so fidgety or restless that you have been moving around a lot more than usual
+9. Thoughts that you would be better off dead or of hurting yourself in some way
+
+- "If the score is 3 or greater, major depressive disorder is likely." (https://www.hiv.uw.edu/page/mental-health-screening/phq-2)
+- "Patients who screen positive should be further evaluated with the PHQ-9, other diagnostic instruments, or direct interview to determine whether they meet criteria for a depressive disorder." (https://www.hiv.uw.edu/page/mental-health-screening/phq-2)
+- "The PHQ-9 is a multipurpose instrument for screening, diagnosing, monitoring and measuring the severity of depression." (https://www.hiv.uw.edu/page/mental-health-screening/phq-9)
+- "Question 9 is a single screening question on suicide risk." (https://www.hiv.uw.edu/page/mental-health-screening/phq-9)
+- Bands on the PHQ-9 page: 0-4 None-minimal, 5-9 Mild, 10-14 Moderate, 15-19 Moderately Severe, 20-27 Severe.
+
+**GAD-2 / GAD-7** (https://www.hiv.uw.edu/page/mental-health-screening/gad-2, https://www.hiv.uw.edu/page/mental-health-screening/gad-7). Same lead-in and answers.
+
+1. Feeling nervous, anxious or on edge
+2. Not being able to stop or control worrying
+3. Worrying too much about different things
+4. Trouble relaxing
+5. Being so restless that it is hard to sit still
+6. Becoming easily annoyed or irritable
+7. Feeling afraid as if something awful might happen
+
+- "Using a cut-off of 3 the GAD-2 has a sensitivity of 86% and specificity of 83% for diagnosis generalized anxiety disorder." (https://www.hiv.uw.edu/page/mental-health-screening/gad-2)
+- "Using a cut-off of 8 the GAD-7 has a sensitivity of 92% and specificity of 76% for diagnosis generalized anxiety disorder." (https://www.hiv.uw.edu/page/mental-health-screening/gad-7)
+- "No permission required to reproduce, translate, display or distribute." (https://www.hiv.uw.edu/page/mental-health-screening/gad-7)
+- Bands on the GAD-7 page: 0-4 Minimal, 5-9 Mild, 10-14 Moderate, greater than 15 Severe (the page leaves 15 unlabelled; the app counts 15 as severe). The page recommends 8 or more as a reasonable cut-point for probable generalized anxiety disorder.
+
+**PSS-4** (https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/.doc/pss_4_item.doc; scoring https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/html/pssscoring.html; scales page https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/index.html). Lead: "The questions in this scale ask you about your feelings and thoughts during the last month." Answers: Never = 0, Almost Never = 1, Sometimes = 2, Fairly Often = 3, Very Often = 4.
+
+1. In the last month, how often have you felt that you were unable to control the important things in your life?
+2. In the last month, how often have you felt confident about your ability to handle your personal problems?
+3. In the last month, how often have you felt that things were going your way?
+4. In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?
+
+- "PSS-4 scores are obtained by reverse coding items # 2 and 3." (https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/html/pssscoring.html)
+- "The Perceived Stress Scale is not a diagnostic instrument; there are no score cut-offs." (https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/index.html)
+- "Submitting a request for permission to use the PSS is completely free of charge and will ensure an optimized service." (https://www.cmu.edu/dietrich/psychology/stress-immunity-disease-lab/scales/index.html) **To do before real use:** the team submits the free permission request for the PSS on ePROVIDE (MAPI Research Trust), as the page asks.
+
+**3-item UCLA Loneliness Scale** (Hughes, Waite, Hawkley & Cacioppo 2004, https://pmc.ncbi.nlm.nih.gov/articles/PMC2394670/). Lead: "The next questions are about how you feel about different aspects of your life." The paper asks by telephone, with the answers inside the question (for example "How often do you feel left out: Hardly ever, some of the time, or often?"); the app shows the question and the three answers as buttons: Hardly ever = 1, Some of the time = 2, Often = 3.
+
+1. How often do you feel that you lack companionship?
+2. How often do you feel left out?
+3. How often do you feel isolated from others?
+
+- "As in the R-UCLA, each person's responses to the questions are summed, with higher scores indicating greater loneliness." (https://pmc.ncbi.nlm.nih.gov/articles/PMC2394670/) The paper gives no cut-off for "lonely"; the app does not use one.
+
+App rules (not from the sources): PHQ-2 + GAD-2 every 14 days (the questionnaires ask about the last 2 weeks); PSS-4 + UCLA-3 every 28 days (the PSS asks about the last month); the rest of the PHQ-9 / GAD-7 only after a positive PHQ-2 / GAD-2 (3 or more, the sources cut-off); the ground can ask for one at any time. Flags for the ground: PHQ-9 question 9 above "Not at all" = Act now and a request to talk is sent; PHQ-9 15 or more or GAD-7 15 or more = Act now; PHQ-9 10 or more, GAD-7 8 or more, or a positive PHQ-2 / GAD-2 = Take a look; PSS-4 up 4 or more or UCLA-3 up 2 or more since their last answer = Take a look. The crew member sees no score. Questions are shown in English: a validated Spanish version was not verified (phqscreeners.com hides its translations behind a terms page; the CMU list has no 4-item Spanish PSS).

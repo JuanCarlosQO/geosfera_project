@@ -15,6 +15,8 @@ import { openingsFor, openNow, reasonLabel } from "./role-core.js";
 import { MEDS_KEY, cleanStore, forMember, patterns } from "./meds-core.js";
 import { KIT } from "./data/med-kit.js";
 import { SUPPLEMENTS } from "./data/supplements.js";
+import { REQUESTS_KEY, cleanRequests, itemLabel } from "./share-core.js";
+import * as Q from "./screen-core.js";
 
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
 const hhmm = (t) => { const d = new Date(t); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
@@ -36,9 +38,17 @@ export function crewStatus(member, now = new Date()) {
   for (const a of getAlerts().filter((x) => x.from?.id === member.id && !x.closed)) {
     add(a.level === "emergency" ? "act" : "watch", "request", `${a.level === "emergency" ? "SOS" : "Asked to talk to someone"} · ${hhmm(a.at)}${a.note ? ` · “${a.note}”` : ""}`);
   }
+  for (const r of cleanRequests(read(REQUESTS_KEY, [])).filter((x) => x.member === member.id && x.status === "pending")) {
+    add("watch", "access", `Asks to see: ${r.items.map(itemLabel).join(" · ")} · ${hhmm(r.at)}${r.reason ? ` · “${r.reason}”` : ""}`);
+  }
   const op = openingsFor(getOpenings(), member.id)[0];
-  if (op && openNow(op, now)) add("act", "opening", `Has their own data open now · ${reasonLabel(op.reason)}`);
+  if (op && openNow(op, now)) add(op.drill ? "info" : "act", "opening", `${op.drill ? "Drill: data opened with the emergency code" : "Has their own data open now"} · ${reasonLabel(op.reason)}`);
   else if (op && now - new Date(op.at) < 3 * 86400000) add("info", "opening", `Opened their own data · ${op.at.slice(5, 10)} ${hhmm(op.at)}${op.closedAt ? `–${hhmm(op.closedAt)}` : ""} · ${reasonLabel(op.reason)}`);
+
+  // mental health check-ins (validated questionnaires, screen-core.js)
+  const checkins = read(Q.CHECKINS_KEY, []);
+  for (const f of Q.flags(checkins, member.id)) add(f.level, "mind", f.text);
+  if (Q.due(checkins, read(Q.ASKS_KEY, []), member.id, now).due) add("info", "mind", "Check-in due: not answered yet");
 
   // the morning question
   const check = C.sleepCheck(log, today);
