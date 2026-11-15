@@ -1,0 +1,24 @@
+/* "A message from home" (js/family-notify.js): a notice on any screen. Calm on purpose:
+   it is not an alarm, and the message stays sealed until the crew member opens it. */
+
+.fn-card {
+  position: fixed; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top)); z-index: 46; max-width: 520px; margin: 0 auto;
+  padding: 16px 18px; border-radius: 20px; background: var(--hull); color: var(--ink); border: 2px solid var(--beacon);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .6); font-family: var(--sans); animation: fn-in .35s ease-out;
+}
+.fn-card[hidden] { display: none; }
+body.al-on .fn-card { top: 76px; }
+body.al-act .fn-card { top: 92px; }
+@keyframes fn-in { from { transform: translateY(-16px); opacity: 0; } }
+.fn-top { margin: 0 0 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; font-size: 16px; }
+.fn-env { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--beacon) 14%, var(--hull)); color: var(--beacon); font-size: 18px; flex: none; }
+.fn-who { margin: 0 0 2px; font-size: 16px; }
+.fn-fine { margin: 0 0 10px; font-size: 13px; color: var(--ink-3); }
+.fn-more { margin-left: auto; font-size: 12px; color: var(--ink-3); }
+.fn-text { margin: 6px 0 10px; font-size: 17px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fn-card .fm-photo { display: block; max-width: 100%; max-height: 46vh; margin: 0 0 10px; border-radius: 12px; }
+.fn-card .fm-audio { width: 100%; margin: 0 0 10px; }
+.fn-card[data-open="true"] { max-height: calc(100vh - 40px); overflow: auto; }
+.fn-acts { display: flex; align-items: center; gap: 10px; }
+.fn-acts .cta { min-height: 46px; }
+@media (prefers-reduced-motion: reduce) { .fn-card { animation: none; } }

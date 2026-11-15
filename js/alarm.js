@@ -19,6 +19,7 @@ const SOUND_KEY = "geosfera.sound";
 const REPEAT_MS = { act: 3000, wake: 1900 };
 const PATTERNS = {
   watch: { type: "sine", vol: 0.16, notes: [[660, 0, 0.18], [880, 0.2, 0.28]] },
+  note: { type: "sine", vol: 0.14, notes: [[523, 0, 0.22], [659, 0.18, 0.22], [784, 0.36, 0.42]] }, // a message from home
   act: { type: "square", vol: 0.2, notes: [[880, 0, 0.2], [660, 0.24, 0.2], [880, 0.48, 0.2], [660, 0.72, 0.2]] },
   wake: { type: "sawtooth", vol: 0.3, notes: [[990, 0, 0.26], [740, 0.3, 0.26], [990, 0.6, 0.26], [740, 0.9, 0.26], [1180, 1.2, 0.4]] }
 };
@@ -39,7 +40,7 @@ function unlock() {
 /** Plays one pattern now. Returns false when sound is off or the browser has not allowed it yet. */
 export function sound(kind) {
   if (!soundOn()) return false;
-  try { navigator.vibrate?.(kind === "watch" ? 120 : [300, 140, 300, 140, 300]); } catch { /* no vibration */ }
+  try { navigator.vibrate?.(kind === "watch" || kind === "note" ? 120 : [300, 140, 300, 140, 300]); } catch { /* no vibration */ }
   if (!ctx || ctx.state !== "running") return false;
   const p = PATTERNS[kind];
   for (const [freq, at, dur] of p.notes) {

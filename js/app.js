@@ -15,6 +15,7 @@ import { mountMind } from "./mind.js";
 import { startSync, mountSyncButton } from "./sync.js";
 import { initFold } from "./fold.js";
 import { mountAlarm } from "./alarm.js";
+import { mountFamilyNotify } from "./family-notify.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -85,8 +86,10 @@ if (new URLSearchParams(location.search).has("demo")) {
 }
 const support = mountSupport(); // the support button works even with the hatch closed
 mountAlarm(); // telemetry alerts on every screen, with sound, and sleep mode
+mountFamilyNotify(); // a message from home is announced on whatever screen is open
 initFold(station); // tabs, and intros and sources tucked away on every screen
 window.addEventListener("hashchange", render);
+document.addEventListener("ergosphere:family-read", () => { if (["#family", "#mind", "#today", ""].includes(location.hash.split("/")[0])) render(); }); // the inbox changed under an open screen
 window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });
 mountSyncButton(document.querySelector('[data-action="sync"]'), document.body);
 startSync();

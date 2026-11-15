@@ -8,7 +8,7 @@ const enc = new TextEncoder();
 const dec = new TextDecoder();
 
 export const SYNC_KEY = "geosfera.sync";
-export const LOCAL_ONLY = ["geosfera.crew-access", "geosfera.sync", "geosfera.theme", "geosfera.family", "geosfera.sound"]; // never leave the device
+export const LOCAL_ONLY = ["geosfera.crew-access", "geosfera.sync", "geosfera.theme", "geosfera.family", "geosfera.sound", "geosfera.mailbox", "geosfera.family-seen"]; // never leave the device
 export const ROUNDS = 150_000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I
 

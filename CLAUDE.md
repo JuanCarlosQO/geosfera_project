@@ -82,6 +82,9 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/fold.js`, `css/fold.css` | Less text on phones: `fold()` blocks, `tabsHtml()` tabs, and `tidy()` (runs after every render: intro and closing note into "About this screen", every `small.src` into a "Source" block). New screens get this for free: keep using `.lede`, `.rule-note` and `small.src` |
 | `js/data/support.js` | NASA behavioral-health quotes, reasons, alert levels and comfort settings |
 | `js/family-core.js`, `js/family.js` | Family channel, tested: message inside a link (`#family/write` → `#family/in/<data>`), sealed inbox per crew member (`#family`), open / set aside / delete; kept on the device (sync `LOCAL_ONLY`), text only, escaped |
+| `js/mailbox-core.js`, `js/mailbox.js` | Family mailbox, tested: one invite link per crew member (who it is for + mailbox id, token and AES key), messages dropped into `/api/sync` under the mailbox id and collected by the crew member's device; answers "none" where there is no sync server |
+| `family.html`, `js/family-page.js` | The family's own page: only the writing form (`mountWrite` from `family.js`), no app shell |
+| `js/family-notify.js`, `css/notify.css` | Announces a new message from home on any screen (sealed, "Open it" / "Later"), polls the mailbox every 8 s while the app is open, respects a paused channel |
 | `js/ask.js` | In-page "Yes / Cancel" confirmation next to the button; use it instead of the browser's confirm(), which some in-app browsers block silently |
 | `js/demo-core.js`, `js/demo.js` | Demo crew, tested: three fictional members with 14 days of simulated readings, Valentina's short-sleep story, melatonin doses and vitamin D days; load on an empty station (button or `?demo`), remove only what the demo wrote |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
