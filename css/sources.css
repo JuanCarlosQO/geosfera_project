@@ -32,5 +32,5 @@
 @media (max-width: 420px) {
   .masthead .sync-btn [data-sync-label] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .masthead .sync-btn { padding: 0 10px; }
-  .masthead .mark span { letter-spacing: .12em; }
+  .masthead .mark .mark-name { font-size: 16px; }
 }

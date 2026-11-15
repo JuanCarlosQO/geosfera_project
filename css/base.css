@@ -40,7 +40,18 @@ button { font: inherit; color: inherit; }
   max-width: 1000px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 20px 10px;
 }
 .mark { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; }
-.mark span { font-weight: 600; font-size: 13px; letter-spacing: .2em; }
+/* The team's logo: the symbol as supplied (cut out, not redrawn), and the name set beside it.
+   On the dark look the symbol sits on a white tile so its navy stays readable. */
+.mark img { width: 34px; height: 34px; flex: none; padding: 3px; border-radius: 10px; background: #ffffff; }
+.mark .mark-name { font-weight: 600; font-size: 18px; letter-spacing: -.01em; white-space: nowrap; }
+.mark .mark-name i { font-style: normal; font-weight: 300; }
+@media (max-width: 400px) {
+  .mark { gap: 7px; }
+  .mark img { width: 30px; height: 30px; }
+  .mark .mark-name { font-size: 15px; }
+  .masthead { padding-left: 14px; padding-right: 14px; }
+  .masthead-tools { gap: 5px; }
+}
 .masthead-tools { display: flex; align-items: center; gap: 8px; }
 .utc { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
 .round-btn {

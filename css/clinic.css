@@ -40,7 +40,7 @@
 [data-theme="day"] body::before { background-image: none; }
 [data-theme="day"] .station *, [data-theme="day"] .dock *, [data-theme="day"] .masthead * { text-shadow: none; }
 [data-theme="day"] .station a { color: var(--beacon); }
-[data-theme="day"] .mark img { filter: brightness(.55) saturate(3) hue-rotate(15deg); }
+[data-theme="day"] .mark img { padding: 0; border-radius: 0; background: none; }
 
 /* ---------- cards ---------- */
 [data-theme="day"] :is(.panel, .strip, .hz, .rd, .mission-card, .ring-card, .streak-card, .week-card, .badge, .fact, .risk, .tally li, .hz-detail, .mod, .data-card, .cond, .sym-group, .alarm, .zone-panel, .followup, .duty-row, .duty-verdict, .duty-link, .crew-card, .member) {
@@ -276,7 +276,7 @@
 [data-theme="day"] :is(.today h1, .checkin h1, .meds h1, .module-head h1, .mission h1) { font-weight: 500; letter-spacing: -.01em; }
 [data-theme="day"] .eyebrow { font-weight: 500; letter-spacing: .12em; }
 [data-theme="day"] .fine { font-size: 12.5px; line-height: 1.5; }
-[data-theme="day"] .mark span { font-weight: 600; letter-spacing: .18em; }
+[data-theme="day"] .mark .mark-name { color: #1b2a5c; }
 
 /* The Cupola stays the same in the day theme (team decision, 14 Nov): instead of the body
    silhouette, the day dashboard shows the six-window Cupola with its own night palette. */

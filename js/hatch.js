@@ -46,7 +46,7 @@ function markup() {
   <div class="sky" aria-hidden="true"></div>
   <div class="hs-fade">
     <div class="hs-top">
-      <span class="mark"><img src="assets/mark.svg" width="22" height="22" alt=""><span>ERGOSPHERE</span></span>
+      <span class="mark"><img src="assets/logo-mark.webp" width="34" height="34" alt=""><span class="mark-name">Ergosphere <i>Co</i></span></span>
       <time class="utc" data-utc>--:-- UTC</time>
     </div>
     <div class="hs-title">
