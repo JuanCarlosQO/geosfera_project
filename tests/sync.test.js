@@ -7,7 +7,9 @@ describe("station secrets and encryption", () => {
   it("makes readable station IDs", () => {
     const id = Y.newStationId();
     assert.ok(Y.validStationId(id), id);
-    assert.equal(Y.validStationId("GSF-O0I1AB"), false);
+    assert.equal(Y.validStationId("ERG-O0I1AB"), false);
+    assert.match(id, /^ERG-/);
+    assert.ok(Y.validStationId("GSF-ABCDEF"), "old IDs still work");
   });
   it("derives a token and key that differ by station and code", async () => {
     const a = await Y.deriveSecrets("orbit-crew-7", "GSF-ABCDEF", 1000);

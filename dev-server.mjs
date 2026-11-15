@@ -22,4 +22,4 @@ createServer(async (req, res) => {
   if (!path.startsWith(process.cwd())) { res.writeHead(403).end(); return; }
   try { res.writeHead(200, { "Content-Type": TYPES[extname(path)] ?? "application/octet-stream" }).end(await readFile(path)); }
   catch { res.writeHead(404).end("Not found"); }
-}).listen(port, () => console.log(`Geosfera with sync on http://localhost:${port}`));
+}).listen(port, () => console.log(`Ergosphere with sync on http://localhost:${port}`));
