@@ -3,6 +3,7 @@
 //    after, and a problem with a machine;
 //  · ground team (on Mission): write the prescription, see what was done, loads, reports, faults.
 
+import { researchHtml } from "./research.js";
 import * as X from "./exercise-core.js";
 import { readLog, writeLog } from "./store.js";
 import { dateKey } from "./log-core.js";
@@ -170,6 +171,7 @@ export function groundExerciseHtml(member, { draft = null, msg = "" } = {}) {
       </div>
     </div>
     ${fold("The machines and NASA's numbers", `<p>${quote(EXERCISE_FACTS.daily)}</p>${["ared", "aredMoves", "aredLoad", "cevis", "t2", "repair", "hardware"].map((k) => `<p>${quote(EXERCISE_FACTS[k])}</p>`).join("")}
+      ${researchHtml(["Inflight_Loading"])}
       <p class="fine">The sessions, their lengths, the starting plan, the list of things to report after a session and the ones that ask the crew medical officer to call at once are app rules, not NASA's. Loads are what the crew member wrote, in pounds as ARED shows them; nothing here judges them.</p>`)}
   </section>`;
 }
@@ -205,6 +207,6 @@ export function exerciseFlags(member, today = dateKey()) {
   const store = read();
   const rows = X.dayStatus(store, member, today);
   const done = rows.filter((r) => r.done).length;
-  const reported = X.recentSymptoms(store, member, today, 1).flatMap((e) => e.symptoms);
+  const reported = X.recentSymptoms(store, member, today, 2).flatMap((e) => e.symptoms); // today and yesterday
   return { done, total: rows.length, reported: [...new Set(reported)], faults: X.openFaults(store).filter((f) => f.member === member).length };
 }

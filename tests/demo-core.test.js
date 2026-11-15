@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { buildDemo, DEMO_CREW, DEMO_DAYS, isDemoId } from "../js/demo-core.js";
 import { FIELDS, checkValue, dateKey } from "../js/log-core.js";
 import { ROLES, MAX_CREW } from "../js/crew-core.js";
-import { cleanStore, patterns } from "../js/meds-core.js";
+import { cleanStore, patterns, forMember } from "../js/meds-core.js";
 import { KIT } from "../js/data/med-kit.js";
 import { SUPPLEMENTS } from "../js/data/supplements.js";
 import { checkSleep } from "../js/duty-core.js";
@@ -54,7 +54,7 @@ describe("demo crew", () => {
   it("tells Valentina's story: short sleep today and melatonin three nights in a row", () => {
     const v = demo.logs[DEMO_CREW[0].id];
     assert.equal(checkSleep(v, today).state, "flag");
-    const store = cleanStore(demo.meds, KIT, SUPPLEMENTS);
+    const store = forMember(cleanStore(demo.meds, KIT, SUPPLEMENTS), DEMO_CREW[0].id);
     assert.equal(store.doses.length, 3);
     assert.ok(patterns(store, KIT, NOW, v).some((p) => p.id === "repeat-Sleep"));
     assert.equal(Object.keys(store.supplements).length, DEMO_DAYS - 2);
@@ -71,5 +71,17 @@ describe("demo crew shows each status", () => {
         assert.ok(["normal", "pending"].includes(s.status ?? s), `${day} ${key} ${JSON.stringify(t[day][key])} → ${JSON.stringify(s)}`);
       }
     }
+  });
+
+  it("tells the other crew members' stories: Aiko's spacewalk and request, Arjun's two sleep medications", () => {
+    const [, , aiko, arjun] = DEMO_CREW;
+    assert.equal(demo.mission.name, "Expedition ERG-1");
+    assert.ok(demo.alerts.some((a) => a.from.id === aiko.id && a.level === "talk"));
+    const jStore = forMember(cleanStore(demo.meds, KIT, SUPPLEMENTS), arjun.id);
+    assert.ok(patterns(jStore, KIT, NOW, demo.logs[arjun.id]).some((p) => p.id.startsWith("twice-")));
+    assert.ok(demo.openings.some((o) => o.member === arjun.id && o.closedAt));
+    assert.equal(demo.family[aiko.id].length, 1);
+    // each crew member sees only their own doses
+    assert.equal(forMember(cleanStore(demo.meds, KIT, SUPPLEMENTS), DEMO_CREW[1].id).doses.length, 0);
   });
 });

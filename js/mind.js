@@ -17,7 +17,7 @@ import { STATUS } from "./data/body-systems.js";
 import { RANGES } from "./data/vital-ranges.js";
 import { KIT } from "./data/med-kit.js";
 import { SUPPLEMENTS } from "./data/supplements.js";
-import { MEDS_KEY, cleanStore } from "./meds-core.js";
+import { MEDS_KEY, cleanStore, forMember } from "./meds-core.js";
 import { FAMILY_KEY, cleanBox } from "./family-core.js";
 import { getAlerts, saveAlerts, applyComfort } from "./support.js";
 import { current, readLog } from "./store.js";
@@ -113,7 +113,7 @@ export function mountMind(host, { talk }) {
 
   const signalsNow = () => M.mindSignals({
     log, today, me,
-    doses: cleanStore(read(MEDS_KEY, null), KIT, SUPPLEMENTS).doses,
+    doses: forMember(cleanStore(read(MEDS_KEY, null), KIT, SUPPLEMENTS), me?.id ?? "").doses,
     kit: KIT,
     alerts: getAlerts(),
     box: cleanBox(read(FAMILY_KEY, {})),

@@ -21,10 +21,10 @@ describe("one code per crew member", () => {
     assert.deepEqual(Object.keys(A.withoutAccess(s, "v1").members), ["t1"]);
   });
   it("gives each demo profile its own code, shown for the judges, and none easy to guess", async () => {
-    assert.equal(DEMO_CREW.length, 2);
-    assert.deepEqual(DEMO_CREW.map((m) => m.body).sort(), ["f", "m"]);
+    assert.equal(DEMO_CREW.length, 4);
+    assert.deepEqual(DEMO_CREW.map((m) => m.body).sort(), ["f", "f", "m", "m"]);
     const codes = DEMO_CREW.map((m) => DEMO_CODES[m.id]);
-    assert.equal(new Set(codes).size, 2);
+    assert.equal(new Set(codes).size, 4);
     for (const c of codes) { assert.ok(A.codeShapeOk(c)); assert.equal(A.guessable(c), false, c); }
     const r = await A.deriveRecord(codes[0], { rounds: 1000 });
     assert.equal(await A.matches(codes[0], r), true);

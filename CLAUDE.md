@@ -23,6 +23,9 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`, `#log/<YYYY-MM-DD>`, `#mission`, `#meds`, `#duty`) and bottom dock |
 | `js/access-core.js` | Pure access rules, tested: code shape, guessable codes, PBKDF2 record, wrong-code waits, WebAuthn assertion check |
 | `js/role-core.js`, `js/role.js` | Who is looking: the ground medical team (sees every reading) or a crew member (home with no readings; emergency opening for 60 min, kept in `geosfera.openings` for the ground). `geosfera.role` never leaves the device |
+| `js/predict-core.js` | The analysis: each reading against the crew member's own 14-day usual, the week's line, a 7-day forecast with a band, sleep debt, bone and radiation outlooks to the mission's end. App rules, tested |
+| `js/crew-status.js`, `js/ground.js`, `js/analysis.js` | Mission Control (`#ground`, the ground team's home): counts, "Look at now", one card per crew member; each opens their analysis (`#analysis`) |
+| `js/data/research.js`, `js/research.js` | The eight NLSP experiments behind features, quoted and shown as "NASA research behind this" |
 | `js/exercise-core.js`, `js/exercise.js`, `js/data/exercise.js` | Countermeasure exercise: the ground team prescribes daily sessions (ARED, CEVIS, T2) on Mission; the crew member marks them done on their home with loads and anything felt after, and reports machine problems. Kept in `geosfera.exercise` (synced); minutes fill "Exercise today" in the daily log |
 | `js/crew-home.js` | `#crew`: the crew member's own home. Morning question without numbers, watch taps, medication, family, talk, critical task, emergency opening |
 | `js/ground.js` | `#ground`: the ground team's crew list (short night, morning answer, requests, emergency openings); a card opens that member's record |

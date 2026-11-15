@@ -7,9 +7,13 @@
 
 export const MEDS_KEY = "geosfera.meds";
 
+import { RESEARCH } from "./data/research.js";
+const SLEEP_TWICE = RESEARCH.Sleep_Meds_Phase_II;
+
 export const RULES = {
   dayHours: 24,          // the kit list's "every 24 hours" window
   repeatDays: 3,         // illustrative app rule: same category on this many days in a row
+  sameNightHours: 8,     // app rule: two sleep doses closer than this count as one night
   noReliefRepeats: 2,    // illustrative app rule: this many "did not work" in a row
   weekDays: 7,           // Dose Tracker asked once a week (every 6-8 days)
   severeDays: 7,         // illustrative app rule: how long a severe side effect stays on the list
@@ -164,6 +168,7 @@ export function cleanStore(raw, kit, supplements = []) {
   for (const d of Array.isArray(raw?.doses) ? raw.doses : []) {
     if (!known.has(d?.medId) || !Number.isInteger(d.units) || d.units < 1 || Number.isNaN(ms(d.at))) continue;
     const dose = { id: String(d.id ?? `${d.medId}-${d.at}`), medId: d.medId, units: d.units, at: iso(d.at), reason: d.reason ?? null, outcome: null };
+    if (typeof d.member === "string" && d.member) dose.member = d.member;
     if (d.recalled === true) dose.recalled = true;
     if (d.scheduled === true) dose.scheduled = true;
     if (cleanSaid(d.said)) dose.said = cleanSaid(d.said);
@@ -332,6 +337,17 @@ export function patterns(store, kit, now = new Date(), log = {}) {
     out.push({ id: `severe-${d.id}`, level: "talk", medId: d.medId, text: `Severe side effect after ${med?.name.toLowerCase() ?? "a medication"} on ${dayOf(d.at)}${fx ? `: ${fx}` : ""}.`, illustrative: true });
   }
 
+  // 7. Two sleep medications in one night (app rule; the concern is quoted from NASA's
+  // sleep-medication study on NLSP): two doses of the Sleep category less than 8 hours apart.
+  const sleepDoses = store.doses.filter((d) => byId.get(d.medId)?.category === "Sleep" && ms(d.at) <= ms(now) && ms(now) - ms(d.at) < RULES.severeDays * 24 * HOUR)
+    .sort((a, b) => ms(a.at) - ms(b.at));
+  for (let i = 1; i < sleepDoses.length; i += 1) {
+    const a = sleepDoses[i - 1], b = sleepDoses[i];
+    if (ms(b.at) - ms(a.at) >= RULES.sameNightHours * HOUR) continue;
+    out.push({ id: `twice-${b.id}`, level: "talk", category: "Sleep", text: `Two sleep medications logged in one night (${dayOf(b.at)}). A NASA sleep-medication study says:`, quote: SLEEP_TWICE.quote, url: SLEEP_TWICE.url, source: "NASA NLSP, Sleep_Meds_Phase_II" });
+    break;
+  }
+
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "talk" ? -1 : 1));
 }
 
@@ -420,3 +436,19 @@ export function toCsv(doses, kit) {
   ].map(cell).join(","));
   return ["taken_at_utc,medication,kit_category,units,unit,what_for,worked,side_effects,side_effect_strength,logged", ...rows].join("\n") + "\n";
 }
+
+/* ---------- one log per crew member on a shared device ---------- */
+
+/**
+ * The doses of one crew member. A dose saved before profiles existed has no member and stays
+ * visible to everyone on the device (it cannot be told whose it was).
+ */
+export const forMember = (store, member) => ({ ...store, doses: store.doses.filter((d) => !d.member || d.member === member) });
+
+/** Puts one crew member's view back into the device's log: their doses replace their own, the rest stay. */
+export function mergeMember(all, member, view) {
+  const mine = view.doses.map((d) => (d.member ? d : { ...d, member }));
+  const ids = new Set(mine.map((d) => d.id));
+  return { ...view, doses: [...all.doses.filter((d) => d.member && d.member !== member && !ids.has(d.id)), ...mine] };
+}
+

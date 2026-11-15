@@ -1,0 +1,193 @@
+/* New light look (2026-11): soft grey page, big white rounded cards with no borders, tight bold
+   headlines (Manrope), dot-matrix numerals for the big readings (Doto), black as the main accent
+   with a yellow call to action and red for the heart. Inspired by two medical dashboards the team
+   liked; it is our own combination, not a copy of either.
+
+   It is a layer: everything here is scoped to html.look-new in light mode, so the button in the
+   masthead (data-action="look") switches straight back to the previous light look to compare.
+   Dark mode is untouched (css/dark.css). */
+
+.look-new[data-mode="light"] {
+  --night: #eceef1;
+  --hull: #ffffff;
+  --seam: #e7e9ed;
+  --seam-hi: #d5d8de;
+  --ink: #121316;
+  --ink-2: #4a4e57;
+  --ink-3: #8a8e97;
+  --beacon: #121316;
+  --beacon-ink: #ffffff;
+  --holo: #121316;
+  --holo-deep: #000000;
+  --alarm: #ef4336;
+  --tone-normal: #12a06a;
+  --tone-watch: #e08900;
+  --tone-act: #ef4336;
+  --tone-again: #3d6be0;
+  --tint: #f1f2f4;
+  --tint-hi: #e6e8ec;
+  --soft: #f4f5f7;
+  --yellow: #f2e15a;
+  --yellow-ink: #121316;
+  --heart: #ef4336;
+  --card-shadow: 0 1px 2px rgba(18, 19, 22, .04), 0 22px 44px -32px rgba(18, 19, 22, .32);
+  --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dots: "Doto", "Manrope", system-ui, sans-serif;
+}
+.look-new[data-mode="light"] body { letter-spacing: -.005em; }
+
+/* ---------- type ---------- */
+.look-new[data-mode="light"] .station h1 { font-weight: 800; letter-spacing: -.035em; line-height: 1.05; }
+.look-new[data-mode="light"] .station h2 { font-weight: 700; letter-spacing: -.02em; }
+.look-new[data-mode="light"] .station h3 { font-weight: 700; letter-spacing: -.01em; }
+.look-new[data-mode="light"] .eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: var(--hull); box-shadow: var(--card-shadow);
+  font-size: 12px; font-weight: 600; letter-spacing: .01em; text-transform: none; color: var(--ink-2) !important;
+}
+.look-new[data-mode="light"] .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 3px color-mix(in srgb, var(--yellow) 35%, transparent); flex: none; }
+.look-new[data-mode="light"] .fine { font-size: 12.5px; }
+.look-new[data-mode="light"] .station a:not(.cta):not(.ch-tile):not(.duty-link) { color: var(--ink); text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent); text-underline-offset: 3px; }
+
+/* the big numbers: dot-matrix, like a monitor's display */
+.look-new[data-mode="light"] :is(.mc-kpi b, .mc-stat b, .an-out b, .tm-val strong, .hub-num, .ch-home strong, .rad-nums strong, .streak-num strong, .ring-text strong, .tally strong, .rd-val strong, .hr-text strong, .strip-text strong, .pl-value) {
+  font-family: var(--dots); font-weight: 800; letter-spacing: .01em;
+}
+.look-new[data-mode="light"] :is(.mc-stat b i, .tm-val span, .tm-val small) { font-family: var(--sans); }
+.look-new[data-mode="light"] .mc-kpi b { font-size: 46px; line-height: 1; margin-bottom: 6px; }
+.look-new[data-mode="light"] .mc-stat b { font-size: 24px; }
+.look-new[data-mode="light"] .an-out b { font-size: 34px; line-height: 1.1; }
+.look-new[data-mode="light"] .tm-val strong { font-size: 40px; }
+
+/* ---------- cards: white, round, no outline ---------- */
+.look-new[data-mode="light"] :is(.panel, .strip, .hz, .rd, .mission-card, .ring-card, .streak-card, .week-card, .badge, .fact, .risk, .tally li, .hz-detail, .mod, .data-card, .cond, .sym-group, .alarm, .zone-panel, .followup, .duty-row, .duty-verdict, .duty-link, .crew-card, .member, .mc-kpi, .mc-look, .an-card, .mc-card, .tm-card, .tm-status, .tm-log, .tm-table, .ch-card, .ch-tile, .cl-callout, .cl-card, .gf-card, .sc-card) {
+  border-color: transparent; border-radius: 26px; box-shadow: var(--card-shadow);
+}
+.look-new[data-mode="light"] :is(.mc-look, .an-card, .ch-card) { padding: 22px 24px; }
+.look-new[data-mode="light"] :is(.strip, .hz, .rd, .badge, .risk, .mod, .mc-card, .ch-tile):hover { border-color: transparent; box-shadow: 0 1px 2px rgba(18, 19, 22, .05), 0 26px 50px -30px rgba(18, 19, 22, .45); }
+.look-new[data-mode="light"] :is(.mc-stat, .an-out, .an-items li, .mc-list button) { border-radius: 18px; border-color: transparent; }
+.look-new[data-mode="light"] :is(h2, h3)::before { border-color: var(--seam-hi); }
+
+/* ---------- buttons: pills; yellow for the main action ---------- */
+.look-new[data-mode="light"] .cta { border-radius: 999px; border-color: transparent; background: var(--hull); box-shadow: var(--card-shadow); font-weight: 600; }
+.look-new[data-mode="light"] .cta:hover { border-color: var(--ink); }
+.look-new[data-mode="light"] .cta.main { background: var(--yellow); border-color: var(--yellow); color: var(--yellow-ink); font-weight: 700; }
+.look-new[data-mode="light"] .cta.main:hover { border-color: var(--ink); }
+.look-new[data-mode="light"] .cta.stop { background: var(--heart); border-color: var(--heart); color: #ffffff; }
+.look-new[data-mode="light"] :is(.cta-wide, .transmit) { background: var(--ink); color: #ffffff; border-radius: 999px; box-shadow: 0 18px 30px -18px rgba(18, 19, 22, .55); }
+.look-new[data-mode="light"] .cta-wide::after { background: linear-gradient(100deg, transparent 20%, #ffffff30 50%, transparent 80%); }
+.look-new[data-mode="light"] :is(.chip, .tm-mode, .tm-tag) { border-radius: 999px; }
+
+/* ---------- masthead: floating white circles ---------- */
+.look-new[data-mode="light"] .round-btn { border-color: transparent; background: var(--hull); color: var(--ink); box-shadow: var(--card-shadow); }
+.look-new[data-mode="light"] .round-btn:hover { color: var(--ink); border-color: var(--ink); }
+.look-new[data-mode="light"] .sync-btn { border-color: transparent; background: var(--hull); box-shadow: var(--card-shadow); border-radius: 999px; }
+.look-new[data-mode="light"] .utc { font-family: var(--dots); font-weight: 800; font-size: 14px; color: var(--ink-2); }
+.look-new[data-mode="light"] .mark .mark-name { font-weight: 800; letter-spacing: -.03em; }
+.look-new[data-mode="light"] .look-btn { background: var(--ink); color: #ffffff; }
+.look-new[data-mode="light"] .look-btn:hover { color: #ffffff; }
+[data-mode="dark"] .look-btn { display: none; }
+
+/* ---------- dock: a floating pill, the current screen in black ---------- */
+.look-new[data-mode="light"] .dock {
+  left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); height: 66px; padding: 0 6px;
+  border: 0; border-radius: 33px; background: color-mix(in srgb, var(--hull) 94%, transparent); box-shadow: 0 18px 40px -18px rgba(18, 19, 22, .35);
+}
+.look-new[data-mode="light"] .dock a { min-width: 0; flex: 1 1 0; max-width: 76px; padding: 7px 0; border-radius: 24px; color: var(--ink-3); font-weight: 600; font-size: 10.5px; transition: background .2s, color .2s; }
+.look-new[data-mode="light"] .dock a[aria-current="page"] { background: var(--ink); color: #ffffff; }
+.look-new[data-mode="light"] .dock a[aria-current="page"]::before { display: none; }
+.look-new[data-mode="light"] .dock a:hover:not([aria-current="page"]) { color: var(--ink); }
+@media (min-width: 1040px) {
+  .look-new[data-mode="light"] .dock { left: 22px; right: auto; bottom: auto; height: auto; padding: 12px 0; width: 80px; border-radius: 40px; background: var(--hull); }
+  .look-new[data-mode="light"] .dock a { flex: none; width: 64px; max-width: none; padding: 10px 0; border-radius: 22px; }
+}
+
+/* ---------- Mission Control ---------- */
+.look-new[data-mode="light"] .mc-kpis { gap: 14px; }
+.look-new[data-mode="light"] .mc-kpi { padding: 18px 20px 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 128px; }
+.look-new[data-mode="light"] .mc-kpi small { font-size: 13px; font-weight: 600; }
+.look-new[data-mode="light"] .mc-kpi:first-child { background: var(--ink); color: #ffffff; }
+.look-new[data-mode="light"] .mc-kpi:first-child small { color: #c4c7cf; }
+.look-new[data-mode="light"] .mc-kpi:first-child.watch b { color: var(--yellow); }
+.look-new[data-mode="light"] .mc-kpi:nth-child(2) { background: var(--yellow); }
+.look-new[data-mode="light"] .mc-kpi:nth-child(2) b, .look-new[data-mode="light"] .mc-kpi:nth-child(2) small { color: var(--yellow-ink); }
+.look-new[data-mode="light"] .mc-kpi.watch:not(:first-child):not(:nth-child(2)) b { color: var(--heart); }
+
+/* status pills: a dot and a word, on grey */
+.look-new[data-mode="light"] .mc-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--soft); color: var(--ink); font: 700 12px var(--sans); letter-spacing: 0; }
+.look-new[data-mode="light"] .mc-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.look-new[data-mode="light"] .mc-pill.mc-act { background: color-mix(in srgb, var(--heart) 12%, var(--hull)); color: #c8281c; }
+.look-new[data-mode="light"] .mc-pill.mc-watch { background: color-mix(in srgb, var(--yellow) 45%, var(--hull)); color: var(--ink); }
+.look-new[data-mode="light"] .mc-pill.mc-watch::before { background: var(--tone-watch); }
+.look-new[data-mode="light"] .mc-pill.mc-ok::before { background: var(--tone-normal); }
+.look-new[data-mode="light"] .mc-pill.mc-ok { color: var(--ink); }
+
+.look-new[data-mode="light"] :is(.mc-card.mc-act, .mc-card.mc-watch, .mc-card.mc-ok) { border-top: 0; }
+.look-new[data-mode="light"] .mc-card { padding: 20px; gap: 14px; }
+.look-new[data-mode="light"] .mc-card.mc-act { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--heart) 55%, transparent), var(--card-shadow); }
+.look-new[data-mode="light"] .mc-stat { padding: 12px; background: var(--soft); }
+.look-new[data-mode="light"] .mc-stat small { font-weight: 600; }
+.look-new[data-mode="light"] .mc-stat:nth-child(2) small::before { content: "♥ "; color: var(--heart); }
+.look-new[data-mode="light"] .mc-stat:nth-child(2) .mc-spark path { stroke: var(--heart); }
+.look-new[data-mode="light"] .mc-stat:nth-child(2) .mc-spark circle { fill: var(--heart); }
+.look-new[data-mode="light"] .mc-band { fill: color-mix(in srgb, var(--ink) 7%, transparent); }
+.look-new[data-mode="light"] .mc-bar { background: var(--hull); height: 10px; border-radius: 5px; }
+.look-new[data-mode="light"] .mc-bar i { background: var(--yellow); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent); }
+.look-new[data-mode="light"] .mc-dots i { background: var(--hull); }
+.look-new[data-mode="light"] .mc-dots i.on { background: var(--ink); }
+.look-new[data-mode="light"] .mc-item { border-radius: 12px; }
+.look-new[data-mode="light"] .mc-open { display: inline-flex; align-self: flex-start; padding: 9px 16px; border-radius: 999px; background: var(--ink); color: #ffffff; font-size: 12.5px; }
+.look-new[data-mode="light"] .mc-list button { background: var(--soft); padding: 12px 14px; }
+.look-new[data-mode="light"] .mc-list button:hover { border-color: var(--ink); }
+.look-new[data-mode="light"] .mc-list .mc-act .mc-dot { background: var(--heart); }
+.look-new[data-mode="light"] .gf-mission { gap: 6px; }
+.look-new[data-mode="light"] .gf-mission > * { padding: 5px 11px; border-radius: 999px; background: var(--hull); box-shadow: var(--card-shadow); font-size: 13px; }
+.look-new[data-mode="light"] .gf-mission :is(span + span, strong + span)::before { content: none; }
+.look-new[data-mode="light"] .gf-mission .sim { background: color-mix(in srgb, var(--yellow) 55%, var(--hull)); color: var(--ink); }
+
+/* ---------- analysis ---------- */
+.look-new[data-mode="light"] .an-av { width: 76px; height: 76px; font-size: 76px; }
+.look-new[data-mode="light"] .an-out { padding: 16px; background: var(--soft); }
+.look-new[data-mode="light"] .an-outs .an-out:first-child { background: var(--ink); }
+.look-new[data-mode="light"] .an-outs .an-out:first-child :is(small, em) { color: #c4c7cf; }
+.look-new[data-mode="light"] .an-outs .an-out:first-child b { color: #ffffff; }
+.look-new[data-mode="light"] .an-outs .an-out:first-child.warn b { color: var(--yellow); }
+.look-new[data-mode="light"] .an-out.warn { background: color-mix(in srgb, var(--yellow) 38%, var(--hull)); }
+.look-new[data-mode="light"] .an-usual { fill: color-mix(in srgb, var(--ink) 7%, transparent); }
+.look-new[data-mode="light"] .an-fband { fill: color-mix(in srgb, var(--yellow) 55%, transparent); }
+.look-new[data-mode="light"] .an-charts .an-card:nth-child(2) :is(.an-line, .an-fline) { stroke: var(--heart); }
+.look-new[data-mode="light"] .an-charts .an-card:nth-child(2) .an-dot { fill: var(--heart); }
+.look-new[data-mode="light"] .an-charts .an-card:nth-child(2) h2::before { content: "♥ "; color: var(--heart); border: 0; }
+.look-new[data-mode="light"] .an-tbl tr.bad th::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--heart); margin-right: 8px; vertical-align: middle; }
+.look-new[data-mode="light"] .an-tbl tr.warn th::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--tone-watch); margin-right: 8px; vertical-align: middle; }
+.look-new[data-mode="light"] .an-links a { border-radius: 20px; }
+
+/* ---------- live sensors ---------- */
+.look-new[data-mode="light"] .tm-card { padding: 18px 20px; }
+.look-new[data-mode="light"] .tm-name { font-weight: 700; }
+.look-new[data-mode="light"] .tm-card[data-ch="heartRate"] .tm-name::before { content: "♥ "; color: var(--heart); }
+.look-new[data-mode="light"] .tm-card[data-ch="heartRate"] .tm-spark path { stroke: var(--heart); }
+.look-new[data-mode="light"] .tm-card[data-status="watch"] { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tone-watch) 60%, transparent), var(--card-shadow); }
+.look-new[data-mode="light"] .tm-card[data-status="act"] { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--heart) 70%, transparent), var(--card-shadow); }
+.look-new[data-mode="light"] .tm-alert { border-radius: 22px; }
+
+/* ---------- crew home ---------- */
+.look-new[data-mode="light"] .ch-tile { padding: 18px; min-height: 108px; }
+.look-new[data-mode="light"] .ch-tile strong { font-weight: 700; letter-spacing: -.01em; }
+.look-new[data-mode="light"] .ch-grid .ch-tile:first-child { background: var(--yellow); }
+.look-new[data-mode="light"] .ch-grid .ch-tile:first-child small { color: var(--ink-2); }
+.look-new[data-mode="light"] .ch-tile.on { background: var(--ink); color: #ffffff; }
+.look-new[data-mode="light"] .ch-tile.on small { color: #c4c7cf; }
+.look-new[data-mode="light"] .ch-home strong { font-size: 30px; vertical-align: -3px; }
+
+
+/* small readings keep to one line; the analysis legend matches the new chart colours */
+.look-new[data-mode="light"] .mc-stat b { font-size: 21px; white-space: nowrap; }
+.look-new[data-mode="light"] .an-k.usual { background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.look-new[data-mode="light"] .an-k.line { background: var(--ink); }
+.look-new[data-mode="light"] .an-k.fore { background: color-mix(in srgb, var(--yellow) 70%, transparent); border-color: var(--ink); }
+@media (max-width: 380px) {
+  .look-new[data-mode="light"] .dock { left: 6px; right: 6px; padding: 0 4px; }
+  .look-new[data-mode="light"] .dock a { font-size: 9.5px; letter-spacing: -.01em; }
+}

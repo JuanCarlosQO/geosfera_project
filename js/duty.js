@@ -6,7 +6,7 @@
 import * as D from "./duty-core.js";
 import { TASKS, WORKLOAD, LEVELS, DUTY_FACTS } from "./data/duty.js";
 import { KIT, REVIEWER } from "./data/med-kit.js";
-import { MEDS_KEY, cleanStore, dayOf, spanWords } from "./meds-core.js";
+import { MEDS_KEY, cleanStore, dayOf, spanWords, forMember } from "./meds-core.js";
 import { fieldByKey } from "./log-core.js";
 import { readLog, current } from "./store.js";
 import * as F from "./family-core.js";
@@ -124,7 +124,7 @@ export function mountDuty(host) {
 
   function paint() {
     const now = new Date();
-    const doses = cleanStore(read(MEDS_KEY), KIT).doses;
+    const doses = forMember(cleanStore(read(MEDS_KEY), KIT), current()?.id ?? "").doses;
     result = D.assess({ log: readLog(), day: dayOf(now), doses, kit: KIT, workload: answers(), now });
     const by = Object.fromEntries(result.checks.map((c) => [c.id, c]));
     const h = HEAD[result.headline];

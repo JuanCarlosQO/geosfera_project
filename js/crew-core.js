@@ -2,7 +2,7 @@
 // shared station device: each member has a profile and their own daily log.
 
 export const CREW_KEY = "geosfera.crew";
-export const ROLES = ["Commander", "Pilot", "Flight Engineer", "Mission Specialist", "Payload Specialist", "Flight Surgeon"];
+export const ROLES = ["Commander", "Pilot", "Flight Engineer", "Mission Specialist", "Payload Specialist", "Crew Medical Officer", "Flight Surgeon"];
 export const MAX_CREW = 8;
 
 export const logKeyFor = (id) => `geosfera.log.${id}`;

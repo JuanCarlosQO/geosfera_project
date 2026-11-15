@@ -71,3 +71,15 @@ a, button, summary, [role="button"] { -webkit-tap-highlight-color: transparent; 
   .hs-pic-btn { right: auto; left: 54px; top: auto; bottom: 10px; width: 30px; height: 30px; min-height: 30px; padding: 0; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(15, 23, 42, .18); }
   .hs-pic-btn span { display: none; }
 }
+
+/* NASA research behind a feature (NLSP experiments) */
+.rs-box { margin-top: 12px; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--seam-hi); background: var(--soft, rgba(127, 127, 127, .05)); }
+.rs-h { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em; color: var(--beacon); }
+.rs-item { margin: 0 0 8px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.rs-item a { color: var(--beacon); }
+
+/* phones: seven masthead buttons and the name do not fit side by side; the symbol stays */
+@media (max-width: 480px) {
+  .masthead .mark .mark-name { display: none; }
+  .masthead .round-btn { width: 40px; height: 40px; }
+}

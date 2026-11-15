@@ -1,9 +1,12 @@
 // Loads and removes the demo crew on this device (rules and values: demo-core.js).
-// Loading is offered only while no crew is registered, so it never mixes with real entries.
-// Removing takes away only what the demo wrote: its two members and their logs, its
-// medication doses and vitamin D days, and its mission start.
+// Loading is offered only while no crew is registered; a demo saved by an older version is
+// replaced by the current one, keeping any crew member the team created by hand.
+// Removing takes away only what the demo wrote: its members and their logs, its medication
+// doses and vitamin D days, its exercise, alerts and openings, and its mission start.
 
-import { buildDemo, DEMO_KEY, isDemoId, DEMO_CREW } from "./demo-core.js";
+import { buildDemo, DEMO_KEY, isDemoId, DEMO_CREW, DEMO_VERSION } from "./demo-core.js";
+import { ALERTS_KEY } from "./support-core.js";
+import { OPENINGS_KEY, cleanOpenings } from "./role-core.js";
 import { getCrew, saveCrew, writeLog, deleteMember } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
 import { FAMILY_KEY } from "./family-core.js";
@@ -16,13 +19,18 @@ const drop = (k) => { try { localStorage.removeItem(k); } catch { /* storage blo
 
 export const demoLoaded = () => Boolean(read(DEMO_KEY, null)) || getCrew().members.some((m) => isDemoId(m.id));
 
-/** Writes the demo crew. Returns false when a crew is already registered. */
-export function loadDemo(now = new Date()) {
-  if (getCrew().members.length) return false;
+/** Writes the demo crew. Returns false when a crew is already registered (unless `keep`: then the
+ * demo is written next to the crew members already on the device). */
+export function loadDemo(now = new Date(), { keep = false } = {}) {
+  const others = getCrew().members.filter((m) => !isDemoId(m.id));
+  if (getCrew().members.length && !keep) return false;
   const d = buildDemo(now);
-  saveCrew(d.crew);
+  saveCrew({ ...d.crew, members: [...d.crew.members, ...others] });
   for (const [id, log] of Object.entries(d.logs)) writeLog(log, id);
-  write(MEDS_KEY, d.meds);
+  const meds = read(MEDS_KEY, null);
+  write(MEDS_KEY, meds ? { ...meds, doses: [...(meds.doses ?? []), ...d.meds.doses], supplements: { ...(meds.supplements ?? {}), ...d.meds.supplements } } : d.meds);
+  write(ALERTS_KEY, [...d.alerts, ...read(ALERTS_KEY, [])]);
+  write(OPENINGS_KEY, [...d.openings, ...cleanOpenings(read(OPENINGS_KEY, []))]);
   write(MISSION_KEY, d.mission);
   write(FAMILY_KEY, { ...read(FAMILY_KEY, {}), ...d.family });
   const ex = cleanExercise(read(EXERCISE_KEY, {}));
@@ -69,7 +77,18 @@ export function removeDemo() {
     for (const id of Object.keys(c.plans)) if (isDemoId(id)) delete c.plans[id];
     write(EXERCISE_KEY, { plans: c.plans, log: c.log.filter((e) => !isDemoId(e.member)), faults: c.faults.filter((f) => !isDemoId(f.member)) });
   }
+  write(ALERTS_KEY, read(ALERTS_KEY, []).filter((a) => !isDemoId(a?.from?.id)));
+  write(OPENINGS_KEY, cleanOpenings(read(OPENINGS_KEY, [])).filter((o) => !isDemoId(o.member)));
   drop(DEMO_KEY);
+}
+
+/** A demo saved by an older version (fewer crew, no mission) is swapped for the current one. */
+export function upgradeDemo(now = new Date()) {
+  const marker = read(DEMO_KEY, null);
+  if (!demoLoaded() || (marker?.version ?? 1) >= DEMO_VERSION) return false;
+  removeDemo();
+  loadDemo(now, { keep: true });
+  return true;
 }
 
 export const demoNoticeHtml = () => `<div class="demo-note" role="note"><span class="dn-tag mono">SIMULATED</span>

@@ -18,7 +18,7 @@ import * as S from "./store.js";
 import { crewStatusHtml, crewFormHtml, manageHtml, bindCrewForm } from "./crew.js";
 import { RADIATION_LIMITS, REVIEW_NOTE } from "./data/vital-ranges.js";
 import { clinicHero } from "./clinic.js";
-import { MEDS_KEY, cleanStore, medList, reminders } from "./meds-core.js";
+import { MEDS_KEY, cleanStore, medList, reminders, forMember } from "./meds-core.js";
 import { SUPPLEMENTS } from "./data/supplements.js";
 import { familyWaiting } from "./family.js";
 import { KIT } from "./data/med-kit.js";
@@ -166,7 +166,7 @@ export function mountToday(host, { go }, requested) {
   const isToday = day === today;
   // Day theme: the clinical overview around the Cupola. Night theme: the Cupola with the check-in strip.
   const day_theme = document.documentElement.dataset.theme !== "night";
-  const medStore = cleanStore(readJson(MEDS_KEY, null), KIT, SUPPLEMENTS);
+  const medStore = forMember(cleanStore(readJson(MEDS_KEY, null), KIT, SUPPLEMENTS), member.id);
   const rem = reminders(medStore, medList(KIT, medStore), SUPPLEMENTS);
 
   const heroProps = { log, day, entry, summary, mday, streak, exercise: ex, actions, isToday, reminders: rem, family: isGround() ? 0 : familyWaiting(member.id), who: member, stage: cupola(summary, entry) };

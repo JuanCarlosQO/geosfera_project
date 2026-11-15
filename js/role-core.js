@@ -26,7 +26,7 @@ export const CREW_ROUTES = ["crew", "meds", "family"];
 // Never for the ground: the crew member's home and their messages from home.
 export const CREW_ONLY = ["crew", "family"];
 // The ground's own screen (the crew roster); a crew member never opens it.
-export const GROUND_ROUTES = ["ground"];
+export const GROUND_ROUTES = ["ground", "analysis"];
 
 const ms = (t) => new Date(t).getTime();
 const iso = (t) => new Date(t).toISOString();

@@ -95,7 +95,15 @@ describe("patterns worth raising", () => {
   });
   it("lists talk-to-the-officer before downlink", () => {
     const p = M.patterns(store([2, 26, 50].map((h) => dose("sleepB", h)).concat(dose("sleepC", 3))), KIT, NOW);
-    assert.deepEqual(p.map((x) => x.level), ["talk", "downlink"]);
+    assert.deepEqual(p.map((x) => x.level), ["talk", "talk", "downlink"]); // the mix, the two-in-one-night, then the repeat
+  });
+  it("raises two sleep medications in one night, quoting NASA's sleep-medication study", () => {
+    const p = M.patterns(store([dose("sleepB", 5), dose("sleepB", 2)]), KIT, NOW);
+    const t = p.find((x) => x.id.startsWith("twice-"));
+    assert.ok(t);
+    assert.equal(t.quote, "Recent data indicate that some crewmembers take medications twice in one night.");
+    assert.match(t.url, /nlsp\.nasa\.gov/);
+    assert.equal(M.patterns(store([dose("sleepB", 30), dose("sleepB", 6)]), KIT, NOW).some((x) => x.id.startsWith("twice-")), false); // 24 hours apart: two nights
   });
   it("counts days in a row ending today", () => {
     assert.equal(M.daysInARow([dose("painA", 0), dose("painA", 24), dose("painA", 72)], () => true, M.dayOf(NOW)), 2);
@@ -289,5 +297,21 @@ describe("what is logged next to a dose", () => {
     assert.deepEqual(M.queued(s).map((d) => d.id), ["painA-2"]);
     const back = M.cleanStore({ ...s, exported: [...s.exported, "ghost-1", s.doses[0].id] }, KIT, SUPPS);
     assert.deepEqual(back.exported, ["painA-5"]);
+  });
+});
+
+describe("one medication log per crew member", () => {
+  it("shows each crew member their own doses and keeps the others when saving", () => {
+    const all = { ...M.cleanStore({ doses: [
+      { id: "a1", medId: "sleepB", units: 1, at: "2026-11-14T23:00:00Z", member: "a" },
+      { id: "b1", medId: "painA", units: 2, at: "2026-11-14T12:00:00Z", member: "b" },
+      { id: "old", medId: "painA", units: 1, at: "2026-11-01T12:00:00Z" }
+    ] }, KIT) };
+    const a = M.forMember(all, "a");
+    assert.deepEqual(a.doses.map((d) => d.id).sort(), ["a1", "old"]); // a dose saved before profiles stays visible
+    const saved = M.mergeMember(all, "a", { ...a, doses: [...a.doses, { id: "a2", medId: "sleepB", units: 1, at: "2026-11-15T23:00:00Z", outcome: null }] });
+    assert.deepEqual(saved.doses.map((d) => d.id).sort(), ["a1", "a2", "b1", "old"]);
+    assert.equal(saved.doses.find((d) => d.id === "a2").member, "a");
+    assert.equal(M.cleanStore(saved, KIT).doses.find((d) => d.id === "b1").member, "b");
   });
 });

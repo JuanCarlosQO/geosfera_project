@@ -13,7 +13,10 @@
 import { judgeReading } from "./log-core.js";
 import { RANGES } from "./data/vital-ranges.js";
 
-export const TICK_MS = 1000;
+// one simulated second every 350 ms: the demo runs about 3 times faster than real time, so a
+// scrubber fault or a spacewalk unfolds in seconds instead of minutes (time compressed, app rule)
+export const TICK_MS = 350;
+export const SPEED = Math.round(1000 / TICK_MS);
 export const HISTORY = 60;          // seconds kept for the sparklines
 export const RULES = {
   baselineDays: 14,                 // app rule: days of the log used for "your usual range"

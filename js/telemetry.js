@@ -8,6 +8,7 @@
 // running after leaving the screen; this one fixes those and sources every limit.
 // Rules: telemetry-core.js. Words and sources: data/telemetry.js, docs/SOURCES.md.
 
+import { researchHtml } from "./research.js";
 import * as T from "./telemetry-core.js";
 import { LIMIT_FACTS, RESPONSES } from "./data/telemetry.js";
 import { RADLAB_ISS } from "./data/radlab-iss.js";
@@ -153,7 +154,7 @@ export function mountLive(host, openTab) {
   const crewTab = `<h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
     ${sensorsHtml()}
     <p class="fine tm-realnote">Crew vital signs here are simulated: no real astronaut vital signs are public. The real data on this screen is the radiation dose rate measured on the International Space Station. <a href="#live/rad">See the real data</a></p>
-    ${fold("How real sensors connect", realHtml(), { cls: "block" })}
+    ${fold("How real sensors connect", realHtml() + researchHtml(["Personal_CO2_Monitor", "ESA_Active_Dosimeter"]), { cls: "block" })}
     <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration", "co2Personal"].map(card).join("")}</ul>
     ${fold("Your usual range", `<p class="fine">${bands.hr ? `App rule, last ${T.RULES.baselineDays} days, ${bands.hr.n} readings: heart rate ${bands.hr.low}–${bands.hr.high} bpm${bands.sys ? `, top blood pressure ${bands.sys.low}–${bands.sys.high} mmHg` : ""}. Values outside it are flagged even inside the reference range.` : `Log heart rate and blood pressure on ${T.RULES.baselineMin} days and the feed will also compare you with yourself.`}</p>`)}`;
 
@@ -213,7 +214,7 @@ export function mountLive(host, openTab) {
 
     <div class="tm-status" data-ref="status" aria-live="polite"></div>
 
-    <p class="fine tm-how">Simulate: tap one or several. Tap again to stop.</p>
+    <p class="fine tm-how">Simulate: tap one or several. Tap again to stop. The simulator runs about ${T.SPEED} times faster than real time, so each one unfolds in seconds.</p>
     ${[["cabin", "Cabin"], ["crew", "Crew member"], ["sensor", "Sensors"]].map(([g, label]) => `<span class="tm-glabel mono">${label}</span><div class="tm-controls scroll-row" role="group" aria-label="${label} simulations">
       ${Object.entries(T.SCENARIOS).filter(([, x]) => x.group === g).map(([id, x]) => `<button type="button" class="tm-scn" data-scn="${id}" data-group="${g}" aria-pressed="false">${x.label}</button>`).join("")}</div>`).join("")}
     <div class="tm-controls"><button type="button" class="tm-scn tm-reset" data-scn="nominal">${T.SCENARIOS.nominal.label}</button>

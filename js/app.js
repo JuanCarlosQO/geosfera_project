@@ -1,4 +1,4 @@
-import { loadDemo, refreshDemoProfiles } from "./demo.js";
+import { loadDemo, refreshDemoProfiles, upgradeDemo } from "./demo.js";
 import { mountFamily } from "./family.js";
 import { Hatch } from "./hatch.js";
 import { mountBody } from "./body.js";
@@ -21,6 +21,7 @@ import { mountFamilyNotify } from "./family-notify.js";
 import { initI18n } from "./i18n.js";
 import { mountCrewHome } from "./crew-home.js";
 import { mountGround } from "./ground.js";
+import { mountAnalysis } from "./analysis.js";
 import { getRole, setRole, isGround, openEmergency, closeEmergency } from "./role.js";
 import { canSee, homeFor, emergencyLeft, inEmergency, reasonLabel } from "./role-core.js";
 import { snapshot } from "./feed.js";
@@ -56,6 +57,23 @@ let savedTheme = null;
 try { savedTheme = localStorage.getItem(THEME_KEY); } catch { /* storage blocked */ }
 applyTheme(savedTheme);
 
+// Design: the new light look (css/look-new.css) or the previous one, to compare them side by
+// side. Only the light mode has two designs; the button hides in dark mode. Kept on this device.
+const LOOK_KEY = "geosfera.look";
+function applyLook(look) {
+  const fresh = look !== "old";
+  document.documentElement.classList.toggle("look-new", fresh);
+  const b = document.querySelector('[data-action="look"]');
+  if (!b) return;
+  const label = fresh ? "Switch to the previous design" : "Switch to the new design";
+  b.setAttribute("aria-pressed", String(fresh));
+  b.setAttribute("aria-label", label);
+  b.title = label;
+}
+let savedLook = null;
+try { savedLook = localStorage.getItem(LOOK_KEY); } catch { /* storage blocked */ }
+applyLook(savedLook);
+
 const roleBar = document.getElementById("role-bar");
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const actNow = () => Boolean(snapshot()?.steady?.some((a) => a.status === "act"));
@@ -89,13 +107,14 @@ function paintDock(name) {
   for (const a of nav.querySelectorAll("a")) {
     const v = a.dataset.view;
     // the ground has no "Home"; a crew member's dock is Home and Meds (everything, during an emergency)
-    a.hidden = !canSee(st, v) || (st.role === "crew" && v === "ground") || (st.role !== "crew" && v === "crew") || (st.role !== "ground" && v === "ground");
+    // the ground team works from Mission Control and each crew member's analysis: no Today or Log
+    a.hidden = !canSee(st, v) || (st.role !== "crew" && v === "crew") || (st.role !== "ground" && ["ground", "analysis"].includes(v)) || (st.role === "ground" && ["today", "log"].includes(v));
   }
 }
 
 function render() {
   const [view = "", arg, rest] = location.hash.replace(/^#/, "").split("/");
-  const known = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices", "crew", "ground"];
+  const known = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices", "crew", "ground", "analysis"];
   const st = getRole();
   let name = known.includes(view) ? view : homeFor(st);
   if (!canSee(st, name)) {
@@ -108,6 +127,7 @@ function render() {
   paintDock(name);
   if (name === "crew") mountCrewHome(station);
   if (name === "ground") mountGround(station);
+  if (name === "analysis") mountAnalysis(station);
   if (["today", "log", "mind"].includes(name)) autoSync(); // readings from the devices arrive before the screen is drawn
   setTimeout(refreshWatchAlerts, 0); // and the watch's alerts follow the profile that is open
   if (name === "devices") mountDevices(station);
@@ -126,7 +146,7 @@ function render() {
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
   for (const a of nav.querySelectorAll("a")) {
-    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: getRole().role === "crew" ? "crew" : "body", devices: "log" }[name] ?? name)) a.setAttribute("aria-current", "page");
+    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: getRole().role === "crew" ? "crew" : "body", devices: getRole().role === "ground" ? "analysis" : "log", today: getRole().role === "ground" ? "analysis" : "today" }[name] ?? name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (!station.inert) station.querySelector("h1")?.focus({ preventScroll: true });
@@ -156,6 +176,7 @@ if (new URLSearchParams(location.search).has("demo")) {
   loadDemo();
   history.replaceState(null, "", location.pathname + location.hash); // so a reload after "Remove demo crew" stays empty
 }
+upgradeDemo(); // a demo saved by an older version becomes the current mission (hand-made profiles stay)
 refreshDemoProfiles(); // a demo crew saved by an older version gets the fields added since (Valentina's body)
 const support = mountSupport(); // the support button works even with the hatch closed
 mountAlarm(); // telemetry alerts on every screen, with sound, and sleep mode
@@ -194,6 +215,12 @@ subscribe((f, raised) => {
     openEmergency("alarm", S.current().id);
     render();
   }
+});
+document.querySelector('[data-action="look"]').addEventListener("click", () => {
+  const next = document.documentElement.classList.contains("look-new") ? "old" : "new";
+  applyLook(next);
+  try { localStorage.setItem(LOOK_KEY, next); } catch { /* storage blocked */ }
+  render();
 });
 document.querySelector('[data-action="theme"]').addEventListener("click", () => {
   const next = document.documentElement.dataset.mode === "dark" ? "day" : "night";

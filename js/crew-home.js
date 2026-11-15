@@ -22,6 +22,11 @@ const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; 
 const readFocus = () => F.cleanFocus(read(F.FOCUS_KEY, {}));
 const writeFocus = (f) => { try { localStorage.setItem(F.FOCUS_KEY, JSON.stringify(f)); } catch { /* storage blocked */ } document.dispatchEvent(new CustomEvent("ergosphere:focus")); };
 
+const missionInfo = () => { try { return JSON.parse(localStorage.getItem("geosfera.mission")) ?? {}; } catch { return {}; } };
+// a personal line: how many days until home, when the mission has a length
+const homeCount = (mday) => { const m = missionInfo(); if (!m.length || !mday) return ""; const left = Math.max(0, m.length - mday); return `<p class="ch-home"><strong>${left}</strong> ${left === 1 ? "day" : "days"} until home · day ${mday} of ${m.length}</p>`; };
+const missionName = () => { try { return JSON.parse(localStorage.getItem("geosfera.mission"))?.name ?? ""; } catch { return ""; } };
+
 function timeOfDay() {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -35,8 +40,9 @@ function html(me) {
     <header class="ch-head">
       <div class="ch-pic" aria-hidden="true">${avatarHtml(me, "ch-av")}</div>
       <div>
-        <p class="eyebrow">Mission day ${mday} · ${esc(me.role)}</p>
+        <p class="eyebrow">${missionName() ? `<span data-no-i18n>${esc(missionName())}</span> · ` : ""}<span>Mission day ${mday}</span> · <span>${esc(me.role)}</span></p>
         <h1 tabindex="-1">${timeOfDay()}, <span data-no-i18n>${esc(me.name.split(" ")[0])}</span></h1>
+        ${homeCount(mday)}
         <p class="ch-lead">Your readings go to the ground medical team and are not shown here. Tell them what only you know.</p>
       </div>
     </header>

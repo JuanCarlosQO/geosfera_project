@@ -11,6 +11,9 @@ import { FUTURE_FACTS } from "./data/future.js";
 import { DUTY_FACTS } from "./data/duty.js";
 import { RANGES } from "./data/vital-ranges.js";
 import { RADLAB_ISS } from "./data/radlab-iss.js";
+import { RESEARCH } from "./data/research.js";
+import { EXERCISE_FACTS } from "./data/exercise.js";
+import { DEVICE_FACTS } from "./data/devices.js";
 
 export const MODULES = {
   today: { label: "Today", href: "#today" },
@@ -20,13 +23,17 @@ export const MODULES = {
   meds: { label: "Meds", href: "#meds" },
   duty: { label: "Fit for duty", href: "#duty" },
   live: { label: "Live", href: "#live" },
-  future: { label: "Future body", href: "#future" }
+  future: { label: "Future body", href: "#future" },
+  mission: { label: "Mission · exercise", href: "#mission" },
+  devices: { label: "Devices · watch", href: "#devices" },
+  ground: { label: "Ground team", href: "#ground" }
 };
 
 export const GROUPS = [
   { id: "standard", title: "NASA standards and technical briefs", note: "Requirements and limits NASA sets for crew health." },
   { id: "hrp", title: "NASA Human Research Program", note: "What NASA knows about the hazards and risks of spaceflight." },
   { id: "data", title: "Real NASA data", note: "Measurements the app shows or replays." },
+  { id: "nlsp", title: "NASA experiments behind each feature (NLSP)", note: "The research a feature follows; their data are not public, so the app does not show their results." },
   { id: "partner", title: "Partner space agencies", note: "" },
   { id: "earth", title: "Earth clinical references", note: "Used where NASA publishes no number: drug labels and vital-sign ranges. Marked “Earth reference” in the app." }
 ];
@@ -59,7 +66,7 @@ const NAMED = {
 /** Every quoted fact the app shows: { module, quote, url }. */
 export function collect() {
   const out = [];
-  const add = (module, quote, url) => { if (url) out.push({ module, quote: quote ?? null, url }); };
+  const add = (module, quote, url, title = null, group = null) => { if (url) out.push({ module, quote: quote ?? null, url, title, group }); };
   for (const s of SYSTEMS) for (const f of s.facts) add("body", f.quote, f.url);
   for (const r of NASA_RISKS) add("risks", r.text, r.url);
   for (const h of HAZARDS) add("today", h.text, HAZARDS_SOURCE.url);
@@ -68,6 +75,9 @@ export function collect() {
   for (const f of Object.values(FUTURE_FACTS)) add("future", f.quote, f.url);
   for (const f of Object.values(DUTY_FACTS)) add("duty", f.quote, f.url);
   for (const r of Object.values(RANGES)) add("log", null, r.url);
+  for (const f of Object.values(EXERCISE_FACTS)) add("mission", f.quote, f.url, f.source);
+  for (const f of Object.values(DEVICE_FACTS)) add("devices", f.quote, f.url, f.source);
+  for (const [id, r] of Object.entries(RESEARCH)) add(r.module, r.quote, r.url, `${r.title} (${id}) — ${r.pi}`, "nlsp");
   return out;
 }
 
@@ -82,14 +92,25 @@ export function describe(url) {
   if (url.includes("dailymed.nlm.nih.gov")) return { title: `FDA drug label (DailyMed) — ${label?.labelName ?? "label"}`, group: "earth" };
   const range = Object.values(RANGES).find((r) => r.url === url);
   if (range) return { title: range.source, group: "earth" };
+  const rs = Object.entries(RESEARCH).find(([, r]) => r.url === url);
+  if (rs) return { title: `${rs[1].title} (${rs[0]}) — ${rs[1].pi}`, group: "nlsp" };
+  const fact = [...Object.values(EXERCISE_FACTS), ...Object.values(DEVICE_FACTS)].find((f) => f.url === url);
+  if (fact) return fallback({ url, title: fact.source });
   return null;
+}
+
+/** A fact that carries its own title: grouped by who published it. */
+function fallback(f) {
+  const host = (() => { try { return new URL(f.url).hostname; } catch { return ""; } })();
+  const group = f.group ?? (/nasa\.gov$/.test(host) ? (/ntrs|standards|ochmo/.test(f.url) ? "standard" : "hrp") : /esa\.int|asc-csa/.test(host) ? "partner" : "earth");
+  return { title: f.title ?? host, group };
 }
 
 /** Documents grouped and sorted, each with the modules that use it and its quotes. */
 export function documents(facts = collect()) {
   const byUrl = new Map();
   for (const f of facts) {
-    const d = byUrl.get(f.url) ?? { url: f.url, ...describe(f.url), modules: new Set(), quotes: [] };
+    const d = byUrl.get(f.url) ?? { url: f.url, ...(describe(f.url) ?? fallback(f)), modules: new Set(), quotes: [] };
     d.modules.add(f.module);
     if (f.quote && !d.quotes.includes(f.quote)) d.quotes.push(f.quote);
     byUrl.set(f.url, d);

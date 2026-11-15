@@ -7,6 +7,7 @@
 // side effect was.
 // Rules: meds-core.js. Words and sources: data/med-kit.js, data/supplements.js, SOURCES.md.
 
+import { researchHtml } from "./research.js";
 import { confirmHere } from "./ask.js";
 import * as M from "./meds-core.js";
 import { RED_FLAGS, KIT, SIDE_EFFECTS, KIT_FACTS } from "./data/med-kit.js";
@@ -51,13 +52,15 @@ const quote = (f) => (f?.quote ? `<small class="src">“${f.quote}” ${link(f.u
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const chip = (x, name, type = "checkbox") => `<label class="chip"><input type="${type}" name="${name}" value="${x.id}"><span>${x.label}</span></label>`;
 
-function load() {
+// the device keeps every crew member's doses; this screen reads and writes only the open profile's
+function loadAll() {
   let raw = null;
   try { raw = JSON.parse(localStorage.getItem(M.MEDS_KEY)); } catch { /* start with an empty log */ }
   return M.cleanStore(raw, KIT, SUPPLEMENTS);
 }
+function load() { return M.forMember(loadAll(), current()?.id ?? ""); }
 function save(store) {
-  try { localStorage.setItem(M.MEDS_KEY, JSON.stringify(store)); return true; } catch { return false; }
+  try { localStorage.setItem(M.MEDS_KEY, JSON.stringify(M.mergeMember(loadAll(), current()?.id ?? "", store))); return true; } catch { return false; }
 }
 
 function download(name, text, type) {
@@ -89,6 +92,7 @@ const quickHtml = () => `<form class="quick" novalidate autocomplete="off">
       <p>Its authors expect that ${quote(FLOW_FACTS.better)}</p>
       <p>So the shortest path here is one sentence and one tap. The sentence is only read for a medication name, a count and what it was for: Ergosphere never picks a medication from a symptom and never turns milligrams into a number of tablets.</p>
       <p>The camera reads the barcode printed on a medication box and looks it up in the FDA's public label database (openFDA). Only the number is sent, never the photo; a box with two or more active ingredients is never matched to one, and a flight version would carry the kit's barcodes on board.</p>
+      ${researchHtml(["Rx_Metabolism", "Sleep_Meds_Pilot", "Sleep_Meds_Phase_II"])}
       <p class="voice-note" hidden>Voice uses this browser's speech recognition, which may send the audio to the browser maker's servers; a flight version would recognise speech on board. Typing stays on this device.</p>`)}
   </form>
   <div data-ref="draft" aria-live="polite"></div>`;
@@ -112,7 +116,7 @@ function contextHtml(ctx, added, recalled) {
     <p class="mono step-label">LOGGED WITH THIS ENTRY</p>
     <dl class="ctx-rows">${ctx.rows.map((r) => `<div><dt>${esc(r.label)}</dt><dd>${esc(r.value)}${r.simulated ? ` <span class="sim">SIMULATED</span>` : ""}</dd></div>`).join("")}</dl>
     ${recalled ? `<p class="fine">Remembered later: the sensors' readings of today are not attached.</p>` : ""}
-    ${added.length ? `<div class="ctx-raise"><p><strong>${STATUS.watch.shape} This entry adds to “Patterns to raise”.</strong> It is still logged as you took it.</p>${added.map((p) => `<p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, "NASA kit list")}` : ""}${p.illustrative ? ` <span class="fine">Illustrative app rule.</span>` : ""}</p>`).join("")}</div>` : ""}
+    ${added.length ? `<div class="ctx-raise"><p><strong>${STATUS.watch.shape} This entry adds to “Patterns to raise”.</strong> It is still logged as you took it.</p>${added.map((p) => `<p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, p.source ?? "NASA kit list")}` : ""}${p.illustrative ? ` <span class="fine">Illustrative app rule.</span>` : ""}</p>`).join("")}</div>` : ""}
     <p class="fine">Readings, not reasons. Ergosphere does not say what caused a symptom or what to take: your crew medical officer reads them together.</p>
   </div>`;
 }
@@ -244,7 +248,7 @@ function patternsHtml(store, now) {
   if (!list.length) return `<p class="calm-line">${STATUS.normal.shape} Nothing to raise right now.</p>`;
   return `<ul class="patterns">${list.map((p) => `<li class="pattern" data-level="${p.level}">
     <p class="pt-head">${p.level === "talk" ? `${STATUS.watch.shape} ${M.LEVELS.talk}` : `↗ ${M.LEVELS.downlink}`}</p>
-    <p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, "NASA kit list")}` : ""}</p>
+    <p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, p.source ?? "NASA kit list")}` : ""}</p>
     ${p.illustrative ? `<p class="fine">Illustrative app rule, not a NASA limit.</p>` : ""}
     ${p.level === "talk" ? (store.raised?.[p.id]
       ? `<p class="pt-sent">${STATUS.logged.shape} Sent to your crew medical officer · ${new Date(store.raised[p.id]).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`
