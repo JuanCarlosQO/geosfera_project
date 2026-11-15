@@ -101,7 +101,8 @@ function markup() {
 
   <div class="hs-crew" data-ref="crew" hidden></div>
 
-  <div class="hatch" data-ref="hatch">
+  <div class="hatch photo" data-ref="hatch">
+    <img class="hatch-photo" src="assets/hatch-door.webp" alt="" decoding="async" draggable="false" onerror="this.parentNode.classList.remove('photo');this.remove()">
     <svg class="hatch-art" viewBox="0 0 200 200" aria-hidden="true">
       <defs>
         <radialGradient id="hg" cx=".5" cy=".5" r=".5">

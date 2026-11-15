@@ -78,7 +78,10 @@
   position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0;
   border-radius: 50%; border: 1px solid var(--seam-hi); background: var(--h-key); color: var(--ink); box-shadow: var(--h-key-shadow);
   font-family: var(--sans); font-weight: 500; font-size: 18px; cursor: pointer; touch-action: manipulation;
-  transform: rotate(calc(var(--i) * 36deg)) translateY(calc(var(--ring) * -1)) rotate(calc(var(--i) * -36deg));
+  /* the size change (hover, press, pop-in) goes LAST, around the key's own centre: the standalone
+     "scale" property would also scale the key's distance from the ring's centre, so the key slid
+     away from the mouse, lost the hover, slid back and flickered */
+  transform: rotate(calc(var(--i) * 36deg)) translateY(calc(var(--ring) * -1)) rotate(calc(var(--i) * -36deg)) scale(var(--ks, 1));
   transition: background .25s, color .25s, box-shadow .25s;
 }
 @media (hover: hover) and (pointer: fine) { .key:hover { border-color: var(--beacon); } }
@@ -137,15 +140,16 @@
 }
 
 /* ---- motion, like the Cupola: the keys pop in around the ring, a tap presses and lights the key,
-   the porthole shows a moving sky. `scale` composes with each key's ring position. ---- */
-.hatch-screen .key { transition: background .12s, color .12s, box-shadow .12s, scale .12s; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+   the porthole shows a moving sky. The size change is the last step of each key's transform. ---- */
+@property --ks { syntax: "<number>"; inherits: false; initial-value: 1; }
+.hatch-screen .key { transition: background .12s, color .12s, box-shadow .12s, --ks .12s; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 .hatch-screen:not(.settled) .key { animation: key-in .42s cubic-bezier(.2, .9, .3, 1.3) both; animation-delay: calc(240ms + var(--i) * 45ms); }
 /* a mouse can hover; a finger cannot (on a phone :hover sticks to the last key touched) */
 @media (hover: hover) and (pointer: fine) {
-  .hatch-screen .key:hover:not(:disabled) { scale: 1.08; box-shadow: 0 0 0 4px color-mix(in srgb, var(--beacon) 16%, transparent), var(--h-key-shadow); }
+  .hatch-screen .key:hover:not(:disabled) { --ks: 1.08; box-shadow: 0 0 0 4px color-mix(in srgb, var(--beacon) 16%, transparent), var(--h-key-shadow); }
 }
 /* the press: lit at once on touch-down, one short pop, no flicker */
-.hatch-screen .key.lit { scale: .92; transition-duration: 0s; }
+.hatch-screen .key.lit { --ks: .92; transition-duration: 0s; }
 .hatch-screen .porthole { animation: port-in .6s cubic-bezier(.2, .8, .2, 1) .1s both; }
 .hatch-screen .porthole::before {
   content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .8;
@@ -159,7 +163,7 @@
 .hatch-screen #hs-heading { animation: hs-rise .5s ease both .05s; }
 .hatch-screen .hs-who { animation: hs-rise .5s ease both; }
 
-@keyframes key-in { from { scale: 0; opacity: 0; } }
+@keyframes key-in { from { --ks: 0; opacity: 0; } }
 @keyframes port-in { from { scale: .6; opacity: 0; } }
 @keyframes twinkle { to { opacity: .35; } }
 @keyframes hs-rise { from { opacity: 0; transform: translateY(8px); } }
@@ -207,3 +211,24 @@
 .hs-av-opt.ini { border-radius: 16px; display: flex; flex-direction: column; gap: 4px; }
 .hs-av-opt.ini .hs-pic { width: 44px; height: 44px; font-size: 44px; }
 .hs-av-opt small { font-size: 11px; color: var(--ink-3); }
+
+/* ---- the hatch picture (made with AI by the team, see docs/AI_USE.md): a metal hatch with the
+   ten keys, the porthole and four bolt slots drawn in the same places as the app's own ring.
+   The buttons stay on top, see-through; a pressed key lights over the picture. If the picture
+   cannot load, the drawn hatch underneath is used. Measured on the picture: key ring 379 px,
+   bolt slots 312 px, key 112 px, on a 960 px crop shown at 110.18 % of the hatch. ---- */
+.hatch-photo { position: absolute; left: -5.09%; top: -5.09%; width: 110.18%; height: 110.18%; max-width: none; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.hatch.photo { filter: drop-shadow(0 26px 40px rgba(24, 33, 47, .28)); }
+.hatch.photo .hatch-art, .hatch.photo .window { display: none; }
+.hatch.photo .key { --kd: calc(var(--d) * .1285); width: var(--kd); height: var(--kd); margin: calc(var(--kd) / -2) 0 0 calc(var(--kd) / -2); background: transparent; border-color: transparent; box-shadow: none; color: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  .hatch-screen .hatch.photo .key:hover:not(:disabled) { --ks: 1.06; background: color-mix(in srgb, var(--beacon) 10%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--beacon) 45%, transparent); }
+}
+.hatch.photo .key:focus-visible { outline: 3px solid var(--beacon); outline-offset: 2px; }
+.hatch-screen .hatch.photo .key.lit { background: color-mix(in srgb, var(--beacon) 88%, transparent); color: #ffffff; box-shadow: 0 0 22px color-mix(in srgb, var(--beacon) 70%, transparent); }
+.hatch.photo .key:disabled { opacity: 1; background: rgba(240, 244, 248, .55); }
+.hatch.photo .bolt { background: transparent; transform: rotate(calc(var(--i) * 90deg)) translateY(calc(var(--d) * -.3581)); }
+.hatch.photo .bolt.shot { background: var(--beacon); box-shadow: 0 0 14px var(--beacon); }
+.hatch.photo.denied .bolt { background: var(--alarm); box-shadow: 0 0 14px var(--alarm); }
+.hatch-screen .hatch.photo .hatch-photo { animation: port-in .6s cubic-bezier(.2, .8, .2, 1) both; }
+[data-mode="dark"] .hatch-photo { filter: brightness(.8) contrast(1.05); }
