@@ -89,7 +89,7 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
             ${family ? `<a class="cl-fam" href="#family">✉ ${family} ${family === 1 ? "message" : "messages"} from home, sealed. Open whenever you like.</a>` : ""}
           </div>
         </div>
-        <a class="cl-cta" href="${checkIn}">${isToday ? (done.filled ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
+        <a class="cl-cta" href="${checkIn}">${isToday ? (done.filled ? "Review today's readings" : "Start today's readings") : "Correct this day"}</a>
       </section>`;
   const charts = `<div class="cl-charts">
         ${chartCard("Blood pressure", "bloodPressure", "bp", log, day, entry)}

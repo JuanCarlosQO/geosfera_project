@@ -4,6 +4,8 @@ import { Hatch } from "./hatch.js";
 import { mountBody } from "./body.js";
 import { mountToday } from "./today.js";
 import { mountLog } from "./log.js";
+import { mountDevices, autoSync, followEva } from "./devices.js";
+import { subscribe } from "./feed.js";
 import { mountMission } from "./mission.js";
 import { mountMeds } from "./meds.js";
 import { mountDuty } from "./duty.js";
@@ -49,7 +51,9 @@ applyTheme(savedTheme);
 
 function render() {
   const [view = "today", arg, rest] = location.hash.replace(/^#/, "").split("/");
-  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family"].includes(view) ? view : "today";
+  const name = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices"].includes(view) ? view : "today";
+  if (["today", "log", "mind"].includes(name)) autoSync(); // readings from the devices arrive before the screen is drawn
+  if (name === "devices") mountDevices(station);
   if (name === "today") mountToday(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "meds") mountMeds(station);
   if (name === "duty") mountDuty(station);
@@ -65,7 +69,7 @@ function render() {
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
   for (const a of nav.querySelectorAll("a")) {
-    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: "body" }[name] ?? name)) a.setAttribute("aria-current", "page");
+    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: "body", devices: "log" }[name] ?? name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (!station.inert) station.querySelector("h1")?.focus({ preventScroll: true });
@@ -93,6 +97,7 @@ if (new URLSearchParams(location.search).has("demo")) {
 }
 const support = mountSupport(); // the support button works even with the hatch closed
 mountAlarm(); // telemetry alerts on every screen, with sound, and sleep mode
+subscribe(followEva); // a spacewalk in the simulator takes the watch off and holds family notices
 mountFamilyNotify(); // a message from home is announced on whatever screen is open
 initFold(station); // tabs, and intros and sources tucked away on every screen
 window.addEventListener("hashchange", render);

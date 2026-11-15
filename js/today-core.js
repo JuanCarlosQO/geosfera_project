@@ -38,7 +38,7 @@ export function summarise(readings, judge) {
 /** One honest sentence for the top of the dashboard. */
 export function headline(summary) {
   const { measured, total, normal, flagged, status } = summary;
-  if (measured === 0) return { title: "No readings yet today, Commander.", line: "Start today's check-in to light up the Cupola." };
+  if (measured === 0) return { title: "No readings yet today, Commander.", line: "Your devices fill the Cupola as their readings arrive. Review today's readings to add the rest." };
   const act = flagged.filter((w) => status[w.id] === "act");
   if (act.length) return { title: "Act now, Commander.", line: `${names(act)} needs attention. Follow the steps in that window.` };
   const again = flagged.filter((w) => status[w.id] === "again");

@@ -44,13 +44,15 @@ function memberLog(profile, days, seed) {
   days.forEach((day, i) => {
     const today = i === days.length - 1;
     const p = profile(i, r);
+    // where each reading came from: the watch (sleep) and the live sensors (heart rate, blood
+    // pressure) as the Devices screen fills them; the rest typed, as a crew member would
     const e = {
-      heartRate: { value: p.hr },
-      bloodPressure: { value: p.bp },
+      heartRate: { value: p.hr, src: "sensors" },
+      bloodPressure: { value: p.bp, src: "sensors" },
       temperature: { value: fix(p.temp, 1) },
       bloodOxygen: { value: p.spo2 },
       glucose: { value: p.glu },
-      sleepHours: { value: fix(p.sleep, 1) },
+      sleepHours: { value: fix(p.sleep, 1), src: "simulated" },
       mood: { value: p.mood }
     };
     if (!today) {

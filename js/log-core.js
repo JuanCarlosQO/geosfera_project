@@ -152,7 +152,7 @@ export function fromBackup(text) {
       if (e?.[f.key] == null) continue;
       const r = checkValue(f, e[f.key].value);
       if (r.state !== "ok") { dropped += 1; continue; }
-      clean[f.key] = { value: r.value, ...(e[f.key].flag === "again" ? { flag: "again" } : {}) };
+      clean[f.key] = { value: r.value, ...(e[f.key].flag === "again" ? { flag: "again" } : {}), ...(typeof e[f.key].src === "string" ? { src: e[f.key].src.slice(0, 20) } : {}) };
     }
     if (Object.keys(clean).length) log[day] = { ...clean, savedAt: e.savedAt ?? null };
   }

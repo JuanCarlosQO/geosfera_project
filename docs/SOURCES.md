@@ -206,6 +206,32 @@ A team member brought notes from an AI notebook (NASA BHP, Private Family Confer
 - After a Fit for duty check for a spacewalk, a docking or another critical task, notices of new family messages are held for up to 4 hours or until the crew member taps *I'm done with the task*. Messages still arrive and stay sealed; the notice comes afterwards.
 - The family channel is store and forward (no live calls) and is kept apart from the medical record: the family's page has only the message form, never sees readings, medications or symptoms, and the mailbox has its own keys.
 
+## Devices: readings that arrive by themselves (15 Nov 2026)
+
+Read on 15 Nov 2026. The Philips sheet was read as text from its PDF.
+
+| Used for | Quote | Source |
+| --- | --- | --- |
+| What the watch is | "a device worn on the wrist, contains an accelerometer to measure motion and photodetectors to monitor ambient lighting" | NASA, Wearable Tech for Space Station Research (2024): https://www.nasa.gov/missions/station/wearable-tech-for-space-station-research/ |
+| What it is for | "It is an upgrade of previous technology used on the space station to monitor the length and quality of crew member sleep." | same page |
+| In use on the station | "Multiple crew members retrieved and donned their AWPs in support of the Standard Measures investigation." | NASA ISS Daily Summary Report, 17 Oct 2023: https://www.nasa.gov/blogs/stationreport/2023/10/17/iss-daily-summary-report-10-17-2023 |
+| Data stay in the watch | "The data is stored in non-volatile memory within the Actiwatch until it is downloaded for analysis." | same report |
+| How it connects | "Direct USB/Micro USB cable" (row "Communication", column "Spectrum Plus") | Philips, Actiwatch specification sheet: https://www.philips.com/c-dam/b2bhc/master/sites/actigraphy/resources/newcase/actiwatch_device_comparison.pdf |
+| Bluetooth from a web page | "The Web Bluetooth API allows websites to communicate with Bluetooth devices." | Chrome for Developers: https://developer.chrome.com/docs/capabilities/bluetooth |
+| Where it works | "A subset of the Web Bluetooth API is available in ChromeOS, Chrome for Android 6.0" | same page |
+
+**Not verified, so not claimed:** that NASA's "AWP" is exactly Philips' Spectrum Plus (our reading of the two names); the exact layout of an Actiware export. The file reader follows the interval-export columns an R importer (ActisoftR, https://rdrr.io/cran/ActisoftR/src/R/read_actigraph_csv.r) reads: interval type, interval number, start date, start time, end date, end time, duration, efficiency, sleep time, with dates written day first; it is **pending a real export from the team**.
+
+**Bluetooth formats:** standard Bluetooth SIG health profiles, read by their 16-bit ids: Heart Rate (service 0x180D, measurement 0x2A37), Blood Pressure (0x1810, 0x2A35), Health Thermometer (0x1809, 0x2A1C), Pulse Oximeter (0x1822, 0x2A5E spot-check and 0x2A5F continuous). Numbers are IEEE 11073 SFLOAT (16-bit) and FLOAT (32-bit) as described in HL7's Personal Health Device guide (https://www.hl7.org/fhir/uv/phd/en/FLOATS.html) and Nordic's SFLOAT notes (https://developer.nordicsemi.com/nRF_Connect_SDK/doc-legacy/2.3.0/nrf/libraries/others/sfloat.html); the field order follows the Bluetooth SIG specifications. Tested with sample bytes, **not yet with a real sensor**.
+
+**App rules (illustrative):** a night runs from 18:00 to 18:00 and counts for the day it ends; the watch off for 60 minutes outside sleep shows a reminder; the resting heart rate from a Bluetooth strap is the middle value of 20 readings; today's heart rate and blood pressure from the live sensors are taken while at rest; a value typed by the crew member is never replaced by a device; the simulated watch draws nights around the crew member's usual sleep (or exactly the night already logged). Mood, exercise minutes, blood sugar and the personal dosimeter stay typed: no device for them is connected.
+
+### Devices: the spacewalk and ActiGraph (15 Nov 2026)
+
+**Spacewalk (team statement, pending a source):** a team member stated that the Actiwatch is not worn during a spacewalk (it is disconnected when the astronaut goes outside). We looked for a NASA source and did not find one, so the app marks it as the team's statement. In the app: at suit-up the watch is recorded as off "for the spacewalk", with no "put it back on" reminder however long it lasts; family notices are held (the same hold as after a Fit for duty check); when the crew member is back inside the watch goes back on and the hold ends. The simulator's spacewalk lasts a few minutes (time compressed for the demo).
+
+**ActiGraph CentrePoint (other actigraphy watches):** ActiGraph's public API documentation, https://github.com/actigraph/CentrePoint3APIDocumentation (read 15 Nov 2026, repository updated 24 Oct 2026). Used as published there: OAuth 2.0 client credentials (client ID and client secret, scope "Analytics") against https://auth.actigraphcorp.com/connect/token; base URL https://api.actigraphcorp.com; "Dustin Tracy Sleep Periods" (inBedTime, outBedTime, timeAwakeMinutes, awakeningCount, averageAwakening); "Minute Summaries" (TimestampUtc, isWear, isSleep); pages of at most 100 items; a limit of 500 requests a minute. The client secret stays on the server (api/actigraph.js, lib/actigraph-handler.js; keys only in environment variables, `.env` is git-ignored); a crew access code keeps strangers from querying subjects; only times, wear and sleep reach the app. **Not verified:** that NASA uses ActiGraph watches on the station (we found no source; NASA's station watch is Philips' Actiwatch). Tested against a fake server built from the documentation, not against ActiGraph. The awakenings are spread evenly across the night because the API gives their number and average length, not their times (app rule).
+
 ## Module 9 — fit for duty
 
 Read on 14 November 2026 in the PDF text of NASA-STD-3001 Volume 1 Revision C (section 4.3, page 35) and NASA's OCHMO technical brief on sleep accommodations. The medication cautions it shows are the NASA kit-list quotes already listed under Module 8.

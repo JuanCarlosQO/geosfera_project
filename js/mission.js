@@ -94,7 +94,7 @@ export function mountMission(host) {
       </ul>
     </section>
 
-    <a class="cta-wide" href="#log">${entry ? "Update today's check-in" : "Start today's check-in"}</a>
+    <a class="cta-wide" href="#log">${entry ? "Review today's readings" : "Start today's readings"}</a>
   </section>`;
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;

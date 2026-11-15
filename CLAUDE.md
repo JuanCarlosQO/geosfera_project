@@ -47,6 +47,11 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/meds-core.js` | Medication rules, tested: symptoms to possible complaints, label interval and daily limit, kit stock and dates, source-warned combinations, dose record, "Did it work?", CSV; readings stored next to a dose with no conclusion (`logContext`), warning preview (`patternsAfter`), export queue (`queued`, `markExported`); Dose Tracker ideas: weekly question (`weeklyDue`, `whenToAt`), own and every-day medications (`addOwn`, `medList`, `scheduledToday`), side-effect strength (`SEVERITY`) |
 | `js/meds.js` | Module 8 screen: body figure for "what for", kit options as 3D models, how many, follow-up with kit-list side effects, patterns to raise, vitamin D, log and CSV; quick log (one typed or spoken sentence, confirmed with a tap), "Logged with this entry", FHIR export |
 | `css/cupola.css` | Today's Cupola: windows as buttons (lift, press, fly-in, breathing "Act now"), hub arcs, radar sweep |
+| `js/devices-core.js` | Devices rules, tested: Actiware interval-file reader, watch timeline (asleep, awake, wake, off, on) and night summary, simulated watch, Bluetooth SIG decoders (heart rate, blood pressure, thermometer, pulse oximeter; IEEE 11073 SFLOAT/FLOAT), `fillDay` (marks the origin, never replaces a typed value) |
+| `js/devices.js` | Devices screen (#devices) and `autoSync()` run before Today, the check-in and Mind; `watchLine()` for Today |
+| `lib/actigraph-handler.js`, `api/actigraph.js` | ActiGraph CentrePoint through the server (OAuth client credentials; secret only in env, see `.env.example`), tested with a fake server |
+| `js/data/devices.js` | Quoted facts for the Devices screen (NASA, Philips, Chrome) |
+| `samples/actiware-sample.csv` | SIMULATED file in the layout of an Actiware interval export, for the demo |
 | `js/i18n-core.js` | Spanish look rules, tested: numbers taken out as `#`, template rules for names and dates, per-part " · " lines, dictionary check |
 | `js/i18n.js` | Spanish look on the page: walks text and labels, follows new content with a MutationObserver, skips quotes (`small.src`), ES/EN button |
 | `js/data/es.js` | Spanish dictionary and templates (machine-assisted, to be read by a Spanish speaker) |

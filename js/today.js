@@ -1,6 +1,7 @@
 // Main dashboard — the Cupola, plus the full picture under it: day stepper, mission strip,
 // NASA's five hazards, what to do now, radiation and every reading with a trend and a reason.
 
+import { watchLine } from "./devices.js";
 import { confirmHere } from "./ask.js";
 import {
   WINDOWS, summarise, headline, missionDay, cupolaGeometry,
@@ -110,6 +111,16 @@ function cupola(summary, readings) {
   </div>`;
 }
 
+// One line on Today: last night from the watch, and a reminder when it has been off too long.
+function devicesStrip(memberId) {
+  const w = watchLine(memberId);
+  if (!w) return `<a class="dv-strip" href="#devices"><span>⌁ Devices<small>No watch in use. Bluetooth sensors and live sensors fill your readings.</small></span><span class="dv-go">Open →</span></a>`;
+  const t = (x) => new Date(x).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const night = w.night ? `${w.night.sleepHours} h asleep · ${t(w.night.asleep)} to ${t(w.night.wake)} · ${w.night.awakenings} ${w.night.awakenings === 1 ? "awakening" : "awakenings"}` : "No night recorded yet";
+  const off = w.off?.eva ? ` · spacewalk: watch off since ${t(w.off.since)}` : w.off ? ` · watch off for ${w.off.minutes} min${w.off.remind ? ": put it back on" : ""}` : "";
+  return `<a class="dv-strip${w.off?.remind ? " remind" : ""}" href="#devices"><span>⌚ Actiwatch-Plus${w.mode === "sim" ? " (simulated)" : ""}<small>${night}${off}</small></span><span class="dv-go">Devices →</span></a>`;
+}
+
 function readingRows(log, day, entry) {
   return FIELDS.map((f, i) => {
     const r = entry?.[f.key];
@@ -162,7 +173,7 @@ export function mountToday(host, { go }, requested) {
   const overviewTab = `${day_theme ? clinicHero({ ...heroProps, part: "overview" }) : `<div class="hero">
       ${cupola(summary, entry)}
       <div class="hero-side">
-        <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Continue today's check-in" : "Start today's check-in") : "Correct this day"}</a>
+        <a class="cta-wide" href="${isToday ? "#log" : `#log/${day}`}">${isToday ? (summary.measured ? "Review today's readings" : "Start today's readings") : "Correct this day"}</a>
         <a class="strip" href="#mission" aria-label="Mission progress">
           <span class="mini-ring" style="--p:${(exFrac * 100).toFixed(0)}"><span>${ex}</span></span>
           <span class="strip-text"><strong>${ex} of ${EXERCISE_GOAL_MIN} min</strong><small>Exercise · NASA's 1.5 hours</small></span>
@@ -170,6 +181,7 @@ export function mountToday(host, { go }, requested) {
         </a>
       </div>
     </div>`}
+    ${isToday ? devicesStrip(member.id) : ""}
     ${isToday ? `<a class="fb-link today-mind" href="#mind"><span><span class="tone-${mindSt.tone}" aria-hidden="true">${mindSt.shape}</span> Mind map<small>${mind.title}</small></span><span>Open →</span></a>` : ""}`;
 
   const readingsTab = `${day_theme ? clinicHero({ ...heroProps, part: "charts" }) : ""}

@@ -1,0 +1,64 @@
+/* Devices: where the readings come from. */
+.devices { max-width: 760px; margin: 0 auto; }
+.devices h1 { margin: 6px 0 6px; font-weight: 400; font-size: clamp(26px, 7vw, 34px); outline: none; }
+.devices .data-card { margin-top: 14px; }
+.devices a { color: var(--beacon); }
+.dv-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.dv-head h2 { margin: 2px 0 0; }
+.dv-kind { margin: 0; color: var(--ink-3); font-size: 11px; letter-spacing: .12em; }
+.dv-state { flex: none; padding: 4px 10px; border-radius: 999px; font: 600 10.5px var(--mono); letter-spacing: .08em; color: var(--ink-3); border: 1px solid var(--seam-hi); }
+.dv-state[data-on="true"] { color: var(--tone-normal); border-color: color-mix(in srgb, var(--tone-normal) 45%, transparent); }
+.dv-alert { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--seam-hi); font-size: 14px; line-height: 1.45; }
+.dv-alert.remind { border-color: var(--tone-watch); background: color-mix(in srgb, var(--tone-watch) 10%, transparent); }
+.dv-night { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.dv-night div { padding: 10px; border-radius: 12px; background: var(--soft, transparent); border: 1px solid var(--seam); display: flex; flex-direction: column; gap: 2px; }
+.dv-night strong { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.dv-night small { color: var(--ink-3); font-size: 12px; line-height: 1.3; }
+@media (max-width: 520px) { .dv-night { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* the night, drawn from 18:00 to 12:00 */
+.tl { margin: 4px 0 6px; }
+.tl-track { position: relative; height: 26px; border-radius: 8px; background: var(--seam); overflow: hidden; }
+.tl-track span { position: absolute; top: 0; bottom: 0; }
+.tl-sleep { background: linear-gradient(180deg, #4f6dff, #3346c9); }
+.tl-awake { background: var(--tone-watch); }
+.tl-off { background: repeating-linear-gradient(45deg, #8a94a6 0 4px, #c9cfda 4px 8px); }
+.tl-ticks { position: relative; height: 16px; font: 10px var(--mono); color: var(--ink-3); }
+.tl-ticks span { position: absolute; transform: translateX(-50%); top: 2px; }
+.tl-ticks span:first-child { transform: none; }
+.tl-ticks span:last-child { transform: translateX(-100%); }
+.tl-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 10px; font-size: 12px; color: var(--ink-3); align-items: center; }
+.tl-key span { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: -8px; }
+.k-sleep { background: #4f6dff; } .k-awake { background: var(--tone-watch); } .k-off { background: repeating-linear-gradient(45deg, #8a94a6 0 3px, #c9cfda 3px 6px); }
+
+.dv-events { list-style: none; margin: 0; padding: 0; }
+.dv-events li { display: grid; grid-template-columns: 52px 32px 1fr auto; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--seam); font-size: 14px; }
+.dv-events li:last-child { border-bottom: 0; }
+.dv-events small { color: var(--ink-3); font-size: 12px; }
+.dv-events [data-kind="off"] .dv-ic, .dv-events [data-kind="awake"] .dv-ic { color: var(--tone-watch); }
+.dv-ic { font-size: 13px; text-align: center; color: var(--beacon); }
+.devices .chips { margin: 12px 0 10px; }
+.dv-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.dv-ble { list-style: none; margin: 0 0 10px; padding: 0; }
+.dv-ble li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--seam); }
+.dv-ble li span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dv-ble small { color: var(--ink-3); font-size: 12.5px; }
+.dv-ble .cta { flex: none; min-height: 44px; }
+.dv-manual { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 10px; }
+.dv-manual li { display: flex; flex-direction: column; gap: 2px; }
+.dv-manual small { color: var(--ink-3); }
+
+/* a reading that came from a device, on the check-in and Today */
+.src-chip { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px 8px; border-radius: 999px; font: 600 10.5px var(--mono); letter-spacing: .04em; color: var(--beacon); background: color-mix(in srgb, var(--beacon) 10%, transparent); }
+.dv-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; padding: 12px 16px; border-radius: 14px; background: var(--hull); border: 1px solid var(--seam-hi); color: var(--ink) !important; text-decoration: none; }
+.dv-strip small { display: block; color: var(--ink-3); font-size: 12px; }
+.dv-strip .dv-go { color: var(--beacon); white-space: nowrap; }
+.dv-strip.remind { border-color: var(--tone-watch); }
+.tl-eva { background: repeating-linear-gradient(45deg, #8b5cf6 0 4px, #c4b5fd 4px 8px); }
+.k-eva { background: repeating-linear-gradient(45deg, #8b5cf6 0 3px, #c4b5fd 3px 6px); }
+.dv-eva { border-color: #8b5cf6; background: color-mix(in srgb, #8b5cf6 9%, transparent); }
+.dv-eva p { margin: 0 0 10px; }
+.dv-eva-start { margin: 6px 0 4px; }
+.dv-events [data-reason="eva"] .dv-ic { color: #8b5cf6; font: 700 10px var(--mono); }
+
+.devices a.cta { text-decoration: none; color: var(--ink); }

@@ -4,6 +4,7 @@
 
 import * as L from "./log-core.js";
 import * as S from "./store.js";
+import { SOURCES } from "./devices-core.js";
 
 const GROUPS = [
   { id: "vitals", code: "SEQ 01", name: "Vitals", keys: ["heartRate", "bloodPressure", "temperature", "bloodOxygen", "glucose"] },
@@ -66,7 +67,7 @@ function module(f, n, saved, prev) {
     </div>
     ${control}
     <div class="mod-foot">
-      <span class="last">${prev != null ? `Last <b>${fmt(prev)}</b>${f.unit ? ` ${f.unit}` : ""}` : "No earlier reading"}</span>
+      <span class="last">${saved?.src ? `<span class="src-chip" title="Change it if it looks wrong: your value replaces the device's">⌁ ${SOURCES[saved.src] ?? "Device"}${saved.at ? ` · ${new Date(saved.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}</span> ` : ""}${prev != null ? `Last <b>${fmt(prev)}</b>${f.unit ? ` ${f.unit}` : ""}` : "No earlier reading"}</span>
       <span class="delta" data-delta></span>
     </div>
     <p class="mod-msg" role="status" aria-live="polite"></p>
@@ -112,8 +113,8 @@ export function mountLog(host, { go }, day = L.dateKey()) {
       <div class="hud-left">
         <p class="eyebrow">Module 3 · Daily procedure</p>
         <div class="who" role="group" aria-label="Who is checking in">${crew.members.map((m) => `<button type="button" class="who-pill ${m.id === member.id ? "on" : ""}" data-who="${m.id}" aria-pressed="${m.id === member.id}">${m.name}<small>${m.role}</small></button>`).join("")}</div>
-        <h1 id="ci-title" tabindex="-1">${day === today ? "Today's check-in" : `Correct ${nice(day)}`}</h1>
-        <p class="lede">Work down the sequences. Skip what you could not measure. Every value is checked the moment you type it.</p>
+        <h1 id="ci-title" tabindex="-1">${day === today ? "Today's readings" : `Correct ${nice(day)}`}</h1>
+        <p class="lede keep">Most of this arrives by itself from your watch and sensors (marked ⌁). Check it, change anything that looks wrong, and add how you feel. <a href="#devices">Your devices →</a></p>
       </div>
       <div class="hud-ring" aria-hidden="true">
         <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" class="hr-track"/><circle cx="60" cy="60" r="50" class="hr-fill" pathLength="100" data-ref="ring"/></svg>
@@ -205,6 +206,11 @@ export function mountLog(host, { go }, day = L.dateKey()) {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const { entry, problems } = L.buildEntry(rawFromForm(form), log, day);
+    // a value left as the device gave it keeps its origin; one the person changed becomes theirs
+    for (const [k, r] of Object.entries(entry)) {
+      const before = log[day]?.[k];
+      if (before?.src && JSON.stringify(before.value) === JSON.stringify(r.value)) { r.src = before.src; if (before.at) r.at = before.at; }
+    }
     const bad = Object.keys(problems);
     if (bad.length) {
       refresh();
