@@ -67,7 +67,7 @@ function crewHtml(members, store) {
       ${avatarHtml(m, "hs-pic")}
       <span class="hs-prof-txt"><strong>${esc(m.name)}</strong><small>${esc(m.role)}${m.age ? ` · ${m.age}` : ""}${m.home ? ` · ${esc(m.home)}` : ""}</small>${line}</span>
       <span class="hs-go" aria-hidden="true">›</span></button>
-      <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose an avatar for ${esc(m.name)}">✎ Avatar</button></li>`;
+      <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose an avatar for ${esc(m.name)}">✎<span> Avatar</span></button></li>`;
   }).join("")}</ul>
   ${demo ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them. Crew members see only what they report; the ground team sees the readings.</p>` : ""}`;
 }

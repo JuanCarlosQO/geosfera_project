@@ -100,3 +100,31 @@ describe("the quick log reads only what was said", () => {
     assert.equal(Q.norm("Dolor  LUMBAR, post-EVA."), "dolor lumbar post eva");
   });
 });
+
+describe("misheard medication names (voice)", () => {
+  it("joins a name the recogniser split and matches how it sounds", () => {
+    for (const [said, id] of [["dos ibu profeno para la espalda", "ibuprofen"], ["tomé una para setamol", "acetaminophen"], ["mela tonina para dormir", "melatonin"], ["prometacina para el mareo", "promethazine"], ["zol pidem", "zolpidem"], ["bisa codilo", "bisacodyl"], ["two ibuprofin", "ibuprofen"]]) {
+      const p = read(said);
+      assert.equal(p.med?.id, id, said);
+      assert.equal(p.close, true, `${said} is a near miss the crew member checks`);
+    }
+  });
+
+  it("does not turn ordinary words into a short medication name", () => {
+    assert.equal(read("también me duele la espalda").med, null); // not "ambien"
+    assert.equal(read("a fin de cuentas").med, null); // not "afrin"
+  });
+
+  it("Spanish and English spellings of a name sound the same", () => {
+    assert.equal(Q.phon("prometacina"), Q.phon("promethazine"));
+    assert.equal(Q.phon("ibuprofeno"), Q.phon("ibuprofen"));
+    assert.equal(Q.phon("parasetamol"), Q.phon("paracetamol"));
+  });
+
+  it("keeps the recogniser's guess that names a medication", () => {
+    const b = Q.bestHeard(["dos y bu pro feo para la espalda", "dos ibuprofeno para la espalda"], KIT, ZONES, OTHER_NAMES);
+    assert.equal(b.text, "dos ibuprofeno para la espalda");
+    assert.equal(b.parsed.med.id, "ibuprofen");
+    assert.equal(Q.bestHeard(["first", "second"], KIT, ZONES, OTHER_NAMES).text, "first"); // a tie keeps the most confident
+  });
+});

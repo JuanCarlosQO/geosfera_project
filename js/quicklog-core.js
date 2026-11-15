@@ -44,20 +44,63 @@ function distance(a, b) {
 
 const has = (padded, phrase) => padded.includes(` ${phrase} `);
 
+/**
+ * How a word sounds, so a misheard medication still matches: Spanish and English spellings of
+ * the same sound become one (c/k/qu, z/s/ce/ci, v/b, ph/f, th/t, y/ll/i, silent h, doubled letters).
+ * "prometacina" and "promethazine" both become "prometasin".
+ */
+export function phon(word) {
+  return norm(word).replace(/\s+/g, "")
+    .replace(/ph/g, "f").replace(/th/g, "t").replace(/ch/g, "x").replace(/sh/g, "x")
+    .replace(/qu/g, "k").replace(/c(?=[ei])/g, "s").replace(/c/g, "k").replace(/z/g, "s").replace(/x(?![aeiou])/g, "ks")
+    .replace(/v/g, "b").replace(/ll/g, "y").replace(/y(?=[^aeiou]|$)/g, "i").replace(/h/g, "").replace(/w/g, "u")
+    .replace(/(.)\1+/g, "$1")
+    .replace(/[aeiou]+$/, ""); // Spanish adds an end vowel the English name lacks: "ibuprofeno" ~ "ibuprofen"
+}
+
+// how far off a heard word may be and still count as a near miss, by the name's length
+const allowed = (n) => (n >= 9 ? 2 : n >= 7 ? 1 : 0); // short names ("ambien", "afrin") only when they sound exactly alike: "también" is not "ambien"
+
 function findMed(padded, tokens, meds, otherNames) {
   let best = null;
   for (const med of meds) for (const n of namesOf(med, otherNames)) if (has(padded, n) && n.length > (best?.len ?? 0)) best = { med, len: n.length, word: n, close: false };
   if (best) return best;
-  // speech recognition often misspells a medication: accept a near miss on one long word, and say so
+  // speech recognition often splits or misspells a medication ("ibu profeno", "para setamol",
+  // "mela tonina"): compare how one, two or three heard words sound, joined, with how each name
+  // sounds, and say it was a near miss so the crew member checks it
+  const heard = [];
+  for (let i = 0; i < tokens.length; i += 1) for (let k = 1; k <= 3 && i + k <= tokens.length; k += 1) {
+    const words = tokens.slice(i, i + k);
+    if (words.some((w) => /^\d/.test(w))) continue;
+    heard.push({ word: words.join(" "), key: phon(words.join("")) });
+  }
   for (const med of meds) for (const n of namesOf(med, otherNames)) {
-    if (n.includes(" ") || n.length < 7) continue;
-    for (const t of tokens) {
-      const d = distance(t, n);
-      if (d <= 2 && t.length >= 6 && d < (best?.d ?? 9)) best = { med, len: n.length, word: t, close: true, d };
+    const key = phon(n);
+    if (key.length < 4) continue;
+    for (const h of heard) {
+      if (Math.abs(h.key.length - key.length) > 2) continue;
+      const d = h.key === key ? 0 : distance(h.key, key);
+      if (d <= allowed(key.length) && (d < (best?.d ?? 9) || (d === best.d && key.length > best.len))) best = { med, len: key.length, word: h.word, close: true, d };
     }
   }
   return best;
 }
+
+/**
+ * Speech recognition offers several guesses of what was said. Keeps the one that reads best:
+ * a medication by name, then a near miss, then what it was for and how many. Ties keep the
+ * recogniser's own order (its most confident guess first).
+ */
+export function bestHeard(guesses, meds, zones, otherNames = {}) {
+  let best = null;
+  guesses.filter(Boolean).forEach((text, i) => {
+    const p = parseQuick(text, meds, zones, otherNames);
+    const score = (p.med ? (p.close ? 6 - Math.min(2, findMedD(p)) : 10) : 0) + (p.zone ? 2 : 0) + (p.units ? 1 : 0) + (p.strength ? 0.5 : 0) - i * 0.01;
+    if (!best || score > best.score) best = { text, parsed: p, score };
+  });
+  return best;
+}
+const findMedD = (p) => (p.close ? p.d ?? 1 : 0);
 
 function findUnits(tokens, medWord) {
   const first = medWord?.split(" ")[0];
@@ -98,6 +141,7 @@ export function parseQuick(text, meds, zones, otherNames = {}) {
     said,
     med: found?.med ?? null,
     close: Boolean(found?.close),
+    d: found?.d ?? 0,
     word: found?.word ?? null,
     units: findUnits(tokens, found?.word),
     strength,

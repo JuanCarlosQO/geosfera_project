@@ -1,5 +1,5 @@
-/* The Cupola on Today: six glass windows, each one a button. Shared by the light and dark looks
-   (the Cupola keeps its own night palette in both). */
+/* The Cupola on Today: six glass windows, each one a button. The dark look keeps its night
+   palette; the light look has its own, at the end of this file. */
 
 .cupola .frame { fill: #121821; stroke: #2f3a47; stroke-width: 1.5; }
 .cupola .hub { fill: #0d1219; stroke: #2f3a47; stroke-width: 1.5; }
@@ -63,3 +63,49 @@
   .today:not(.ready) .cupola .pane-in { opacity: 1; }
   .cupola .pane-btn { transition: none; }
 }
+
+/* ---------- the light look: white frame, pale glass, the same blue accent as the rest ---------- */
+[data-mode="light"] .cl-stage-cupola .cupola {
+  --ink: #18212f; --ink-2: #475569; --ink-3: #8492a6; --seam: #e2e8f1; --seam-hi: #cbd5e3; --beacon: #2f5bea;
+  --tone-normal: #0e9f6e; --tone-watch: #d97706; --tone-act: #dc2626; --tone-again: #3b6fe0; --tone-none: #8492a6;
+  background: radial-gradient(120% 100% at 50% 45%, #ffffff 0%, #f1f5fc 62%, #e6edf8 100%);
+  border: 1px solid var(--seam);
+}
+[data-mode="light"] .cupola .frame { fill: #eef2f8; stroke: #cbd5e3; }
+[data-mode="light"] .cupola .hub { fill: #f8fafd; stroke: #cbd5e3; }
+[data-mode="light"] .cupola .rivets circle { fill: #b3bfce; }
+[data-mode="light"] .cupola #glass stop:nth-child(1) { stop-color: #ffffff; }
+[data-mode="light"] .cupola #glass stop:nth-child(2) { stop-color: #f1f6ff; }
+[data-mode="light"] .cupola #glass stop:nth-child(3) { stop-color: #d9e6ff; }
+[data-mode="light"] .cupola #earth-c stop:nth-child(1) { stop-color: #7aa7ff; }
+[data-mode="light"] .cupola #earth-c stop:nth-child(2) { stop-color: #cfe0ff; }
+[data-mode="light"] .cupola #earth-c stop:nth-child(3) { stop-color: #f5f8ff; }
+[data-mode="light"] .cupola .hub-earth { stroke: #2f5bea; stroke-width: 1.2; }
+[data-mode="light"] .cupola .sweep-beam { opacity: .35; }
+
+[data-mode="light"] .cupola .pane-edge { stroke: #2f5bea40; }
+[data-mode="light"] .cupola .pane-btn[data-status="normal"] .pane-edge { stroke: #0e9f6e80; stroke-width: 1.8; }
+[data-mode="light"] .cupola .pane-btn[data-status="watch"] .pane-edge { stroke: #d97706; }
+[data-mode="light"] .cupola .pane-btn[data-status="act"] .pane-edge { stroke: #dc2626; }
+[data-mode="light"] .cupola .pane-btn[data-status="again"] .pane-edge { stroke: #3b6fe0; }
+[data-mode="light"] .cupola .pane-btn[data-status="none"] .pane-edge, [data-mode="light"] .cupola .pane-btn[data-status="pending"] .pane-edge { stroke: #b3bfce; }
+[data-mode="light"] .cupola .pane-btn[data-status="none"] .pane { filter: none; fill: #f6f8fb; }
+[data-mode="light"] .cupola .pane-btn:hover .pane, [data-mode="light"] .cupola .pane-btn:focus-visible .pane { filter: drop-shadow(0 6px 12px rgba(47, 91, 234, .18)); }
+[data-mode="light"] .cupola .pane-btn:hover .pane-edge, [data-mode="light"] .cupola .pane-btn:focus-visible .pane-edge { stroke: #2f5bea; filter: none; }
+[data-mode="light"] .cupola .pane-btn.pressed .pane { filter: brightness(.96); }
+
+[data-mode="light"] .cupola .pl-name { fill: #64748b; }
+[data-mode="light"] .cupola .pl-value { fill: #18212f; font-weight: 400; }
+[data-mode="light"] .cupola .pl-unit { fill: #64748b; }
+[data-mode="light"] .cupola .pl-status { fill: #0e9f6e; }
+[data-mode="light"] .cupola .pl-status.tone-watch { fill: #b45309; }
+[data-mode="light"] .cupola .pl-status.tone-act { fill: #dc2626; }
+[data-mode="light"] .cupola .pl-status.tone-again { fill: #2f5bea; }
+[data-mode="light"] .cupola .pl-status.tone-none, [data-mode="light"] .cupola .pl-status.tone-pending { fill: #8492a6; }
+
+[data-mode="light"] .cupola .hub-arc { stroke: #dbe3ef; }
+[data-mode="light"] .cupola .hub-arc.on { stroke: #2f5bea; filter: drop-shadow(0 0 3px #2f5bea66); }
+[data-mode="light"] .cupola .hub-label, [data-mode="light"] .cupola .hub-num { color: #18212f; }
+[data-mode="light"] .cupola .hub-num small, [data-mode="light"] .cupola .hub-word { color: #475569; }
+@keyframes arc-on-light { from { stroke: #dbe3ef; filter: none; } }
+[data-mode="light"] .today.ready .cupola .hub-arc.on { animation-name: arc-on-light; }

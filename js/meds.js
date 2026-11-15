@@ -19,6 +19,7 @@ import { readLog } from "./store.js";
 import { sendAlert } from "./support.js";
 import { tabsHtml, showTab, fold } from "./fold.js";
 import * as Q from "./quicklog-core.js";
+import * as BC from "./barcode-core.js";
 import { toBundle, bundleJson } from "./fhir-core.js";
 import { FLOW_FACTS } from "./data/med-flow.js";
 import { snapshot, startFeed } from "./feed.js";
@@ -71,19 +72,23 @@ function download(name, text, type) {
 /* ---------- quick log: one sentence, typed or spoken ---------- */
 
 const MIC = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>`;
-const QUICK_NOTE = "Name what you took. Nothing is logged until you confirm it.";
+const CAM = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
+const QUICK_NOTE = "Name what you took, or take a photo of the box's barcode. Nothing is logged until you confirm it.";
+const LABELS = "https://api.fda.gov/drug/label.json";
 
 const quickHtml = () => `<form class="quick" novalidate autocomplete="off">
     <label class="mono step-label" for="md-quick">QUICK LOG · SAY IT OR TYPE IT</label>
     <div class="quick-row">
       <input id="md-quick" name="said" type="text" maxlength="${Q.MAX_SAID}" placeholder="two ibuprofen for back pain" enterkeyhint="go" autocapitalize="off" spellcheck="false">
       <button type="button" class="quick-mic" data-med-act="mic" aria-pressed="false" aria-label="Speak instead of typing" hidden>${MIC}</button>
+      <label class="quick-mic quick-cam" title="Photo of the box's barcode"><span class="sr-only">Photo of the box's barcode</span>${CAM}<input id="md-cam" type="file" accept="image/*" capture="environment" hidden></label>
       <button type="submit" class="cta main">Read it</button>
     </div>
     <p class="fine" data-ref="quick-note" role="status" aria-live="polite">${QUICK_NOTE}</p>
     ${fold("Why a quick log", `<p>NASA's own medication app for ISS crews collected far more entries than recall interviews, ${quote(FLOW_FACTS.usability)}</p>
       <p>Its authors expect that ${quote(FLOW_FACTS.better)}</p>
       <p>So the shortest path here is one sentence and one tap. The sentence is only read for a medication name, a count and what it was for: Ergosphere never picks a medication from a symptom and never turns milligrams into a number of tablets.</p>
+      <p>The camera reads the barcode printed on a medication box and looks it up in the FDA's public label database (openFDA). Only the number is sent, never the photo; a box with two or more active ingredients is never matched to one, and a flight version would carry the kit's barcodes on board.</p>
       <p class="voice-note" hidden>Voice uses this browser's speech recognition, which may send the audio to the browser maker's servers; a flight version would recognise speech on board. Typing stays on this device.</p>`)}
   </form>
   <div data-ref="draft" aria-live="polite"></div>`;
@@ -121,7 +126,7 @@ function draftHtml(d) {
   const picked = d.units ?? (differs ? null : 1);
   return `<div class="draft">
     <p class="mono step-label">CHECK IT · NOTHING IS LOGGED YET</p>
-    <p class="draft-said">${d.via === "voice" ? "Heard" : "Read"}: “${esc(d.said)}”</p>
+    <p class="draft-said">${d.via === "photo" ? `From the box's barcode ${esc(d.box.code)}: <span data-no-i18n>${esc(d.box.names || "label found")}</span>` : `${d.via === "voice" ? "Heard" : "Read"}: “${esc(d.said)}”`}</p>
     <div class="draft-med">${pill3d(m, 64)}<div><strong>${esc(m.name)}</strong><span class="mono">${m.own ? "your own" : `${m.strength}${m.rx ? " · Rx" : ""}`}</span>${d.close ? `<span class="fine">Closest name to “${esc(d.word)}”. Not it? Cancel and try again.</span>` : !Q.norm(m.name).includes(d.word) ? `<span class="fine">“${esc(d.word)}” is listed here as ${esc(m.name)}.</span>` : ""}</div></div>
     ${differs ? `<p class="before-take"><strong>You said ${esc(d.strength)}.</strong> The log counts ${m.unit}s, and the kit's ${m.unit} is ${m.strength}. Ergosphere does not convert one into the other: choose how many you took.</p>` : ""}
     ${m.beforeTaking ? `<p class="before-take">${beforeHtml(m)}</p>` : ""}
@@ -447,7 +452,55 @@ export function mountMeds(host) {
     $("draft").scrollIntoView({ block: "nearest" });
   }
 
+  /** A photo of the box: its barcode (the browser's own reader, else ours) looked up in openFDA. */
+  async function fromPhoto(file) {
+    quickNote("Reading the barcode…");
+    let code = null;
+    try {
+      const bmp = await createImageBitmap(file);
+      if ("BarcodeDetector" in globalThis) {
+        try { code = (await new globalThis.BarcodeDetector({ formats: ["ean_13", "upc_a"] }).detect(bmp))[0]?.rawValue ?? null; } catch { /* use our own reader */ }
+      }
+      if (!code) {
+        const k = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
+        const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+        const cv = Object.assign(document.createElement("canvas"), { width: w, height: h });
+        const cx = cv.getContext("2d", { willReadFrequently: true });
+        cx.drawImage(bmp, 0, 0, w, h);
+        const px = cx.getImageData(0, 0, w, h).data, gray = new Uint8Array(w * h);
+        for (let i = 0; i < gray.length; i += 1) gray[i] = (px[i * 4] * 299 + px[i * 4 + 1] * 587 + px[i * 4 + 2] * 114) / 1000;
+        code = BC.decodeGray(gray, w, h);
+      }
+    } catch { /* not an image this browser can open */ }
+    if (!code) { quickNote("No barcode found in that photo. Fill the picture with the barcode, in good light and in focus, or say or type the name."); return; }
+    quickNote(`Barcode ${code}: looking it up in openFDA…`);
+    let label = null;
+    for (const upc of BC.upcForms(code)) {
+      try {
+        const r = await fetch(`${LABELS}?search=openfda.upc:%22${upc}%22&limit=1`, { cache: "no-store" });
+        if (r.ok) { label = (await r.json()).results?.[0]?.openfda ?? null; if (label) break; }
+      } catch { quickNote("Could not reach openFDA (offline?). Say or type the name."); return; }
+    }
+    if (!label) { quickNote(`Barcode ${code} is not in openFDA's labels. Say or type the name.`); return; }
+    LIST = M.medList(KIT, store);
+    const hit = BC.medFromLabel(label, LIST);
+    if (!hit.med) { quickNote(`${hit.names || `Barcode ${code}`}: ${hit.why}`); return; }
+    closeZone();
+    draft = { said: "", med: hit.med, close: false, d: 0, word: Q.norm(hit.med.name), units: null, strength: null, zone: null, zoneId: null, via: "photo", box: { code, names: hit.names } };
+    $("draft").innerHTML = draftHtml(draft);
+    paintContext("draft-ctx", draftEntry());
+    quickNote(QUICK_NOTE);
+    $("draft").scrollIntoView({ block: "nearest" });
+  }
+  root.querySelector("#md-cam")?.addEventListener("change", (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) fromPhoto(f); });
+
   const SR = globalThis.SpeechRecognition ?? globalThis.webkitSpeechRecognition;
+  const speechLang = () => {
+    let lang = "en";
+    try { lang = localStorage.getItem("geosfera.lang") ?? "en"; } catch { /* storage blocked */ }
+    if (lang !== "es") return "en-US";
+    return (navigator.languages ?? [navigator.language]).find((l) => /^es-/i.test(l)) ?? "es-CO";
+  };
   if (SR) {
     root.querySelector(".quick-mic").hidden = false;
     root.querySelector(".voice-note").hidden = false;
@@ -459,13 +512,24 @@ export function mountMeds(host) {
     let heard = "";
     try {
       rec = new SR();
-      rec.lang = "en-US";
+      // listen in the language the app is in (it was always English, so Spanish was misheard)
+      rec.lang = speechLang();
       rec.interimResults = true;
-      rec.maxAlternatives = 1;
+      rec.maxAlternatives = 5; // several guesses: the one that names a medication wins (quicklog-core bestHeard)
       rec.onresult = (ev) => {
         const all = [...ev.results];
-        input.value = all.map((r) => r[0].transcript).join(" ").replace(/\s+/g, " ").trim().slice(0, Q.MAX_SAID);
-        if (all.some((r) => r.isFinal)) heard = input.value;
+        const clean = (t) => t.replace(/\s+/g, " ").trim().slice(0, Q.MAX_SAID);
+        input.value = clean(all.map((r) => r[0].transcript).join(" "));
+        if (!all.length || !all.every((r) => r.isFinal)) return;
+        // each guess of the whole sentence: the other pieces keep their best guess
+        const guesses = [];
+        for (let a = 0; a < 5; a += 1) for (let i = 0; i < all.length; i += 1) {
+          if (!all[i][a]) continue;
+          guesses.push(clean(all.map((r, j) => (j === i ? r[a] : r[0]).transcript).join(" ")));
+        }
+        const best = Q.bestHeard([...new Set(guesses)], M.medList(KIT, store), ZONES, OTHER_NAMES);
+        heard = best?.text ?? input.value;
+        input.value = heard;
       };
       rec.onerror = (ev) => {
         quickNote(ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "The microphone is blocked for this page. Type it instead."
@@ -478,7 +542,7 @@ export function mountMeds(host) {
       };
       rec.start();
       mic.setAttribute("aria-pressed", "true");
-      quickNote("Listening… say the medication, how many, and what it was for.");
+      quickNote("Listening… say the medication, how many, and what it was for. Speak the name clearly; you can correct it before saving.");
     } catch {
       rec = null;
       mic.setAttribute("aria-pressed", "false");

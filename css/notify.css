@@ -18,7 +18,7 @@ body.al-act .fn-card { top: 92px; }
 .fn-text { margin: 6px 0 10px; font-size: 17px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .fn-card .fm-photo { display: block; max-width: 100%; max-height: 46vh; margin: 0 0 10px; border-radius: 12px; }
 .fn-card .fm-audio { width: 100%; margin: 0 0 10px; }
-.fn-card[data-open="true"] { max-height: calc(100vh - 40px); overflow: auto; }
+.fn-card[data-open="true"] { max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow: auto; }
 .fn-acts { display: flex; align-items: center; gap: 10px; }
 .fn-acts .cta { min-height: 46px; }
 @media (prefers-reduced-motion: reduce) { .fn-card { animation: none; } }

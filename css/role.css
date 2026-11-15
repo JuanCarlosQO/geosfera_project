@@ -78,3 +78,6 @@
 .hs-av-opt:not(.ini) img { object-fit: contain; }
 .hs-av-opt.ini { aspect-ratio: 2 / 3; }
 .hs-avs p .fine { display: block; margin-top: 2px; }
+
+/* the emergency choice keeps its red in both looks (the day theme repainted .cta white) */
+.ch-em-row .cta.stop, [data-theme="day"] .ch-em-row .cta.stop { background: var(--tone-act, #dc2626); border-color: var(--tone-act, #dc2626); color: #ffffff; font-weight: 600; }

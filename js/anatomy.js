@@ -171,7 +171,7 @@ export const modelFor = (member = current()) => (member?.body === "f" ? PHOTO_F 
 // The full-body game-style avatar a crew member chose (assets/avatars/<id>.webp). It is drawn in
 // the same pose and framing as the teaching model, so every spot placed on the body still fits;
 // until the file exists the picture falls back to the teaching model.
-const AVATAR_IDS = ["f1", "f2", "f3", "m1", "m2", "m3"];
+const AVATAR_IDS = ["f1", "f2", "f3", "m1", "m2", "m3", "m4"];
 /** The body picture of the active crew member: their chosen avatar, or the teaching model. */
 export function photoFor(member = current()) {
   const model = modelFor(member);

@@ -462,3 +462,9 @@ Valentina Reyes and Tomás Okafor are fictional. Every reading in the demo is ma
 ## Pending
 
 Vital-sign ranges now come from the team document above (Earth clinical references, pending team review). The app labels them that way and warns that in flight blood pressure runs lower and temperature higher.
+
+### Medication log: voice and the box's barcode (15 Nov 2026)
+
+- **Voice** listens in the app's language (it listened in English only, so Spanish names were misheard), asks the browser for five guesses and keeps the one that names a kit medication (`bestHeard`, quicklog-core.js). A name the recogniser split or misspelled ("ibu profeno", "para setamol", "prometacina") is matched by how it sounds (`phon`: Spanish and English spellings of one sound made equal) and shown as a near miss for the crew member to check. Short names (6 letters or fewer, like "ambien") match only when they sound exactly alike, so "también" is not "ambien". App rules, not NASA's.
+- **Photo of the box:** the EAN-13 / UPC-A barcode is read on the device (the browser's BarcodeDetector where it exists, otherwise the app's own reader in barcode-core.js, which also works in Safari) and looked up in openFDA's drug label endpoint by its `openfda.upc` field: https://api.fda.gov/drug/label.json (example checked 15 Nov 2026: 0341520314643 returns a label whose substance is IBUPROFEN). Only the number is sent. The label's single active ingredient is matched to the kit's; a box with two or more active ingredients, or a medication outside the kit list, is not matched and the crew member chooses. The box's strength is not read: the kit's own strength is shown.
+

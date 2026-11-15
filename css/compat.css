@@ -1,0 +1,73 @@
+/* ================= every device and every browser (Safari in particular) =================
+   Loaded last. Each rule fixes something Safari (iPhone, iPad, Mac) or a narrow screen
+   draws differently from Chrome. */
+
+/* iPhone: no automatic text enlargement when the phone turns sideways */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Safari before 16 does not know overflow-x: clip, so a wide element let the page slide sideways */
+@supports not (overflow-x: clip) { body { overflow-x: hidden; } }
+
+/* iPhone zooms the whole page into any field written smaller than 16 px and stays zoomed in */
+@supports (-webkit-touch-callout: none) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: 16px !important; }
+}
+
+/* Safari draws its own grey, glossy select box and ignores rounded corners: draw ours */
+select {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 34px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%238492a6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 12px 8px;
+}
+/* Safari paints buttons and links in its own blue unless told otherwise */
+button, input, select, textarea { color: inherit; }
+
+/* the dock: up to seven buttons share the width on any phone (they overflowed at 430 px) */
+@media (max-width: 1039px) {
+  .dock a { min-width: 0; flex: 1 1 0; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dock a svg { flex: none; }
+}
+@media (max-width: 360px) { .dock { padding-left: 2px; padding-right: 2px; } .dock a { font-size: 9.5px; } }
+
+/* long words (a medication, a German name, a URL) wrap instead of pushing the screen wide */
+.station p, .station li, .station h1, .station h2, .station h3, .station dd { overflow-wrap: anywhere; }
+
+/* pictures and charts never wider than their box */
+.station img, .station video, .station canvas { max-width: 100%; }
+.station .body-photo, .station .fb-bone, .station .hatch-photo { max-width: none; }
+
+/* iPhone: "vh" counts the space behind Safari's address bar, so sheets and the hatch were taller
+   than the screen. svh / dvh are the visible height (Safari 15.4+); older ones keep vh */
+@supports (height: 1svh) {
+  .hatch { --d: min(344px, 88vw, 47svh); }
+  .crew-sheet { max-height: 86dvh; }
+  .sp-sheet { max-height: 92dvh; }
+  .intro { padding-top: 8svh; }
+}
+
+/* Safari let animated or transformed pictures spill past a box's rounded corners */
+.cta-wide, .porthole, .window, .av, .sp-level, .hs-av-opt, .tm-card, .cl-card, .ch-card, .gf-card, .sc-card { isolation: isolate; }
+
+/* iPhone: while typing, the keyboard lifts the bottom bar over the field; hide it until done */
+@media (pointer: coarse) {
+  body:has(:is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), textarea, select):focus) .dock { display: none; }
+}
+
+/* no grey flash on every tap on iPhone (each button has its own pressed look) */
+a, button, summary, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+/* small phones: the masthead's buttons ran over the name */
+@media (max-width: 400px) {
+  .masthead .round-btn { width: 38px; height: 38px; }
+  .masthead .sync-btn { min-height: 38px; padding: 0 10px; }
+  .masthead-tools { gap: 4px; }
+}
+@media (max-width: 420px) { .mark .mark-name i { display: none; } }
+@media (max-width: 360px) { .mark .mark-name { display: none; } }
+
+/* profiles on a phone: the avatar button becomes a small badge on the picture instead of covering the name */
+@media (max-width: 480px) {
+  .hs-pic-btn { right: auto; left: 54px; top: auto; bottom: 10px; width: 30px; height: 30px; min-height: 30px; padding: 0; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(15, 23, 42, .18); }
+  .hs-pic-btn span { display: none; }
+}

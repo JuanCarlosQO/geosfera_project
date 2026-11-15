@@ -7,7 +7,7 @@ import { photoFor } from "./anatomy.js";
 
 export const AVATARS = [
   { id: "f1", body: "f" }, { id: "f2", body: "f" }, { id: "f3", body: "f" },
-  { id: "m1", body: "m" }, { id: "m2", body: "m" }, { id: "m3", body: "m" }
+  { id: "m1", body: "m" }, { id: "m2", body: "m" }, { id: "m3", body: "m" }, { id: "m4", body: "m" }
 ];
 export const avatarSrc = (id) => (AVATARS.some((a) => a.id === id) ? `assets/avatars/${id}.webp` : null);
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
