@@ -55,6 +55,14 @@ describe("Supabase store", () => {
     assert.ok(!row.includes(T), "raw token never stored");
   });
 
+  it("sends new sb_secret keys only in the apikey header", async () => {
+    const seen = [];
+    const store = supabaseStore({ url: "https://x.supabase.co", key: "sb_secret_abc", fetchImpl: async (u, o) => { seen.push(o.headers); return { ok: true, json: async () => [] }; } });
+    await store.get("k");
+    assert.equal(seen[0].apikey, "sb_secret_abc");
+    assert.equal(seen[0].Authorization, undefined);
+  });
+
   it("reads the settings Vercel's Supabase integration provides", () => {
     assert.deepEqual(supabaseEnv({ SUPABASE_URL: "u", SUPABASE_SERVICE_ROLE_KEY: "k" }), { url: "u", key: "k" });
     assert.deepEqual(supabaseEnv({ NEXT_PUBLIC_SUPABASE_URL: "u", SUPABASE_SECRET_KEY: "k" }), { url: "u", key: "k" });
