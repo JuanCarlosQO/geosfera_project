@@ -187,7 +187,7 @@ HL7 FHIR R4, MedicationStatement — https://hl7.org/fhir/R4/medicationstatement
 - Voice entry uses the browser's own speech recognition (Web Speech API), which in some browsers sends the audio to the browser maker's servers; the app says so and typing always works. A flight version would need on-board recognition: not built.
 - The export writes medications and reasons as text, with no clinical codes (none were verified), and tags the bundle as simulated. The "queue" counts doses not yet exported; the link to the ground is **simulated**, nothing is transmitted.
 
-**Not built, and why:** a personalised dose or a plasma-concentration curve, C(t) (it would be a prescription, and no validated spaceflight pharmacokinetic model was read); a verdict on what caused a symptom (interpreting a symptom); scanning a package (needs a library or a browser API that is not available on every phone). Claims the team notebook attributed to NASA IMPACT codes, HERMES/TrialX, Polaris Dawn and a VASTX simulation were **not verified** and are not used in the app.
+**Not built, and why:** a personalised dose or a plasma-concentration curve, C(t) (it would be a prescription, and no validated spaceflight pharmacokinetic model was read); a verdict on what caused a symptom (interpreting a symptom). (Scanning a package was listed here until 15 Nov 2026; it is now built as a barcode lookup, see "Medication log: voice and the box's barcode" below.) Claims the team notebook attributed to NASA IMPACT codes, HERMES/TrialX, Polaris Dawn and a VASTX simulation were **not verified** and are not used in the app.
 
 ### Pictures on the medication and future-body screens (15 Nov 2026)
 
@@ -484,4 +484,24 @@ Read on 15 Nov 2026 (web pages as text; the Evidence Report as text from its PDF
 | Why machine faults are reported | "For example, crewmembers have not always been able to exercise due to hardware failure or were only able to exercise at lower intensities to conserve station power resources." | the Evidence Report above |
 
 **App rules, not NASA's:** the ground team writes each crew member's daily sessions (machine, what it works on, minutes; up to four); until it does, the starting plan is ARED lower body 60 min and CEVIS intervals 30 min (NASA's 1.5 hours). The crew member marks a session done with the minutes, optional ARED loads (pounds) and repetitions, and optional things felt afterwards (dizzy, back pain, joint pain, muscle pain or cramp, chest discomfort, short of breath, something else) with a note; chest discomfort, shortness of breath and dizziness also ask the crew medical officer to reach them, through the same channel as "I'd like to talk to someone". The minutes fill "Exercise today" in the daily log. A problem with a machine stays open until the ground team marks it fixed. **Not claimed:** that exercise causes injuries in flight (we found no NASA sentence saying so) or anything about what a load or a symptom means.
+
+## Team research library (AI notebook, listed 15 Nov 2026)
+
+The team researched in an AI notebook (NotebookLM) with the documents below. Each link was opened and its title checked on 15 Nov 2026. **Being in this list does not make a claim usable:** the app shows only what is quoted word for word elsewhere in this file. "Background" means the document informed the team's design but nothing from it is shown on screen.
+
+| # | Document (official title) | Link | In the app |
+| --- | --- | --- | --- |
+| 1 | 2026 Abstracts of the AsMA Scientific Sessions (VASTX, Polaris Dawn, XMIPT panel) | **not found**: no published 2026 abstracts supplement (the latest found is 2025, AMHP vol. 96 no. 8) | Not used. Its claims (VASTX exposure drop, Polaris Dawn pharmacokinetics) stay **not verified** |
+| 2 | Wotring VE, Smith LK. Dose Tracker Application for Collecting Medication Use Data from International Space Station Crew. Aerosp Med Hum Perform 2020;91(1):41-45 | https://pubmed.ncbi.nlm.nih.gov/31852573/ | **Quoted**: medication log ("Dose Tracker" section above) |
+| 3 | Wotring V. Recent Pharmacology Studies on the International Space Station (NASA JSC, 2014) | https://ntrs.nasa.gov/citations/20140012420 | Background |
+| 4 | Wotring VE. Medication use by U.S. crewmembers on the International Space Station. FASEB J 2015;29(11):4417-23 | https://pubmed.ncbi.nlm.nih.gov/26187345 | Background |
+| 5 | Pharmaceutical Care, OCHMO-MTB-012 Rev B (NASA-STD-3001 Medical Technical Brief) | https://www.nasa.gov/wp-content/uploads/2026/01/ochmo-mtb-012-pharmaceutical-care.pdf | Background (also in the pharmaceutical chemist's review of the kit) |
+| 6 | "Earth-Independent Spaceflight Medical Operations: System Architecture, Operational Software, Environmental Hazards, and Quantitative Risk Modeling" | **not found** under this title | Not used |
+| 7 | Urbina M, McGuire K, Lehnhardt K, Fleming N. Medical System Concept of Operations for Mars Exploration Mission-11: Exploration Medical Capability (ExMC) Element (2019) | https://ntrs.nasa.gov/citations/20200001715 | Background for the roles and the exercise prescription; not quoted |
+| 8 | Levin DR et al. Enabling Human Space Exploration Missions Through Progressively Earth Independent Medical Operations (EIMO). IEEE Open J Eng Med Biol 2023;4:162-167 | https://pmc.ncbi.nlm.nih.gov/articles/PMC10810302/ (doi:10.1109/OJEMB.2023.3255513) | Background |
+| 9 | Ebert D et al. Autonomous Medical Officer Support (AMOS) Software Technology Demonstrations on the International Space Station (ISS) (2024 preprint) | https://ntrs.nasa.gov/citations/20240012964 | Background |
+| 10 | Dev SI et al. Risk of Adverse Cognitive or Behavioral Changes and Psychiatric Disorders Leading to In-Mission Health and Performance and Long-Term Health Effects (HRP evidence report, 2025) | https://ntrs.nasa.gov/citations/20250001454 | Background; the app quotes OCHMO-TB-016 for behavioral health |
+| 11 | ESA, EveryWear (2016) and Thomas Pesquet testing EveryWear smartshirt (2017) | https://www.esa.int/ESA_Multimedia/Images/2016/12/EveryWear · https://www.esa.int/ESA_Multimedia/Videos/2017/05/Thomas_Pesquet_testing_EveryWear_smartshirt | Background for the wearable sensors (simulated in the app) |
+| 12 | NASA Space Flight Medical Selection, Recertification and Mission Evaluation Standards, OCHMO-STD-100.1A (2024) | https://www.nasa.gov/wp-content/uploads/2023/04/ochmo-std-100.1a.pdf | Not used. **The notebook described it as an exercise and fitness standard; it is a medical selection standard** |
+| 13 | Waivered Health Conditions, OCHMO-MTB-002 (NASA-STD-3001 Medical Technical Brief) | https://www.nasa.gov/wp-content/uploads/2024/09/ochmo-mtb-002-waivered-health-conditions.pdf | Background |
 
