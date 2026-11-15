@@ -505,3 +505,7 @@ The team researched in an AI notebook (NotebookLM) with the documents below. Eac
 | 12 | NASA Space Flight Medical Selection, Recertification and Mission Evaluation Standards, OCHMO-STD-100.1A (2024) | https://www.nasa.gov/wp-content/uploads/2023/04/ochmo-std-100.1a.pdf | Not used. **The notebook described it as an exercise and fitness standard; it is a medical selection standard** |
 | 13 | Waivered Health Conditions, OCHMO-MTB-002 (NASA-STD-3001 Medical Technical Brief) | https://www.nasa.gov/wp-content/uploads/2024/09/ochmo-mtb-002-waivered-health-conditions.pdf | Background |
 
+### Crew avatars (15 Nov 2026)
+
+Seven full-body avatars (`assets/avatars/f1`–`f3`, `m1`–`m4`) were generated with AI by a team member from prompts Claude wrote, white background removed with the app's own code. They are illustrations of fictional people, not real astronauts. **They appear only on the profile screen**, where a crew member is chosen (the round picture is the head of the same file, and "✎ Avatar" opens the full-body choice). Inside the app every crew member is shown by initials and the health screens keep the AI-generated body picture (team decision, 15 Nov 2026).
+

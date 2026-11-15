@@ -1,7 +1,7 @@
-// Crew avatars: full-body game-style characters in assets/avatars (made for the demo with AI,
-// see docs/AI_USE.md), drawn in the same pose and framing as the body picture so the health
-// screens can show them. Round pictures show the head and shoulders of the same file. Until
-// those files exist, or with none chosen, the avatar is the crew member's initials.
+// Crew avatars: full-body characters in assets/avatars (made for the demo with AI, see
+// docs/AI_USE.md). They are shown only on the profile screen, where a crew member is chosen:
+// the round picture is the head and shoulders of the same file. Inside the app every crew
+// member is shown by initials, and the health screens keep the body picture.
 
 import { photoFor } from "./anatomy.js";
 
@@ -13,9 +13,13 @@ export const avatarSrc = (id) => (AVATARS.some((a) => a.id === id) ? `assets/ava
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export const initials = (name) => esc(String(name ?? "").split(" ").map((w) => w[0]).slice(0, 2).join(""));
 
-/** The crew member's picture, falling back to initials if the image is missing. */
-export function avatarHtml(member, cls = "") {
-  const src = avatarSrc(member?.avatar);
+/**
+ * The crew member's initials; with { photo: true } (the profile screen only, where a crew member
+ * is chosen) their avatar's head instead, falling back to initials if the image is missing.
+ * Inside the app the avatar is not shown (team decision, 15 Nov 2026).
+ */
+export function avatarHtml(member, cls = "", { photo = false } = {}) {
+  const src = photo ? avatarSrc(member?.avatar) : null;
   const ini = `<span class="av-ini">${initials(member?.name)}</span>`;
   return `<span class="av ${cls}" data-body="${member?.body ?? ""}" aria-hidden="true">${ini}${src ? `<img class="av-full" src="${src}" alt="" decoding="async" onerror="this.remove()">` : ""}</span>`;
 }

@@ -168,14 +168,8 @@ export const PHOTO_F = { ...PHOTO, src: "assets/body-front-f.webp" };
 export const PHOTO_NOTE = "Body picture generated with AI: an illustration, not an anatomical reference.";
 /** The teaching model for the crew member's body (a woman's or a man's). */
 export const modelFor = (member = current()) => (member?.body === "f" ? PHOTO_F : PHOTO);
-// The full-body game-style avatar a crew member chose (assets/avatars/<id>.webp). It is drawn in
-// the same pose and framing as the teaching model, so every spot placed on the body still fits;
-// until the file exists the picture falls back to the teaching model.
-const AVATAR_IDS = ["f1", "f2", "f3", "m1", "m2", "m3", "m4"];
-/** The body picture of the active crew member: their chosen avatar, or the teaching model. */
-export function photoFor(member = current()) {
-  const model = modelFor(member);
-  return AVATAR_IDS.includes(member?.avatar) ? { ...model, src: `assets/avatars/${member.avatar}.webp`, fallback: model.src } : model;
-}
+/** The body picture of the active crew member (a woman's or a man's teaching model). Avatars are
+ * shown only on the profile screen, never on the health screens (team decision, 15 Nov 2026). */
+export const photoFor = (member = current()) => modelFor(member);
 export const photoFigure = (member) => { const p = photoFor(member); return `<img class="body-photo" src="${p.src}" width="${p.w}" height="${p.h}" alt="" decoding="async"${p.fallback ? ` onerror="this.onerror=null;this.src='${p.fallback}'"` : ""}>`; };
 

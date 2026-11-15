@@ -64,7 +64,7 @@ function crewHtml(members, store) {
     const demo = DEMO_CODES[m.id];
     const line = demo ? `<span class="hs-code">Demo code <b>${spaced(demo)}</b></span>` : rec ? `<span class="hs-code">Code set</span>` : `<span class="hs-code">First time: choose a code</span>`;
     return `<li style="--i:${i}"><button type="button" class="hs-prof" data-pick="${esc(m.id)}">
-      ${avatarHtml(m, "hs-pic")}
+      ${avatarHtml(m, "hs-pic", { photo: true })}
       <span class="hs-prof-txt"><strong>${esc(m.name)}</strong><small>${esc(m.role)}${m.age ? ` · ${m.age}` : ""}${m.home ? ` · ${esc(m.home)}` : ""}</small>${line}</span>
       <span class="hs-go" aria-hidden="true">›</span></button>
       <button type="button" class="hs-pic-btn" data-avatar-for="${esc(m.id)}" aria-label="Choose an avatar for ${esc(m.name)}">✎<span> Avatar</span></button></li>`;
@@ -442,7 +442,7 @@ export class Hatch {
     const sheet = this.ui.crew.querySelector(".hs-avs") ?? Object.assign(document.createElement("div"), { className: "hs-avs" });
     // women's avatars first for a woman's body, men's first for a man's; any can be chosen
     const order = [...AVATARS].sort((a, b) => (b.body === m.body) - (a.body === m.body));
-    sheet.innerHTML = `<p><strong>Avatar for ${esc(m.name.split(" ")[0])}</strong> <span class="fine">Shown on the health screens</span></p>
+    sheet.innerHTML = `<p><strong>Avatar for ${esc(m.name.split(" ")[0])}</strong> <span class="fine">Shown here, when choosing a profile</span></p>
       <div class="hs-av-grid">${order.map((a) => `<button type="button" class="hs-av-opt" data-avatar="${a.id}" data-for="${esc(id)}" aria-pressed="${m.avatar === a.id}" aria-label="Avatar ${a.id}"><img src="${avatarSrc(a.id)}" alt="" onerror="this.closest('button').hidden=true"></button>`).join("")}
         <button type="button" class="hs-av-opt ini" data-avatar="" data-for="${esc(id)}" aria-pressed="${!m.avatar}">${avatarHtml({ ...m, avatar: null }, "hs-pic")}<small>Initials</small></button></div>
       <p class="fine hs-av-wait" hidden>The avatar pictures are not in the app yet: until they are, profiles show initials.</p>`;
