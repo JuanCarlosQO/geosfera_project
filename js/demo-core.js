@@ -6,6 +6,7 @@
 // typical ISS dose the team verified (about 0.5 mSv per day, data/vital-ranges.js).
 // Pure functions, no DOM: same date in, same demo out (tests/demo-core.test.js).
 
+import * as X from "./exercise-core.js";
 import { dateKey } from "./log-core.js";
 
 export const DEMO_KEY = "geosfera.demo";
@@ -118,7 +119,32 @@ export function buildDemo(now = new Date()) {
   const supplements = {};
   days.forEach((day, i) => { if (i !== 4 && i !== 9) supplements[day] = ["vitaminD"]; });
 
+  // countermeasure exercise: Valentina on the starting plan, loads creeping up, back pain after
+  // yesterday's deadlifts; Tomás on a plan the ground wrote, and a frayed treadmill bungee
+  let exercise = X.cleanStore({});
+  const vPlan = X.planFor(exercise, DEMO_CREW[0].id).sessions;
+  days.slice(-7, -1).forEach((day, i) => {
+    exercise = X.logSession(exercise, { member: DEMO_CREW[0].id, day, session: vPlan[0], minutes: 55 + (i % 2) * 5, now: at(day, 10, 15),
+      sets: [{ move: "squat", load: 230 + i * 4, reps: 8 }, { move: "deadlift", load: 255 + i * 4, reps: 6 }, { move: "heel", load: 280, reps: 12 }],
+      symptoms: i === 5 ? ["back"] : [], note: i === 5 ? "Lower back after the deadlifts" : "" }).store;
+    if (i !== 2) exercise = X.logSession(exercise, { member: DEMO_CREW[0].id, day, session: vPlan[1], minutes: 30, now: at(day, 16, 0) }).store;
+  });
+  exercise = X.setPlan(exercise, DEMO_CREW[1].id, [{ focus: "upper", minutes: 45 }, { focus: "run", minutes: 40 }], "Ground medical team", at(days[0], 9, 0)).store;
+  const tPlan = X.planFor(exercise, DEMO_CREW[1].id).sessions;
+  days.slice(-7, -1).forEach((day, i) => {
+    exercise = X.logSession(exercise, { member: DEMO_CREW[1].id, day, session: tPlan[0], minutes: 45, now: at(day, 9, 30), sets: [{ move: "bench", load: 150 + i * 5, reps: 8 }, { move: "row", load: 140 + i * 5, reps: 10 }] }).store;
+    if (i !== 3) exercise = X.logSession(exercise, { member: DEMO_CREW[1].id, day, session: tPlan[1], minutes: 40, now: at(day, 17, 0) }).store;
+  });
+  exercise = X.addFault(exercise, { member: DEMO_CREW[1].id, device: "t2", text: "One harness bungee looks frayed near the clip", now: at(days[days.length - 2], 17, 50), id: "f-demo-1" }).store;
+
+  // the daily log's "Exercise today" follows the sessions logged (today stays open for the demo)
+  for (const m of DEMO_CREW) for (const day of days) {
+    const mins = X.minutesOn(exercise, m.id, day);
+    if (logs[m.id][day]) { if (mins) logs[m.id][day].exerciseMinutes = { value: mins, src: "exercise" }; else if (day === today) delete logs[m.id][day].exerciseMinutes; }
+  }
+
   return {
+    exercise,
     crew: { members: DEMO_CREW.map((m) => ({ ...m })), active: DEMO_CREW[0].id },
     logs,
     meds: { doses, supplements },

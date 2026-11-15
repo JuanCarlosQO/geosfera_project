@@ -1,6 +1,8 @@
 // Module 4 — Mission: the daily exercise ring (NASA's 1.5 hours), the check-in streak,
 // a self-drawing week of exercise and habit achievements.
 
+import { groundExerciseHtml, bindGroundExercise } from "./exercise.js";
+import { isGround } from "./role.js";
 import * as M from "./mission-core.js";
 import { dateKey } from "./log-core.js";
 import * as S from "./store.js";
@@ -49,6 +51,7 @@ export function mountMission(host) {
     <h1 id="mi-title" tabindex="-1">Keep the countermeasures going</h1>
     <p class="lede">Badges reward checking in and doing the exercise NASA asks of every crew member, never what a reading says.</p>
     <a class="fb-link" href="#future"><span>Future body<small>Where your bones are heading on a long mission, and why the exercise matters</small></span><span>Open →</span></a>
+    ${isGround() ? `<div data-ref="exg-wrap">${groundExerciseHtml(member)}</div>` : ""}
 
     <div class="mi-top">
       <figure class="ring-card">
@@ -96,6 +99,8 @@ export function mountMission(host) {
 
     <a class="cta-wide" href="#log">${entry ? "Review today's readings" : "Start today's readings"}</a>
   </section>`;
+  const exgWrap = host.querySelector('[data-ref="exg-wrap"]');
+  if (exgWrap) bindGroundExercise(exgWrap, member, (o) => { exgWrap.innerHTML = groundExerciseHtml(member, o); });
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   for (const el of host.querySelectorAll("[data-count]")) {

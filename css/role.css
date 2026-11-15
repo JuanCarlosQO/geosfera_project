@@ -81,3 +81,4 @@
 
 /* the emergency choice keeps its red in both looks (the day theme repainted .cta white) */
 .ch-em-row .cta.stop, [data-theme="day"] .ch-em-row .cta.stop { background: var(--tone-act, #dc2626); border-color: var(--tone-act, #dc2626); color: #ffffff; font-weight: 600; }
+.gf-tag { display: inline-block; margin: 2px 2px 0 0; padding: 1px 8px; border-radius: 999px; background: rgba(255, 255, 255, .6); font-weight: 600; }

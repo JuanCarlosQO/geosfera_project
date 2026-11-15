@@ -23,6 +23,7 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/app.js` | Boot, UTC clock, lock button, hash router (`#today`, `#body/<system>`, `#log`, `#log/<YYYY-MM-DD>`, `#mission`, `#meds`, `#duty`) and bottom dock |
 | `js/access-core.js` | Pure access rules, tested: code shape, guessable codes, PBKDF2 record, wrong-code waits, WebAuthn assertion check |
 | `js/role-core.js`, `js/role.js` | Who is looking: the ground medical team (sees every reading) or a crew member (home with no readings; emergency opening for 60 min, kept in `geosfera.openings` for the ground). `geosfera.role` never leaves the device |
+| `js/exercise-core.js`, `js/exercise.js`, `js/data/exercise.js` | Countermeasure exercise: the ground team prescribes daily sessions (ARED, CEVIS, T2) on Mission; the crew member marks them done on their home with loads and anything felt after, and reports machine problems. Kept in `geosfera.exercise` (synced); minutes fill "Exercise today" in the daily log |
 | `js/crew-home.js` | `#crew`: the crew member's own home. Morning question without numbers, watch taps, medication, family, talk, critical task, emergency opening |
 | `js/ground.js` | `#ground`: the ground team's crew list (short night, morning answer, requests, emergency openings); a card opens that member's record |
 | `js/hatch.js` | Module 1 screen: hatch with a ring of digits 0–9, four bolts, ISS in the porthole, fingerprint/face, forgot code, opening animation |

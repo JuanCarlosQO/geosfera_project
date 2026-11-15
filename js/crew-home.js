@@ -15,6 +15,7 @@ import * as F from "./family-core.js";
 import { EMERGENCY_REASONS, EMERGENCY_MIN } from "./role-core.js";
 import { openEmergency } from "./role.js";
 import { avatarHtml } from "./avatar.js";
+import { crewExerciseHtml, bindCrewExercise } from "./exercise.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
@@ -48,6 +49,8 @@ function html(me) {
       <p class="ch-msg" role="status" data-ref="ch-msg"></p>
     </section>
 
+    <div data-ref="ex-wrap">${crewExerciseHtml(me)}</div>
+
     <div class="ch-grid">
       <a class="ch-tile" href="#meds"><strong>Log a medication</strong><small>What you took, what for, how many</small></a>
       <a class="ch-tile" href="#family"><strong>Messages from home</strong><small>${fam ? `${fam} sealed, open whenever you like` : "Nothing new"}</small></a>
@@ -70,6 +73,8 @@ export function mountCrewHome(host) {
   host.innerHTML = html(me);
   const say = (t) => { const m = host.querySelector('[data-ref="ch-msg"]'); if (m) m.textContent = t; };
   bindSleepCheck(host.querySelector(".crew-home"), () => current()); // the card is redrawn with each mount
+  const exWrap = host.querySelector('[data-ref="ex-wrap"]');
+  bindCrewExercise(exWrap, me, (o) => { exWrap.innerHTML = crewExerciseHtml(me, o); exWrap.querySelector("form input, form select")?.focus({ preventScroll: true }); });
   host.onclick = (e) => {
     const mk = e.target.closest("[data-mark]");
     if (mk) { const t = applyMark(me.id, mk.dataset.mark); mountCrewHome(host); say(t); return; }

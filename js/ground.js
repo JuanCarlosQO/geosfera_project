@@ -14,6 +14,8 @@ import { avatarHtml } from "./avatar.js";
 import { DEVICE_FACTS } from "./data/devices.js";
 import { fold } from "./fold.js";
 import { demoNoticeHtml, demoLoaded } from "./demo.js";
+import { exerciseFlags } from "./exercise.js";
+import { symptomLabel, TELL_NOW } from "./exercise-core.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const SIM = ["simulated", "sensors"];
@@ -38,6 +40,8 @@ function card(m, today, alerts, openings) {
     const live = openNow(op);
     flags.push(`<li class="${live ? "gf-act" : ""}">${live ? "Has their own data open now" : "Opened their own data"} · ${hhmm(op.at)}${op.closedAt ? `–${hhmm(op.closedAt)}` : ""} · ${reasonLabel(op.reason)}</li>`);
   }
+  const ex = exerciseFlags(m.id, today);
+  flags.push(`<li class="${ex.reported.some((s) => TELL_NOW.includes(s)) ? "gf-act" : ex.reported.length ? "gf-watch" : ""}"><span>Exercise today:</span> <strong>${ex.done} of ${ex.total} sessions</strong>${ex.reported.length ? ` <span class="gf-sep">·</span> <span>After a session:</span> ${ex.reported.map((s) => `<span class="gf-tag">${symptomLabel(s)}</span>`).join(" ")}` : ""}${ex.faults ? ` <span class="gf-sep">·</span> <span>${ex.faults} ${ex.faults === 1 ? "machine problem reported" : "machine problems reported"}</span>` : ""}</li>`);
   const night = log[today]?.sleepHours;
   return `<li><button type="button" class="gf-card" data-open="${esc(m.id)}">
     <span class="gf-pic">${avatarHtml(m, "gf-av")}</span>

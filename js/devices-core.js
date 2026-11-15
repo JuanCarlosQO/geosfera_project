@@ -644,7 +644,8 @@ export const SOURCES = {
   sensors: "Live sensors (simulated)",
   simulated: "Actiwatch (simulated)",
   marks: "Your marks (estimated)",
-  centrepoint: "ActiGraph CentrePoint"
+  centrepoint: "ActiGraph CentrePoint",
+  exercise: "Exercise log"
 };
 
 /**

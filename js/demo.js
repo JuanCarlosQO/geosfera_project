@@ -7,6 +7,7 @@ import { buildDemo, DEMO_KEY, isDemoId, DEMO_CREW } from "./demo-core.js";
 import { getCrew, saveCrew, writeLog, deleteMember } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
 import { FAMILY_KEY } from "./family-core.js";
+import { EXERCISE_KEY, cleanStore as cleanExercise } from "./exercise-core.js";
 
 const MISSION_KEY = "geosfera.mission";
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
@@ -24,6 +25,8 @@ export function loadDemo(now = new Date()) {
   write(MEDS_KEY, d.meds);
   write(MISSION_KEY, d.mission);
   write(FAMILY_KEY, { ...read(FAMILY_KEY, {}), ...d.family });
+  const ex = cleanExercise(read(EXERCISE_KEY, {}));
+  write(EXERCISE_KEY, { plans: { ...ex.plans, ...d.exercise.plans }, log: [...ex.log, ...d.exercise.log], faults: [...ex.faults, ...d.exercise.faults] });
   write(DEMO_KEY, { ...d.marker, doses: d.meds.doses.map((x) => x.id), supplementDays: Object.keys(d.meds.supplements), missionStart: d.mission.start });
   return true;
 }
@@ -60,6 +63,12 @@ export function removeDemo() {
   if (marker.missionStart && read(MISSION_KEY, {}).start === marker.missionStart) drop(MISSION_KEY);
   const fam = read(FAMILY_KEY, null);
   if (fam) { for (const id of Object.keys(fam)) if (isDemoId(id)) delete fam[id]; write(FAMILY_KEY, fam); }
+  const ex = read(EXERCISE_KEY, null);
+  if (ex) {
+    const c = cleanExercise(ex);
+    for (const id of Object.keys(c.plans)) if (isDemoId(id)) delete c.plans[id];
+    write(EXERCISE_KEY, { plans: c.plans, log: c.log.filter((e) => !isDemoId(e.member)), faults: c.faults.filter((f) => !isDemoId(f.member)) });
+  }
   drop(DEMO_KEY);
 }
 
