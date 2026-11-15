@@ -507,5 +507,5 @@ The team researched in an AI notebook (NotebookLM) with the documents below. Eac
 
 ### Crew avatars (15 Nov 2026)
 
-Seven full-body avatars (`assets/avatars/f1`–`f3`, `m1`–`m4`) were generated with AI by a team member from prompts Claude wrote, white background removed with the app's own code. They are illustrations of fictional people, not real astronauts. **They appear only on the profile screen**, where a crew member is chosen (the round picture is the head of the same file, and "✎ Avatar" opens the full-body choice). Inside the app every crew member is shown by initials and the health screens keep the AI-generated body picture (team decision, 15 Nov 2026).
+Seven full-body avatars (`assets/avatars/f1`–`f3`, `m1`–`m4`) were generated with AI by a team member from prompts Claude wrote, white background removed with the app's own code. They are illustrations of fictional people, not real astronauts. **They appear only on the profile screen**, where a crew member is chosen (the round picture is the head of the same file, and "✎ Avatar" opens the full-body choice). Inside the app every crew member is shown by initials and the health screens keep the AI-generated body picture (team decision, 15 Nov 2026). Choosing a woman's or a man's avatar also sets which body picture (woman's or man's) the health screens show for that crew member.
 

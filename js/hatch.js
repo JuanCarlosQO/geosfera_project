@@ -458,7 +458,11 @@ export class Hatch {
     if (btn.dataset.avatar !== undefined) {
       const crew = getCrew();
       const m = crew.members.find((x) => x.id === btn.dataset.for);
-      if (m) { if (btn.dataset.avatar) m.avatar = btn.dataset.avatar; else delete m.avatar; saveCrew(crew); this.members = crew.members; }
+      if (m) {
+        // a woman's or a man's avatar also sets the body picture shown inside the app
+        if (btn.dataset.avatar) { m.avatar = btn.dataset.avatar; m.body = AVATARS.find((a) => a.id === btn.dataset.avatar)?.body ?? m.body; } else delete m.avatar;
+        saveCrew(crew); this.members = crew.members;
+      }
       this.goTo("who");
       return;
     }
