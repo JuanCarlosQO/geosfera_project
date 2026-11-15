@@ -193,6 +193,15 @@ export class Hatch {
     this.bolts = [...this.screen.querySelectorAll(".bolt")];
     this.canBiometric = await biometricReady();
 
+    // a digit counts the moment the finger touches it (no wait for the click that follows);
+    // the click is then ignored, while a keyboard's Enter or Space still types through click
+    this.screen.addEventListener("pointerdown", (e) => {
+      const k = e.target.closest(".key");
+      if (!k || k.disabled || e.button > 0) return;
+      e.preventDefault(); // no text selection, no focus ring flash, no double-tap zoom
+      this.pointerAt = Date.now();
+      this.press(Number(k.dataset.key));
+    });
     this.screen.addEventListener("click", (e) => this.onClick(e));
     this.screen.addEventListener("keydown", (e) => this.onKey(e));
 
@@ -276,8 +285,9 @@ export class Hatch {
     this.digits.push(n);
     this.drawBolts();
     const key = this.keys[n];
+    clearTimeout(key._litTimer);
     key.classList.add("lit");
-    setTimeout(() => key.classList.remove("lit"), 240);
+    key._litTimer = setTimeout(() => key.classList.remove("lit"), 180);
     if (this.digits.length === core.DIGITS) {
       const code = this.digits.join("");
       setTimeout(() => this.submit(code), 240);
@@ -339,7 +349,7 @@ export class Hatch {
   async onClick(e) {
     const btn = e.target.closest("button");
     if (!btn) return;
-    if (btn.dataset.key !== undefined) { this.press(Number(btn.dataset.key)); return; }
+    if (btn.dataset.key !== undefined) { if (Date.now() - (this.pointerAt ?? 0) > 700) this.press(Number(btn.dataset.key)); return; }
 
     switch (btn.dataset.do) {
       case "forgot":
