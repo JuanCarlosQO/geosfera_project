@@ -14,10 +14,10 @@ const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I
 
 export function newStationId(rand = (n) => globalThis.crypto.getRandomValues(new Uint8Array(n))) {
   const b = rand(6);
-  return `GSF-${Array.from(b, (x) => ALPHABET[x % ALPHABET.length]).join("")}`;
+  return `ERG-${Array.from(b, (x) => ALPHABET[x % ALPHABET.length]).join("")}`;
 }
 
-export const validStationId = (id) => /^GSF-[A-HJ-NP-Z2-9]{6}$/.test(String(id ?? "").trim().toUpperCase());
+export const validStationId = (id) => /^(ERG|GSF)-[A-HJ-NP-Z2-9]{6}$/.test(String(id ?? "").trim().toUpperCase());
 export const normaliseId = (id) => String(id ?? "").trim().toUpperCase();
 export const validCode = (code) => typeof code === "string" && code.trim().length >= 8;
 

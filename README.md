@@ -33,9 +33,10 @@ The build plan, with every task and its status, is public in [docs/PLAN.md](docs
 Records appear on every linked device and browser. Each device keeps working offline and syncs when it can. The data is encrypted on the device with the station code, so the server only stores ciphertext.
 
 1. Deploy the repository on Vercel.
-2. In the Vercel project: **Storage → Marketplace → Upstash Redis → Create** and connect it to the project (the free plan is enough). Vercel adds the database URL and token as environment variables; redeploy.
-3. In the app, tap **Sync** (top right) → **New station**, choose a station code (8+ characters) and note the station ID.
-4. On every other device: **Sync → Join a station** with that ID and code.
+2. Create the database on **Supabase**: in the Vercel project **Storage → Create Database → Supabase** (or create a project at supabase.com and add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Vercel → Settings → Environment Variables).
+3. In Supabase → **SQL Editor**, paste and run [`supabase/schema.sql`](supabase/schema.sql), then **Redeploy** in Vercel.
+4. In the app, tap **Sync** (top right) → **New station**, choose a station code (8+ characters) and note the station ID.
+5. On every other device: **Sync → Join a station** with that ID and code.
 
 `npm run dev` runs the app with an in-memory sync server for testing.
 

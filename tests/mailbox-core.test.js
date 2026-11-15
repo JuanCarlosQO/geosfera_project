@@ -13,7 +13,7 @@ const msg = (text) => makeMessage({ to: "Valentina Reyes", from: "Camila", rel: 
 describe("family mailbox", () => {
   it("makes a mailbox the sync server accepts", () => {
     assert.ok(B.validMailbox(box));
-    assert.match(box.id, /^GSF-[A-HJ-NP-Z2-9]{6}$/);
+    assert.match(box.id, /^ERG-[A-HJ-NP-Z2-9]{6}$/);
     assert.match(box.token, /^[0-9a-f]{64}$/);
     assert.equal(atob(box.key).length, 32);
     assert.ok(!B.validMailbox({ ...box, token: "short" }) && !B.validMailbox(null));

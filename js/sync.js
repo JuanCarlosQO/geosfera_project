@@ -101,7 +101,7 @@ function soon() { clearTimeout(timer); timer = setTimeout(syncNow, 1500); }
 export async function link({ mode, stationId, code }) {
   if (!Y.validCode(code)) return { ok: false, why: "The station code needs at least 8 characters." };
   let id = mode === "create" ? Y.newStationId() : Y.normaliseId(stationId);
-  if (!Y.validStationId(id)) return { ok: false, why: "Station IDs look like GSF-7K2QXM." };
+  if (!Y.validStationId(id)) return { ok: false, why: "Station IDs look like ERG-7K2QXM." };
   setState({ status: "syncing", message: "Linking…" });
   try {
     for (let tries = 0; tries < 3; tries += 1) {
@@ -153,7 +153,7 @@ export function sheetHtml() {
       <div class="mc-head"><h2 id="sy-h">Station sync</h2><button type="button" class="round-btn" data-sync="close" aria-label="Close">✕</button></div>
       <p class="sy-status" data-ref="sy-status">${state.message}</p>
       <div class="sy-id"><span class="eyebrow">Station ID</span><strong>${cfg.stationId}</strong><button type="button" class="cta" data-sync="copy">Copy</button></div>
-      <p class="fine">On another device or browser: open Geosfera, tap the sync button, choose “Join a station” and type this ID and your station code. Data is encrypted on the device with that code; the server cannot read it.</p>
+      <p class="fine">On another device or browser: open Ergosphere, tap the sync button, choose “Join a station” and type this ID and your station code. Data is encrypted on the device with that code; the server cannot read it.</p>
       <div class="data-btns"><button type="button" class="cta" data-sync="now">Sync now</button><button type="button" class="cta" data-sync="unlink">Unlink this device</button></div>
     </div></div>`;
   }
@@ -167,7 +167,7 @@ export function sheetHtml() {
     </form>
     <form class="sy-form" data-mode="join" novalidate>
       <h3>Join a station <small>other devices</small></h3>
-      <label class="cf-field"><span>Station ID</span><input name="station" type="text" autocomplete="off" placeholder="GSF-7K2QXM" required></label>
+      <label class="cf-field"><span>Station ID</span><input name="station" type="text" autocomplete="off" placeholder="ERG-7K2QXM" required></label>
       <label class="cf-field"><span>Station code</span><input name="code" type="password" autocomplete="current-password" required></label>
       <button type="submit" class="cta-wide cf-add">Join station</button>
     </form>
