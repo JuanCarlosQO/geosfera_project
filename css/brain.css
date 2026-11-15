@@ -85,3 +85,6 @@
 /* the pins must not cover the model: drags reach the canvas between them */
 .bp-pins { pointer-events: none; }
 .bp-pin { pointer-events: auto; }
+/* longer captions (Spanish) must not run into each other: the tag keeps the left 62 % */
+.brain-photo .brain-tag { max-width: 62%; line-height: 1.35; }
+.brain-photo .brain-hint { max-width: 32%; text-align: right; line-height: 1.35; }

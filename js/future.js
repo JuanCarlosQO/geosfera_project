@@ -7,11 +7,17 @@
 import * as F from "./future-core.js";
 import { FUTURE_FACTS, MISSIONS } from "./data/future.js";
 import { STATUS } from "./data/body-systems.js";
-import { figureSvg } from "./anatomy.js";
+import { photoFigure, PHOTO, PHOTO_NOTE } from "./anatomy.js";
 import { dateKey } from "./log-core.js";
 import { readLog } from "./store.js";
 import { MEDS_KEY } from "./meds-core.js";
 import { fold } from "./fold.js";
+
+// Skeleton pictures by bone density, generated with AI from the body picture (same pose and
+// framing), one per point of NASA's average without countermeasures (worst case, 1.5 % a
+// month): 0, 6, 18 and 36 months. Only the files that exist are used; until then the body
+// picture stands alone. The picture between two points is a cross-fade of the two.
+export const BONE_STAGES = [0, 6, 18, 36].map((months) => ({ months, src: `assets/bone-${String(months).padStart(2, "0")}.webp` }));
 
 const link = (f) => `<a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
 const src = (f) => `<small class="src">“${f.quote}” ${link(f)}</small>`;
@@ -59,8 +65,8 @@ export function mountFuture(host) {
 
     <div class="fb-main">
       <div class="fb-body">
-        <div class="fb-fig" data-ref="fig" aria-hidden="true">${figureSvg()}</div>
-        <p class="fine">Illustration: the skeleton fades with the projected loss.</p>
+        <div class="fb-fig fb-photo" data-ref="fig" aria-hidden="true">${photoFigure()}<div class="fb-bones" data-ref="bones"></div></div>
+        <p class="fine" data-ref="fig-note">${PHOTO_NOTE}</p>
       </div>
       <div class="fb-side">
         <div class="fb-read" data-ref="read" aria-live="polite"></div>
@@ -121,10 +127,35 @@ export function mountFuture(host) {
     // the skeleton fades from full to faint as the worst case drops from 100 % to 46 %
     const fade = 0.2 + 0.8 * ((b.worst - F.remaining(F.MAX_MONTHS, F.RATE.high)) / (100 - F.remaining(F.MAX_MONTHS, F.RATE.high)));
     $("fig").style.setProperty("--bone", fade.toFixed(2));
+    paintBones();
     root.querySelectorAll("[data-months]").forEach((x) => x.setAttribute("aria-pressed", String(Number(x.dataset.months) === months)));
     const mission = MISSIONS.find((m) => m.months === months);
     $("note").textContent = mission ? mission.note : "";
   }
+
+  // bone pictures: keep the ones that load, cross-fade between the two around `months`
+  let bones = [];
+  function paintBones() {
+    if (!bones.length) return;
+    const after = bones.find((x) => x.months >= months) ?? bones.at(-1);
+    const before = [...bones].reverse().find((x) => x.months <= months) ?? bones[0];
+    const t = after === before ? 1 : (months - before.months) / (after.months - before.months);
+    for (const x of bones) x.img.style.opacity = x === after ? t.toFixed(2) : x === before ? (1 - t).toFixed(2) : "0";
+    if (after === before) after.img.style.opacity = "1";
+  }
+  Promise.all(BONE_STAGES.map((st) => new Promise((done) => {
+    const img = Object.assign(new Image(), { alt: "", decoding: "async", width: PHOTO.w, height: PHOTO.h, className: "fb-bone" });
+    img.onload = () => done({ ...st, img });
+    img.onerror = () => done(null);
+    img.src = st.src;
+  }))).then((list) => {
+    bones = list.filter(Boolean);
+    if (!bones.length || !root.isConnected) return;
+    $("bones").append(...bones.map((x) => x.img));
+    $("fig").classList.add("has-bones");
+    $("fig-note").textContent = "Skeleton pictures generated with AI from NASA's average loss without countermeasures; porosity drawn for illustration, not a scan.";
+    paintBones();
+  });
 
   $("range").addEventListener("input", (e) => { months = Number(e.target.value); paint(); });
   root.addEventListener("click", (e) => {

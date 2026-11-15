@@ -8,7 +8,8 @@ import { TASKS, WORKLOAD, LEVELS, DUTY_FACTS } from "./data/duty.js";
 import { KIT, REVIEWER } from "./data/med-kit.js";
 import { MEDS_KEY, cleanStore, dayOf, spanWords } from "./meds-core.js";
 import { fieldByKey } from "./log-core.js";
-import { readLog } from "./store.js";
+import { readLog, current } from "./store.js";
+import * as F from "./family-core.js";
 import { STATUS } from "./data/body-systems.js";
 
 const TONE = {
@@ -23,6 +24,9 @@ const HEAD = {
 };
 
 const read = (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
+const readFocus = () => F.cleanFocus(read(F.FOCUS_KEY));
+const writeFocus = (f) => { try { localStorage.setItem(F.FOCUS_KEY, JSON.stringify(f)); } catch { /* storage blocked */ } document.dispatchEvent(new CustomEvent("ergosphere:focus")); };
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const link = (f) => `<a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
 const src = (f) => `<small class="src">“${f.quote}” ${link(f)}</small>`;
 
@@ -98,6 +102,7 @@ export function mountDuty(host) {
 
     <div class="duty-actions">
       <button type="button" class="cta main" data-duty-act="save">Save this check</button>
+      <div data-ref="focus" aria-live="polite"></div>
       <p class="step-msg" data-ref="msg" role="status" aria-live="polite"></p>
     </div>
 
@@ -134,7 +139,28 @@ export function mountDuty(host) {
     saved = D.saveCheck(saved, { task: task(), result });
     try { localStorage.setItem(D.DUTY_KEY, JSON.stringify(saved)); $("msg").textContent = "Check saved."; } catch { $("msg").textContent = "This browser blocked saving."; }
     $("history").innerHTML = historyHtml(saved);
+    // a critical task is ahead: hold family notices until it is over (app rule)
+    const me = current();
+    if (me && task()) {
+      writeFocus(F.startFocus(readFocus(), me.id, task()));
+      paintFocus();
+    }
   });
+  root.addEventListener("click", (e) => {
+    if (!e.target.closest('[data-duty-act="done"]')) return;
+    const me = current();
+    if (me) writeFocus(F.endFocus(readFocus(), me.id));
+    paintFocus();
+  });
+
+  function paintFocus() {
+    const me = current();
+    const f = me ? F.focusNow(readFocus(), me.id) : null;
+    const until = f ? `${f.until.slice(11, 16)} UTC` : "";
+    $("focus").innerHTML = f ? `<div class="duty-focus" role="status"><p><strong>☾ Family notices on hold until ${until}</strong> (${esc(TASKS.find((t) => t.id === f.task)?.label ?? "critical task")}). Messages from home still arrive and stay sealed; you are told about them after the task.</p>
+      <button type="button" class="cta" data-duty-act="done">I'm done with the task</button></div>` : "";
+  }
+  paintFocus();
 
   paint();
 }

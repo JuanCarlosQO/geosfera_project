@@ -2,7 +2,7 @@
 
 Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, challenge *Create Health Monitoring Software for Astronauts on Space Missions* (resources: https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/?tab=resources). The challenge started at 09:00 Colombia time on 14 November 2026; every file in this repository was written after that. Submission closes Sunday 15 November, 11:59 p.m. local event time.
 
-- App UI, submission form and demo video: **English**.
+- App UI, submission form and demo video: **English**. The app also has a Spanish look (ES/EN button in the top bar): `js/i18n.js` swaps text on screen from the dictionary `js/data/es.js`; quoted sources are never translated. New screen text should get a Spanish entry too (anything missing simply stays in English).
 - The developer, Juan Carlos, speaks Spanish: **talk to him in Spanish**.
 - `main` is the published branch (GitHub Pages). Juan Carlos authorised pushing straight to `main`.
 
@@ -44,8 +44,15 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/data/hazards.js` | NASA's five hazards word for word, linked to body systems (app choice) |
 | `js/data/body-systems.js` | App grouping of the risks into seven body systems, the regions each lights, verified facts, status words and shapes |
 | `css/meds.css` | Module 8 styles |
-| `js/meds-core.js` | Medication rules, tested: symptoms to possible complaints, label interval and daily limit, kit stock and dates, source-warned combinations, dose record, "Did it work?", CSV; Dose Tracker ideas: weekly question (`weeklyDue`, `whenToAt`), own and every-day medications (`addOwn`, `medList`, `scheduledToday`), side-effect strength (`SEVERITY`) |
-| `js/meds.js` | Module 8 screen: body figure for "what for", kit options as 3D models, how many, follow-up with kit-list side effects, patterns to raise, vitamin D, log and CSV |
+| `js/meds-core.js` | Medication rules, tested: symptoms to possible complaints, label interval and daily limit, kit stock and dates, source-warned combinations, dose record, "Did it work?", CSV; readings stored next to a dose with no conclusion (`logContext`), warning preview (`patternsAfter`), export queue (`queued`, `markExported`); Dose Tracker ideas: weekly question (`weeklyDue`, `whenToAt`), own and every-day medications (`addOwn`, `medList`, `scheduledToday`), side-effect strength (`SEVERITY`) |
+| `js/meds.js` | Module 8 screen: body figure for "what for", kit options as 3D models, how many, follow-up with kit-list side effects, patterns to raise, vitamin D, log and CSV; quick log (one typed or spoken sentence, confirmed with a tap), "Logged with this entry", FHIR export |
+| `css/cupola.css` | Today's Cupola: windows as buttons (lift, press, fly-in, breathing "Act now"), hub arcs, radar sweep |
+| `js/i18n-core.js` | Spanish look rules, tested: numbers taken out as `#`, template rules for names and dates, per-part " · " lines, dictionary check |
+| `js/i18n.js` | Spanish look on the page: walks text and labels, follows new content with a MutationObserver, skips quotes (`small.src`), ES/EN button |
+| `js/data/es.js` | Spanish dictionary and templates (machine-assisted, to be read by a Spanish speaker) |
+| `js/quicklog-core.js` | Quick-log sentence reader, tested: medication name, count, reason; never picks a medication from a symptom, never converts mg to tablets |
+| `js/fhir-core.js` | Medication log as HL7 FHIR R4 `MedicationStatement` bundle, tested: text only, no codes, marked simulated |
+| `js/data/med-flow.js` | Quoted facts for the quick log and the export (Dose Tracker abstract, HL7 FHIR R4) |
 | `js/data/supplements.js` | Vitamin D in the mission plan, with NASA quotes |
 | `js/data/med-zones.js` | The body zones (where on the figure, which regions light, which symptoms each asks about); navigation only, an app choice |
 | `js/pill3d.js` | CSS-only 3D medication models (stacked layers) that turn and can be dragged; illustrations of the dose form, not the real products |
@@ -81,6 +88,8 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `js/feed.js` | The one telemetry feed for the whole app: state, tick, steady alerts and events; `subscribe()`, `toggle()`, `setSleeping()`. Starts when Live or sleep mode opens and keeps running on the other screens |
 | `js/alarm.js`, `css/alarm.css` | Alerts on every screen: top bar, red frame and repeating sound for "Act now" (Web Audio, no files), Silence, and sleep mode with its wake alarm and escalation to the crew |
 | `js/brain-gl.js` | Day look's realistic 3D brain: a hand-written WebGL viewer (no library) for `assets/brain3d.bin` + `assets/brain3d-tex.webp` (AI-generated model): drag to turn, sway, zones tinted by status, pins that follow the model. `readMesh` and `paintZones` are tested. Falls back to the still picture `assets/brain-side.webp` |
+| `css/dark.css` | The dark look: the same app as the light one with another palette. `<html>` always carries `data-theme="day"` (structure) and `data-mode="light"` or `"dark"` (colours). Colours in `css/clinic.css` are tokens (`--hull`, `--tint`, `--soft`...) so a new screen works in both looks if it uses them instead of fixed colours |
+| `js/icons.js` | The app's own outline icons and `tile()` (icon on a rounded square), used beside readings and signals |
 | `js/fold.js`, `css/fold.css` | Less text on phones: `fold()` blocks, `tabsHtml()` tabs, and `tidy()` (runs after every render: intro and closing note into "About this screen", every `small.src` into a "Source" block). New screens get this for free: keep using `.lede`, `.rule-note` and `small.src` |
 | `js/data/support.js` | NASA behavioral-health quotes, reasons, alert levels and comfort settings |
 | `js/family-core.js`, `js/family.js` | Family channel, tested: message inside a link (`#family/write` → `#family/in/<data>`), sealed inbox per crew member (`#family`), open / set aside / delete; kept on the device (sync `LOCAL_ONLY`), text only, escaped |

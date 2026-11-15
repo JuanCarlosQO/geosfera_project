@@ -8,6 +8,7 @@ import { WINDOWS, series, EXERCISE_GOAL_MIN } from "./today-core.js";
 import { STATUS } from "./data/body-systems.js";
 import { judgeReading, fieldByKey } from "./log-core.js";
 import { areaChart, completion, gaugeArc, readingList } from "./clinic-core.js";
+import { tile } from "./icons.js";
 
 const ICONS = {
   heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/>',
@@ -107,7 +108,7 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
         </div>
         <div class="cl-list">
           <h2 id="cl-comp-h">${isToday ? "Today's readings" : "Readings on this day"}</h2>
-          <ul>${rows.map((r) => `<li><span>${r.label}</span><span class="cl-val tone-${STATUS[r.status].tone}"><strong>${r.value}</strong> ${r.unit}<span class="cl-shape" title="${STATUS[r.status].word}" aria-label="${STATUS[r.status].word}">${STATUS[r.status].shape}</span></span></li>`).join("")}</ul>
+          <ul>${rows.map((r) => `<li><span class="cl-row-name">${tile(r.key, 18)}${r.label}</span><span class="cl-val tone-${STATUS[r.status].tone}"><strong>${r.value}</strong> ${r.unit}<span class="cl-shape" title="${STATUS[r.status].word}" aria-label="${STATUS[r.status].word}">${STATUS[r.status].shape}</span></span></li>`).join("")}</ul>
         </div>
       </section>`;
   if (part === "charts") return `<div class="clinic clinic-charts"><div class="cl-side">${charts}</div></div>`;

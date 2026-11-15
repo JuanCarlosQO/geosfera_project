@@ -32,7 +32,7 @@ export const familyWaiting = (memberId = current()?.id) => (memberId ? F.announc
 let draft = null; // a reply being started from an opened message
 
 function head(m) {
-  return `<p class="fm-from"><strong>${esc(m.from)}</strong> · ${esc(m.rel)} <span class="fm-kind">${esc(F.kindLabel(m.kind))}</span>${m.photo ? ` <span class="fm-kind">photo</span>` : ""}${m.audio ? ` <span class="fm-kind">voice note</span>` : ""}${m.simulated ? ` <span class="fm-sim mono">SIMULATED</span>` : ""}</p>
+  return `<p class="fm-from"><strong>${esc(m.from)}</strong> · ${esc(m.rel)} <span class="fm-kind">${esc(F.kindLabel(m.kind))}</span>${F.mediaWords(m).map((w) => ` <span class="fm-kind">${w}</span>`).join("")}${m.simulated ? ` <span class="fm-sim mono">SIMULATED</span>` : ""}</p>
     <p class="fine">Sent ${day(m.at)} · arrived ${F.ago(m.arrivedAt)}</p>`;
 }
 
@@ -47,6 +47,8 @@ function inboxHtml(me, box, notice) {
     <h1 id="fm-h" tabindex="-1">Messages from home</h1>
     <p class="lede">They wait here sealed, ${first}. Open one when you want to, or not at all: nothing is ever marked overdue, and nobody is told whether you read it.</p>
     ${notice ? `<p class="fm-notice" role="status">${notice}</p>` : ""}
+    ${(() => { let f = null; try { f = F.focusNow(F.cleanFocus(JSON.parse(localStorage.getItem(F.FOCUS_KEY))), me.id); } catch { /* none */ }
+      return f ? `<p class="fm-notice" role="status">☾ Notices are on hold until ${`${f.until.slice(11, 16)} UTC`}, after your Fit for duty check for a critical task. Messages still arrive here, sealed. <a href="#duty">End the hold</a></p>` : ""; })()}
     ${F.homesick(box, me.id) ? `<div class="fm-notice fm-care" role="status"><p><strong>The last two messages left you more homesick.</strong> That happens, and it is worth telling someone. You can also pause this channel for a while.</p><div class="fm-acts"><a class="cta main" href="#mind">I'd like to talk to someone</a><button type="button" class="cta" data-fm="pause">Pause the channel</button></div></div>` : ""}
 
     ${paused ? `<section class="data-card fm-paused"><h2>The channel is paused</h2>
@@ -58,7 +60,7 @@ function inboxHtml(me, box, notice) {
         <span class="fm-env" aria-hidden="true">✉</span><div class="fm-body">${head(m)}
         <div class="fm-acts"><button type="button" class="cta main" data-fm="open" data-id="${m.id}">Open it</button><button type="button" class="textlink" data-fm="aside" data-id="${m.id}">Set aside for later</button></div></div></li>`).join("")}</ul>`
       : `<p class="fine">Nothing waiting. That is fine too.</p>`}
-      <p class="fine fm-pause-line">Need quiet, or have a critical task ahead? <button type="button" class="textlink" data-fm="pause">Pause the channel</button>: messages are kept, sealed, and nothing is announced.</p>
+      <p class="fine fm-pause-line">Need quiet? <button type="button" class="textlink" data-fm="pause">Pause the channel</button>: messages are kept, sealed, and nothing is announced. Before a spacewalk or a docking, the Fit for duty check holds the notices by itself until the task is over.</p>
     </section>`}
 
     ${open.length ? `<section class="data-card" aria-labelledby="fm-o"><h2 id="fm-o">Opened</h2>
@@ -66,6 +68,7 @@ function inboxHtml(me, box, notice) {
         ${m.text ? `<p class="fm-text">${esc(m.text)}</p>` : ""}
         ${m.photo ? `<img class="fm-photo" src="${esc(m.photo)}" alt="Photo sent by ${esc(m.from)}">` : ""}
         ${m.audio ? `<audio class="fm-audio" controls preload="metadata" src="${esc(m.audio)}"></audio>` : ""}
+        ${m.video ? `<video class="fm-video" controls playsinline preload="metadata" src="${esc(m.video)}" aria-label="Video sent by ${esc(m.from)}"></video>` : ""}
         <div class="fm-feel" role="group" aria-label="How did this message leave you?"><span>How did it leave you?</span>${F.FEELS.map((f) => `<button type="button" class="chip-btn" data-fm="feel" data-feel="${f.id}" data-id="${m.id}" aria-pressed="${m.feel === f.id}">${f.label}</button>`).join("")}</div>
         <div class="fm-acts"><button type="button" class="cta" data-fm="reply" data-id="${m.id}">Write back</button><button type="button" class="textlink" data-fm="reseal" data-id="${m.id}">Seal it again</button><button type="button" class="textlink danger" data-fm="delete" data-id="${m.id}">Delete</button></div></div></li>`).join("")}</ul></section>` : ""}
 
@@ -83,11 +86,13 @@ function inboxHtml(me, box, notice) {
         <li>Your family opens your link on their own phone and writes. They type no name: the link knows it is for you.</li>
         <li>When they tap Send, the message goes to your mailbox on the mission's server, encrypted, and this app picks it up the next time it is open.</li>
         <li>You get a notice on whatever screen you are on. The message stays sealed until you choose to open it.</li>
+        <li>During a critical task (after a Fit for duty check for a spacewalk, a docking or another critical task) the notice waits until the task is over, for up to ${F.FOCUS_HOURS} hours (app rule).</li>
       </ol>
+      <p class="fine">Store and forward, not a call: on a long mission a message cannot arrive live. “${SUPPORT_FACTS.delay.quote}” <a href="${SUPPORT_FACTS.delay.url}" target="_blank" rel="noopener">${SUPPORT_FACTS.delay.source}</a>. The family channel is kept apart from the medical record: the family's page has only the message form and never sees readings, medications or symptoms, and the mailbox has its own keys.</p>
       <p class="fine">Where this copy of the app has no server (a plain web host), the family's page gives them a link to send instead, and a message written in this same browser arrives directly. A message file can also be opened by hand: <button type="button" class="textlink" data-fm="import">Open a message file</button><input type="file" accept=".json,application/json" data-ref="file" hidden></p>
       <p class="fine">Anyone holding your link can write to you, so share it with family only. In a mission the message would travel with Mission Control's uplink and its delay. For serious or urgent news, families go through the mission's support team, not this channel (app rule).</p>
       <p class="fine">“${SUPPORT_FACTS.familyContact.quote}” “${SUPPORT_FACTS.carePackages.quote}” <a href="${SUPPORT_FACTS.familyContact.url}" target="_blank" rel="noopener">${SUPPORT_FACTS.familyContact.source}</a></p>`, { cls: "block" })}
-    <p class="fine rule-note">The family channel is an app idea, not a NASA system. Messages are text, a photo or a short voice note; they stay on this device and are not sent to the other crew devices. It does not replace “I'd like to talk to someone” or the SOS button. <a href="#mind">Back to Mind &amp; support</a></p>
+    <p class="fine rule-note">The family channel is an app idea, not a NASA system. Messages are text, a photo, a short voice note or a few seconds of video; they stay on this device and are not sent to the other crew devices. It does not replace “I'd like to talk to someone” or the SOS button. <a href="#mind">Back to Mind &amp; support</a></p>
   </section>`;
 }
 
@@ -116,6 +121,8 @@ function writeHtml(d = {}, invite = null) {
       <div class="fm-attach">
         <div><button type="button" class="cta" data-fm="pick-photo">Add a photo</button><input type="file" accept="image/*" data-ref="photo" hidden><span class="fine" data-ref="photo-note"></span><img class="fm-photo" data-ref="photo-prev" alt="Your photo" hidden></div>
         <div data-ref="voice-box"><button type="button" class="cta" data-fm="record">Record a voice note</button><span class="fine" data-ref="voice-note">Up to ${F.MAX_VOICE_S} seconds.</span><audio class="fm-audio" controls data-ref="voice-prev" hidden></audio></div>
+        <div data-ref="video-box"><button type="button" class="cta" data-fm="record-video">Record a short video</button><span class="fine" data-ref="video-note">Up to ${F.MAX_VIDEO_S} seconds, made small to travel.</span>
+          <video class="fm-video" data-ref="video-live" muted playsinline hidden></video><video class="fm-video" controls playsinline data-ref="video-prev" hidden></video></div>
       </div>
       <button type="submit" class="cta main fm-send">${invite ? "Send" : "Create the message"}</button>
       <p class="step-msg" data-ref="msg" role="status" aria-live="polite"></p>
@@ -123,23 +130,23 @@ function writeHtml(d = {}, invite = null) {
     <div data-ref="out" aria-live="polite"></div>
     <p class="fine rule-note">${invite
       ? `Your message is encrypted on this phone before it leaves, and only ${who}'s device can open it. Ergosphere keeps no copy once it is delivered.`
-      : "Nothing you write is uploaded or stored by Ergosphere: the message lives only inside the link, or inside the file you download."} Up to ${F.MAX_TEXT} characters of text, one photo and one voice note of up to ${F.MAX_VOICE_S} seconds. Please keep serious or urgent news for the mission's family support team.</p>
+      : "Nothing you write is uploaded or stored by Ergosphere: the message lives only inside the link, or inside the file you download."} Up to ${F.MAX_TEXT} characters of text, one photo, one voice note of up to ${F.MAX_VOICE_S} seconds and one video of up to ${F.MAX_VIDEO_S} seconds. Please keep serious or urgent news for the mission's family support team.</p>
   </section>`;
 }
 
 const sentHtml = (message, name, how) => `<section class="data-card fm-out fm-sent" aria-labelledby="fm-out-h">
     <p class="fm-sent-mark" aria-hidden="true">✓</p>
     <h2 id="fm-out-h">${how === "here" ? `Delivered to ${esc(name)}` : `Sent to ${esc(name)}`}</h2>
-    <p>${how === "here" ? "It is in their inbox on this device, sealed." : "It is waiting in their mailbox, encrypted. Their app picks it up the next time it is open and tells them a message from home arrived."} They will see <strong>${esc(message.from)}</strong> · ${esc(message.rel)} · ${esc(F.kindLabel(message.kind))}${message.photo ? " · photo" : ""}${message.audio ? " · voice note" : ""}, and open it when they choose.</p>
+    <p>${how === "here" ? "It is in their inbox on this device, sealed." : "It is waiting in their mailbox, encrypted. Their app picks it up the next time it is open and tells them a message from home arrived."} They will see <strong>${esc(message.from)}</strong> · ${esc(message.rel)} · ${esc(F.kindLabel(message.kind))}${F.mediaWords(message).map((w) => ` · ${w}`).join("")}, and open it when they choose.</p>
     <div class="fm-acts"><button type="button" class="cta" data-fm="another">Write another</button></div>
   </section>`;
 
 function fileOutHtml(message, name) {
   return `<section class="data-card fm-out" aria-labelledby="fm-out-h">
     <h2 id="fm-out-h">Your message is ready</h2>
-    <p>It has ${message.photo && message.audio ? "a photo and a voice note" : message.photo ? "a photo" : "a voice note"}, so it travels as a small file: <strong>${esc(name)}</strong>. Send that file the way the mission's family support team tells you.</p>
+    <p>It has ${F.mediaWords(message).length > 1 ? "attachments" : F.mediaWords(message)[0] === "photo" ? "a photo" : F.mediaWords(message)[0] === "video" ? "a video" : "a voice note"}, so it travels as a small file: <strong>${esc(name)}</strong>. Send that file the way the mission's family support team tells you.</p>
     <div class="fm-acts"><a class="cta main" data-ref="dl" download="${esc(name)}">Download the message file</a>${navigator.canShare ? `<button type="button" class="cta" data-fm="share-file">Share…</button>` : ""}</div>
-    <p class="fine">What they see before opening: <strong>${esc(message.from)}</strong> · ${esc(message.rel)} · ${esc(F.kindLabel(message.kind))}${message.photo ? " · photo" : ""}${message.audio ? " · voice note" : ""}.</p>
+    <p class="fine">What they see before opening: <strong>${esc(message.from)}</strong> · ${esc(message.rel)} · ${esc(F.kindLabel(message.kind))}${F.mediaWords(message).map((w) => ` · ${w}`).join("")}.</p>
   </section>`;
 }
 
@@ -177,9 +184,10 @@ function outHtml(message, link, noServer = false) {
 export function mountWrite(host, { invite = null, draft: d = {} } = {}) {
     host.innerHTML = writeHtml(d, invite);
     const root = host.querySelector(".family"), form = root.querySelector("form"), out = root.querySelector('[data-ref="out"]');
-    let link = "", photo = null, audio = null, file = null, rec = null, recTimer = null, starting = false, sending = false;
+    let link = "", photo = null, audio = null, video = null, file = null, rec = null, recTimer = null, starting = false, sending = false;
+    let vrec = null, vTimer = null;
     const $w = (r) => root.querySelector(`[data-ref="${r}"]`);
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") $w("voice-box").hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") { $w("voice-box").hidden = true; $w("video-box").hidden = true; }
     $w("photo").addEventListener("change", async (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
@@ -193,6 +201,35 @@ export function mountWrite(host, { invite = null, draft: d = {} } = {}) {
       const b = e.target.closest("[data-fm]");
       if (!b) return;
       if (b.dataset.fm === "pick-photo") $w("photo").click();
+      if (b.dataset.fm === "record-video") {
+        if (vrec) { vrec.stop(); return; }
+        if (starting) return;
+        starting = true;
+        try {
+          // small and short on purpose: a message must fit the crew member's mailbox (and, on a mission, the uplink)
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 20 }, facingMode: "user" }, audio: true });
+          const live = $w("video-live");
+          live.srcObject = stream; live.hidden = false; live.play().catch(() => {});
+          const type = ["video/webm;codecs=vp8,opus", "video/webm", "video/mp4"].find((t) => MediaRecorder.isTypeSupported?.(t)) ?? "";
+          const chunks = [];
+          vrec = new MediaRecorder(stream, { ...(type ? { mimeType: type } : {}), videoBitsPerSecond: 200000, audioBitsPerSecond: 24000 });
+          vrec.ondataavailable = (ev) => chunks.push(ev.data);
+          vrec.onstop = async () => {
+            clearInterval(vTimer); stream.getTracks().forEach((t) => t.stop());
+            live.srcObject = null; live.hidden = true;
+            const mime = (vrec.mimeType || type || "video/webm").replace(/;\s+/g, ";");
+            const data = await blobToDataUrl(new Blob(chunks, { type: mime })); vrec = null;
+            video = F.cleanVideo(data);
+            b.textContent = video ? "Record it again" : "Record a short video";
+            $w("video-note").textContent = video ? " Video added." : " That video was too big to travel. Try a shorter one.";
+            $w("video-prev").hidden = !video;
+            if (video) $w("video-prev").src = video;
+          };
+          let left = F.MAX_VIDEO_S;
+          vrec.start(); starting = false; b.textContent = `Stop · ${left} s`;
+          vTimer = setInterval(() => { left -= 1; b.textContent = `Stop · ${left} s`; if (left <= 0) vrec?.stop(); }, 1000);
+        } catch { $w("video-note").textContent = " The camera is not available here."; vrec = null; starting = false; $w("video-live").hidden = true; }
+      }
       if (b.dataset.fm === "record") {
         if (rec) { rec.stop(); return; }
         if (starting) return; // the microphone permission is still being asked
@@ -237,7 +274,7 @@ export function mountWrite(host, { invite = null, draft: d = {} } = {}) {
       e.preventDefault();
       if (sending) return;
       const say = root.querySelector('[data-ref="msg"]');
-      const r = F.makeMessage({ to: invite ? invite.name : form.to.value, from: form.from.value, rel: form.rel.value, kind: form.querySelector('input[name="kind"]:checked')?.value, text: form.text.value, photo, audio });
+      const r = F.makeMessage({ to: invite ? invite.name : form.to.value, from: form.from.value, rel: form.rel.value, kind: form.querySelector('input[name="kind"]:checked')?.value, text: form.text.value, photo, audio, video });
       say.textContent = r.ok ? "" : r.why;
       if (!r.ok) { out.innerHTML = ""; return; }
       if (!invite) { byHand(r.message, false); return; }
@@ -254,7 +291,7 @@ export function mountWrite(host, { invite = null, draft: d = {} } = {}) {
       sending = false;
       say.textContent = "";
       if (how === "sent") { form.hidden = true; out.innerHTML = sentHtml(r.message, invite.name, "server"); return; }
-      if (how === "full") { say.textContent = "Their mailbox is full for now. Try again later, or send it without the photo or the voice note."; return; }
+      if (how === "full") { say.textContent = "Their mailbox is full for now. Try again later, or send it without the video, the photo or the voice note."; return; }
       if (how === "error") { say.textContent = "It could not be sent just now. Check the connection and tap Send again."; return; }
       // 3. no server on this host: a link to send by hand
       byHand(r.message, true);

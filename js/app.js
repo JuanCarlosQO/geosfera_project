@@ -16,6 +16,9 @@ import { startSync, mountSyncButton } from "./sync.js";
 import { initFold } from "./fold.js";
 import { mountAlarm } from "./alarm.js";
 import { mountFamilyNotify } from "./family-notify.js";
+import { initI18n } from "./i18n.js";
+
+initI18n(); // English as written, or Spanish from the dictionary (top-bar button)
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -30,11 +33,15 @@ function stampUtc() {
 
 const go = (route) => { location.hash = route; };
 
-// Look: "day" (clinical, the default) or "night" (the original low-orbit look with the Cupola).
+// Look: light or dark. Both are the same app with the same screens; only the colours change
+// (css/dark.css). The structure is always data-theme="day"; data-mode says which palette.
+// The saved value keeps its old names: "day" (light) and "night" (dark).
 const THEME_KEY = "geosfera.theme";
 function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme === "night" ? "night" : "day";
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "night" ? "#05070a" : "#eef2f8");
+  const dark = theme === "night";
+  document.documentElement.dataset.theme = "day";
+  document.documentElement.dataset.mode = dark ? "dark" : "light";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#07080d" : "#eef2f8");
 }
 let savedTheme = null;
 try { savedTheme = localStorage.getItem(THEME_KEY); } catch { /* storage blocked */ }
@@ -95,7 +102,7 @@ mountSyncButton(document.querySelector('[data-action="sync"]'), document.body);
 startSync();
 document.querySelector('[data-action="lock"]').addEventListener("click", closeHatch);
 document.querySelector('[data-action="theme"]').addEventListener("click", () => {
-  const next = document.documentElement.dataset.theme === "night" ? "day" : "night";
+  const next = document.documentElement.dataset.mode === "dark" ? "day" : "night";
   applyTheme(next);
   try { localStorage.setItem(THEME_KEY, next); } catch { /* storage blocked */ }
   render();

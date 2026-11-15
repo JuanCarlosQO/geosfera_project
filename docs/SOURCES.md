@@ -161,6 +161,51 @@ NASA Dose Tracker, ISS Increment 45/46 Science Symposium, July 2015 — https://
 
 **App choices (not NASA rules, pending the pharmacist's review):** the three strength words (Mild "noticed it, carried on", Moderate "it got in the way", Severe "could not work normally"); a severe side effect stays under "Patterns to raise" for 7 days as "talk it over with your crew medical officer"; a dose remembered later is stored at midday of that day and marked "remembered later"; every-day medications of one's own are not asked "Did it work?" and never count as a repeat pattern; up to 12 own medications.
 
+### Quick log, readings logged with a dose, and the flight-surgeon export (15 Nov 2026)
+
+Dose Tracker results: Wotring VE, Smith LK. "Dose Tracker Application for Collecting Medication Use Data from International Space Station Crew." Aerospace Medicine and Human Performance 2020; 91(1):41-45. doi:10.3357/AMHP.5392.2020 — https://pubmed.ncbi.nlm.nih.gov/31852573/. **Read in the abstract only** (PubMed record, 15 Nov 2026); the full paper was not read, so nothing beyond the abstract is claimed.
+
+| Used for | Quote |
+| --- | --- |
+| Why a quick log | "despite user criticisms regarding app usability" |
+| Why a quick log | "improvements in a software-based questionnaire application could result in a robust data collection tool that astronauts find more acceptable" |
+| The study ended early | "Six crewmembers completed flight data collection and five completed ground data collection before NASA's early study discontinuation." |
+| Export for the flight surgeon | "to share data with flight surgeons" |
+
+HL7 FHIR R4, MedicationStatement — https://hl7.org/fhir/R4/medicationstatement.html (read 15 Nov 2026). The export uses its element names (`status`, `medicationCodeableConcept`, `subject`, `effectiveDateTime`, `dateAsserted`, `informationSource`, `reasonCode`, `dosage`, `note`) inside a `Bundle` of type `collection`.
+
+| Used for | Quote |
+| --- | --- |
+| What the export is | "A record of a medication that is being consumed by a patient." |
+| Self-reported entries | "The source of this information can be the patient, significant other (such as a family member or spouse), or a clinician." |
+
+**App choices (not NASA rules):**
+- The quick log reads one typed or spoken sentence for three things only: a medication name from the kit list or the crew member's own list, a count, and what it was for. It never picks a medication from a symptom and never converts milligrams into a number of tablets; a strength that differs from the kit's unit makes the crew member choose the count. Nothing is logged without a confirmation tap.
+- Other names accepted in the sentence (app list, pending the pharmacist's check): "tylenol", "afrin" and "ambien" are the brand names of the FDA labels this module already quotes; "paracetamol" is the international name of acetaminophen; "nasal spray" and "hydrocortisone cream" are the kit entries' own words. A misspelt name within two letters of a listed one is offered as "closest name" for the crew member to confirm. The sentence may also be said in Spanish: the list holds the Spanish spellings of the same names (acetaminofen, ibuprofeno, meclizina, prometazina, oximetazolina, pseudoefedrina, seudoefedrina, melatonina, hidrocortisona, bisacodilo, "spray nasal"), Spanish number and unit words, and Spanish words for each "what for" (app list, same check pending).
+- "Logged with this entry" stores numbers next to a dose (mission day, self-reported sleep of the night before, simulated cabin CO₂) and shows them with the last time the medication was logged. No conclusion is drawn from them: the app does not say what caused a symptom. A dose remembered later gets no sensor reading.
+- If an entry would add a warning to "Patterns to raise", the same warning (same rules, same NASA quotes) is shown before "Log it". The entry is still logged as taken.
+- Voice entry uses the browser's own speech recognition (Web Speech API), which in some browsers sends the audio to the browser maker's servers; the app says so and typing always works. A flight version would need on-board recognition: not built.
+- The export writes medications and reasons as text, with no clinical codes (none were verified), and tags the bundle as simulated. The "queue" counts doses not yet exported; the link to the ground is **simulated**, nothing is transmitted.
+
+**Not built, and why:** a personalised dose or a plasma-concentration curve, C(t) (it would be a prescription, and no validated spaceflight pharmacokinetic model was read); a verdict on what caused a symptom (interpreting a symptom); scanning a package (needs a library or a browser API that is not available on every phone). Claims the team notebook attributed to NASA IMPACT codes, HERMES/TrialX, Polaris Dawn and a VASTX simulation were **not verified** and are not used in the app.
+
+### Pictures on the medication and future-body screens (15 Nov 2026)
+
+The medication log's "what for" figure and Future body now use the same AI-generated body picture as Body systems (labelled on screen as an illustration, not an anatomical reference). Future body is ready for four AI skeleton pictures (`assets/bone-00.webp`, `bone-06`, `bone-18`, `bone-36`) drawn at the worst case of NASA's average loss without countermeasures (1.5 % a month): 100 %, 91 %, 73 % and 46 % of pre-mission bone density. The porosity in those pictures would be drawn for illustration, not measured; 36 months is the app's extrapolation, as the chart already says.
+
+## Spanish look (15 Nov 2026)
+
+An ES/EN button shows the same app in Spanish. The Spanish text is a machine-assisted translation (Claude) of the English interface, pending a read by a Spanish-speaking teammate. **Quoted sources are not translated**: every quote on screen stays word for word in its original language, so the wording checked in this file is the wording shown. Medication names get their Spanish generic names (acetaminofén, ibuprofeno…). The quick log also understands a sentence said in Spanish.
+
+### Family channel: video, quiet during critical tasks, store and forward (15 Nov 2026)
+
+A team member brought notes from an AI notebook (NASA BHP, Private Family Conferences, a Mars medical concept of operations, a Family Support Office). Only what is already verified in this file is quoted in the app: the family-support and care-package sentences of NASA OCHMO-TB-016 and the "up to 20 minutes one way" delay of NASA HRP, Distance from Earth (both quoted above). The notebook's other claims (Private Family Conferences, "Family Conference" in a Mars ConOps, a historical finding about stressful news before a spacewalk) were **not verified** and are not used.
+
+**App rules (illustrative, not NASA procedures):**
+- A family message may carry a video of up to 8 seconds, recorded small on the family's phone (about 320 x 240, low bit rate, at most about 260 KB), besides a photo and a voice note; photo, voice and video together are capped so one message fits the mailbox.
+- After a Fit for duty check for a spacewalk, a docking or another critical task, notices of new family messages are held for up to 4 hours or until the crew member taps *I'm done with the task*. Messages still arrive and stay sealed; the notice comes afterwards.
+- The family channel is store and forward (no live calls) and is kept apart from the medical record: the family's page has only the message form, never sees readings, medications or symptoms, and the mailbox has its own keys.
+
 ## Module 9 — fit for duty
 
 Read on 14 November 2026 in the PDF text of NASA-STD-3001 Volume 1 Revision C (section 4.3, page 35) and NASA's OCHMO technical brief on sleep accommodations. The medication cautions it shows are the NASA kit-list quotes already listed under Module 8.
@@ -334,6 +379,10 @@ NASA OCHMO-TB-016 Rev B (Behavioral Health and Performance, 24 Oct 2023) read on
 **Brain picture (generated with AI, 14 Nov 2026):** in the day look the Mind page shows `assets/brain-side.webp`, a side view of a brain. It is not a scan or an atlas: it was generated with an AI image model (through OpenAI Codex, by a team member, from a prompt written with Claude) as a picture of a plastic anatomy teaching model; the white background was removed by code and nothing else was retouched. The screen labels it "Picture generated with AI · not a scan". The coloured zones painted over it (ellipses for the frontal, parietal, temporal and occipital lobes, the cerebellum and the brainstem) are placed by hand and approximate, and they remain a map of the five signals, not a claim about anatomy: a zone keeps its natural colour when its signal is normal, turns orange or red when it needs a look, and grey when there is no data. The night look keeps the 3D brain drawn by code.
 
 **3D brain model (generated with AI, 15 Nov 2026):** in the day look the brain on the Mind page is a 3D model that turns by drag (`assets/brain3d.bin`, `assets/brain3d-tex.webp`). It was produced from the AI-generated brain picture above by an AI image-to-3D service (Higgsfield, model "sam_3_3d"); the side that the picture does not show was invented by that model. The team's own script converted the result to a compact mesh (13,458 points, about 300 KB) and added smooth shading; nothing was sculpted by hand. It is drawn by the app's own small WebGL viewer (`js/brain-gl.js`), with no library. The screen labels it "AI-generated 3D model · not a scan". The zones are painted on it from the same approximate ellipses as on the picture, through the whole depth of the model, and they remain a map of the five signals, not anatomy. Where WebGL is not available the still picture is shown instead. The night look keeps the point-cloud brain drawn by code.
+
+**Light and dark are one design (design choice, 15 Nov 2026):** the two looks used to be two different apps (different fonts, different Today layout, a hologram body and a point-cloud brain only in the dark one). Now the dark look is the light one with another palette (`css/dark.css`): same screens, same layout, same realistic body and 3D brain, with glowing chart lines and gradient buttons. The earlier dark-only pieces (hologram body, point-cloud brain, the original night Today) are no longer shown; their code is still in the repository. The access screen (the hatch) follows the look too, greets the active crew member by name and shows the digits typed as four dots; how it works did not change.
+
+**Icons (own drawings):** the outline icons on small tiles beside readings and signals (`js/icons.js`) were drawn for this app. A commercial icon pack was shown as a style reference by a team member; none of its icons were copied or used.
 
 **Less text on screen (design choice):** from 14 Nov 2026 every screen tucks its introduction and closing note into "About this screen" under the title, and each quoted source into a "Source" block beside what it supports; long screens are split into tabs. No quote, label ("SIMULATED", "REAL NASA DATA", "App rule") or disclaimer was removed: the words are one tap away, and the labels stay visible.
 

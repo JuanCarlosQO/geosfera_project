@@ -246,3 +246,48 @@ describe("follow-up alerts and reminders", () => {
     assert.ok(M.patternNote({ text: "x".repeat(400) }).length <= 280);
   });
 });
+
+describe("what is logged next to a dose", () => {
+  const log = { "2026-11-15": { sleepHours: { value: 5.3 } } };
+  it("keeps the sentence and the readings with the dose, numbers only", () => {
+    const r = M.logDose(M.emptyStore(), KIT, { medId: "painA", units: 2, at: NOW, said: "  two pain a   for my head ", context: { missionDay: 14, sleepHours: 5.3, co2: 2.3, verdict: "fluid shift" } });
+    assert.equal(r.dose.said, "two pain a for my head");
+    assert.deepEqual(r.dose.context, { missionDay: 14, sleepHours: 5.3, co2: 2.3 });
+    const back = M.cleanStore(JSON.parse(JSON.stringify(r.store)), KIT, SUPPS);
+    assert.deepEqual(back.doses[0].context, { missionDay: 14, sleepHours: 5.3, co2: 2.3 });
+    assert.equal(back.doses[0].said, "two pain a for my head");
+    assert.equal(M.logDose(M.emptyStore(), KIT, { medId: "painA", at: NOW, context: {} }).dose.context, undefined);
+  });
+
+  it("shows facts side by side and concludes nothing", () => {
+    const med = KIT[0];
+    const ctx = M.logContext({ med, doses: [dose("painA", 6, 2), dose("painA2", 3, 1), dose("sleepB", 1)], kit: KIT, now: NOW, log, co2: 2.3, missionDay: 14 });
+    const by = Object.fromEntries(ctx.rows.map((r) => [r.id, r]));
+    assert.equal(by.last.value, "6 h ago · 2 tablets");
+    assert.equal(by.day.value, "3 tablets", "the same ingredient under another brand counts");
+    assert.equal(by.sleep.value, "5.3 h");
+    assert.equal(by.co2.value, "2.3 mmHg");
+    assert.equal(by.co2.simulated, true);
+    assert.deepEqual(ctx.snapshot, { missionDay: 14, sleepHours: 5.3, co2: 2.3 });
+    assert.doesNotMatch(JSON.stringify(ctx), /because|caused|due to|likely|recommend|should/i);
+    const bare = M.logContext({ med, doses: [], kit: KIT, now: NOW });
+    assert.deepEqual(bare.rows.map((r) => r.value), ["None yet", "Nothing", "Not checked in today"]);
+    assert.deepEqual(bare.snapshot, {});
+  });
+
+  it("previews the patterns an entry would add, and still lets it be logged", () => {
+    const s = store([dose("painA", 2, 4), dose("painA", 5, 4)]);
+    assert.deepEqual(ids(M.patternsAfter(s, KIT, { medId: "painA", units: 1, at: NOW }, NOW)), ["limit-painA"]);
+    assert.deepEqual(M.patternsAfter(M.emptyStore(), KIT, { medId: "painA", units: 1, at: NOW }, NOW), []);
+    assert.equal(M.logDose(s, KIT, { medId: "painA", units: 1, at: NOW }).ok, true);
+  });
+
+  it("keeps a queue of doses not yet exported for the flight surgeon", () => {
+    let s = { ...M.emptyStore(), doses: [dose("painA", 5), dose("painA", 2)] };
+    assert.equal(M.queued(s).length, 2);
+    s = M.markExported(s, [s.doses[0].id]);
+    assert.deepEqual(M.queued(s).map((d) => d.id), ["painA-2"]);
+    const back = M.cleanStore({ ...s, exported: [...s.exported, "ghost-1", s.doses[0].id] }, KIT, SUPPS);
+    assert.deepEqual(back.exported, ["painA-5"]);
+  });
+});

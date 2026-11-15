@@ -17,6 +17,7 @@ import { current } from "./store.js";
 import { startFeed, subscribe, toggle, setPaused, TYPICAL_DOSE } from "./feed.js";
 import { goToSleep } from "./alarm.js";
 import { fold, tabsHtml, showTab } from "./fold.js";
+import { tile } from "./icons.js";
 import { mountHelix } from "./helix3d.js";
 import { versusUsual } from "./helix-core.js";
 import { radiationTotals } from "./today-core.js";
@@ -106,7 +107,7 @@ const realHtml = () => `<p>On the International Space Station the same chain exi
 function card(k) {
   const c = CARDS[k];
   return `<li class="tm-card" data-ch="${k}">
-    <div class="tm-top"><span class="tm-name">${c.name}</span><span class="tm-tag" data-tag="${k}">${k === "dose" ? "REAL NASA DATA" : "SIMULATED"}</span></div>
+    <div class="tm-top"><span class="tm-name">${tile(k)}${c.name}</span><span class="tm-tag" data-tag="${k}">${k === "dose" ? "REAL NASA DATA" : "SIMULATED"}</span></div>
     <p class="tm-val"><strong data-val="${k}">—</strong> <span>${c.unit}</span><small data-extra="${k}"></small></p>
     <svg class="tm-spark" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"><path data-spark="${k}"/></svg>
     <p class="tm-foot"><span data-st="${k}"></span><span class="tm-limit">${LIMIT_TEXT[k]}</span></p>

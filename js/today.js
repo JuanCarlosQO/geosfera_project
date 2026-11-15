@@ -20,6 +20,7 @@ import { familyWaiting } from "./family.js";
 import { KIT } from "./data/med-kit.js";
 import { demoLoaded, loadDemo, removeDemo, demoNoticeHtml, demoOfferHtml } from "./demo.js";
 import { fold, tabsHtml } from "./fold.js";
+import { tile } from "./icons.js";
 import { mindSignals, overall } from "./mind-core.js";
 import { getAlerts } from "./support.js";
 import { FAMILY_KEY, cleanBox } from "./family-core.js";
@@ -51,40 +52,60 @@ const HAZARD_ICONS = {
   closed: '<path d="M4 11a8 8 0 0 1 16 0v7H4z"/><path d="M8 18v-4h8v4"/>'
 };
 
+// The Cupola: six glass windows around the day's summary. Each window IS the button: it lifts
+// toward you on hover or focus, presses in on a tap and opens that system in the body view.
+// The windows fly in from the centre when the screen opens; a window with "Act now" breathes.
 function cupola(summary, readings) {
   const geo = cupolaGeometry();
-  const glass = geo.map((g) => {
-    const st = summary.status[g.id];
-    const ring = { watch: "var(--tone-watch)", act: "var(--tone-act)", again: "var(--tone-again)" }[st] ?? "#4b5664";
-    return `<polygon points="${poly(g.points)}" class="pane" style="stroke:${ring}"/>${st === "watch" ? `<polygon points="${poly(g.points)}" fill="url(#hatch)"/>` : ""}`;
-  }).join("");
-  const labels = geo.map((g) => {
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const panes = geo.map((g, i) => {
     const win = WINDOWS.find((w) => w.id === g.id);
-    const st = STATUS[summary.status[g.id]];
-    const key = win.readings.find((k) => readings[k] != null);
+    const stKey = summary.status[g.id];
+    const st = STATUS[stKey];
+    const key = win.readings.find((k) => readings?.[k] != null);
     const value = key ? fmt(key, readings[key].value) : "—";
-    const unit = key && key !== "bloodPressure" ? UNITS[key] ?? "" : "";
-    return `<button type="button" class="pane-label" data-body="${win.body}" style="left:${(g.centre[0] / 390) * 100}%;top:${(g.centre[1] / 360) * 100}%" aria-label="${win.label}: ${st.word}. Open in the body hologram">
-      <span class="pl-name">${win.label.toUpperCase()}</span>
-      <span class="pl-value">${value}${unit ? `<small> ${unit}</small>` : ""}</span>
-      <span class="pl-status tone-${st.tone}"><span aria-hidden="true">${st.shape}</span> ${st.word}</span>
-    </button>`;
+    const unit = key === "sleepHours" ? "h" : key && key !== "bloodPressure" ? UNITS[key] ?? "" : ""; // short in the window: "5.3 h"
+    const len = Math.hypot(g.centre[0] - 195, g.centre[1] - 180) || 1;
+    const ux = (g.centre[0] - 195) / len, uy = (g.centre[1] - 180) / len;
+    const dx = ux.toFixed(3), dy = uy.toFixed(3);
+    // the four side windows narrow toward the hub: their words sit a little further out
+    const push = Math.abs(uy) < 0.95 ? 9 : 0;
+    const cx = g.centre[0] + ux * push, cy = g.centre[1] + uy * push * 0.4;
+    return `<g class="pane-in" style="--i:${i};--dx:${dx};--dy:${dy}">
+      <g class="pane-btn" data-body="${win.body}" data-status="${stKey}" role="button" tabindex="0" aria-label="${esc(`${win.label}: ${value}${unit ? ` ${unit}` : ""}, ${st.word}. Open in the body view`)}">
+        <polygon points="${poly(g.points)}" class="pane"/>
+        ${stKey === "watch" ? `<polygon points="${poly(g.points)}" class="pane-hatch" fill="url(#hatch)"/>` : ""}
+        <polygon points="${poly(g.points)}" class="pane-edge"/>
+        <text x="${cx.toFixed(1)}" y="${(cy - 20).toFixed(1)}" class="pl-name" text-anchor="middle">${win.label.toUpperCase()}</text>
+        <text x="${cx.toFixed(1)}" y="${(cy + 8).toFixed(1)}" class="pl-value" text-anchor="middle">${value}${unit ? `<tspan class="pl-unit" dx="4">${unit}</tspan>` : ""}</text>
+        <text x="${cx.toFixed(1)}" y="${(cy + 28).toFixed(1)}" class="pl-status tone-${st.tone}" text-anchor="middle"><tspan class="pl-shape">${st.shape}</tspan> ${st.word}</text>
+      </g>
+    </g>`;
+  }).join("");
+  // the hub's ring: one arc per window, lit for each window with a reading today
+  const arcs = Array.from({ length: summary.total }, (_, i) => {
+    const r = 64, gap = 7, a0 = -90 + (360 / summary.total) * i + gap / 2, a1 = a0 + 360 / summary.total - gap;
+    const p = (a) => [195 + r * Math.cos((a * Math.PI) / 180), 180 + r * Math.sin((a * Math.PI) / 180)];
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" class="hub-arc${i < summary.measured ? " on" : ""}" style="--i:${i}"/>`;
   }).join("");
   return `<div class="cupola">
-    <svg viewBox="0 0 390 360" role="img" aria-label="Cupola: six body-system windows around the day's summary">
+    <svg viewBox="0 0 390 360" role="group" aria-label="Cupola: six body-system windows around the day's summary">
       <defs>
-        <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1626"/><stop offset=".7" stop-color="#0f2a4d"/><stop offset="1" stop-color="#1b4f8f"/></linearGradient>
+        <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c1830"/><stop offset=".62" stop-color="#11305a"/><stop offset="1" stop-color="#1d5aa6"/></linearGradient>
         <radialGradient id="earth-c" cx=".5" cy="1.25" r="1"><stop offset=".45" stop-color="#2f7be0"/><stop offset=".6" stop-color="#0f3a78"/><stop offset=".8" stop-color="#071628"/></radialGradient>
-        <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#ff9f5a" stroke-width="1.4" opacity=".35"/></pattern>
+        <radialGradient id="cupola-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3b82f6" stop-opacity=".22"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></radialGradient>
+        <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#ff9f5a" stroke-width="1.4" opacity=".32"/></pattern>
       </defs>
+      <circle cx="195" cy="180" r="190" fill="url(#cupola-glow)"/>
       <polygon points="102,19 288,19 381,180 288,341 102,341 9,180" class="frame"/>
-      ${glass}
+      <g class="sweep" aria-hidden="true"><path d="M195 180 L195 2 A178 178 0 0 1 284 26 Z" class="sweep-beam"/></g>
+      ${panes}
       <polygon points="161,121 229,121 263,180 229,239 161,239 127,180" class="hub"/>
-      <circle cx="195" cy="180" r="56" fill="url(#earth-c)" stroke="var(--beacon)" stroke-width="1.5"/>
-      <circle cx="195" cy="180" r="62" class="hub-ring"/>
+      <circle cx="195" cy="180" r="56" fill="url(#earth-c)" class="hub-earth"/>
+      <g class="hub-arcs">${arcs}</g>
       <g class="rivets"><circle cx="102" cy="19" r="2.5"/><circle cx="288" cy="19" r="2.5"/><circle cx="381" cy="180" r="2.5"/><circle cx="288" cy="341" r="2.5"/><circle cx="102" cy="341" r="2.5"/><circle cx="9" cy="180" r="2.5"/></g>
     </svg>
-    ${labels}
     <div class="hub-label" aria-hidden="true"><span class="hub-num"><span data-count="${summary.measured}">0</span><small>/${summary.total}</small></span><span class="hub-word">MEASURED</span></div>
   </div>`;
 }
@@ -95,7 +116,7 @@ function readingRows(log, day, entry) {
     const st = r?.value == null ? "none" : judgeReading(f.key, r);
     const d = sparkPath(series(log, f.key, day, 14));
     return `<li class="rd" style="--i:${i}">
-      <div class="rd-name">${f.label}<small class="rd-why">${reasonFor(f.key, r)}</small></div>
+      <div class="rd-name"><span class="rd-label">${tile(f.key)}${f.label}</span><small class="rd-why">${reasonFor(f.key, r)}</small></div>
       <svg class="spark" viewBox="0 0 120 32" aria-hidden="true">${d ? `<path d="${d}" pathLength="1"/>` : `<line x1="0" y1="16" x2="120" y2="16" class="flat"/>`}</svg>
       <div class="rd-val"><strong>${r?.value != null ? fmt(f.key, r.value) : "—"}</strong><span>${f.unit}</span></div>
       <div class="rd-st">${chip(st)}</div>
@@ -242,9 +263,18 @@ export function mountToday(host, { go }, requested) {
       });
     }
   });
-  host.querySelector(".cupola, .cl-callouts").addEventListener("click", (e) => {
-    const b = e.target.closest(".pane-label, .cl-callout");
-    if (b) go(`body/${b.dataset.body}`);
+  const openPane = (b) => {
+    if (!b) return;
+    if (!b.classList.contains("pane-btn") || matchMedia("(prefers-reduced-motion: reduce)").matches) { go(`body/${b.dataset.body}`); return; }
+    b.classList.add("pressed"); // a short press-in before the body view opens
+    setTimeout(() => go(`body/${b.dataset.body}`), 180);
+  };
+  host.querySelectorAll(".cupola, .cl-callouts").forEach((box) => {
+    box.addEventListener("click", (e) => openPane(e.target.closest(".pane-btn, .pane-label, .cl-callout")));
+    box.addEventListener("keydown", (e) => {
+      const b = e.target.closest(".pane-btn");
+      if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPane(b); }
+    });
   });
   host.querySelector(".stepper").addEventListener("click", (e) => {
     const b = e.target.closest("[data-day]");

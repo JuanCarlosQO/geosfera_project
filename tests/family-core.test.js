@@ -135,3 +135,43 @@ describe("family channel: protections", () => {
     assert.deepEqual(F.setFeel(box, "v1", three[2].id, "angry"), box);
   });
 });
+
+describe("family channel: a short video", () => {
+  const video = `data:video/webm;codecs=vp8,opus;base64,${"C".repeat(20000)}`;
+  it("accepts a short video, alone or with words", () => {
+    const r = F.makeMessage({ from: "Camila", rel: "Sibling", kind: "hello", text: "", video });
+    assert.equal(r.ok, true);
+    assert.equal(r.message.video, video);
+    assert.deepEqual(F.mediaWords(r.message), ["video"]);
+    assert.equal(F.hasMedia(r.message), true);
+    assert.equal(F.fromFile(F.toFile(r.message)).message.video, video, "travels in a message file");
+  });
+  it("refuses a video that is not a capped webm/mp4 data URL, and too much at once", () => {
+    for (const bad of ["data:video/quicktime;base64,AAAA", "data:text/html;base64,AAAA", "https://example.com/v.mp4", `data:video/mp4;base64,${"A".repeat(F.MAX_VIDEO)}`]) {
+      assert.equal(F.makeMessage({ from: "Camila", rel: "Sibling", kind: "hello", text: "hi", video: bad }).ok, false, bad.slice(0, 30));
+    }
+    const big = `data:video/mp4;base64,${"A".repeat(F.MAX_VIDEO - 40)}`, photo = `data:image/jpeg;base64,${"A".repeat(F.MAX_PHOTO - 40)}`, audio = `data:audio/webm;base64,${"A".repeat(F.MAX_AUDIO - 40)}`;
+    assert.equal(F.makeMessage({ from: "Camila", rel: "Sibling", kind: "hello", text: "hi", video: big, photo, audio }).ok, false, "all three at full size is too much");
+  });
+  it("keeps the ids of older messages without video unchanged", () => {
+    const at = new Date("2026-11-15T10:00:00Z");
+    const a = F.makeMessage({ from: "Camila", rel: "Sibling", kind: "hello", text: "hello there", at }).message.id;
+    assert.equal(a, F.makeMessage({ from: "Camila", rel: "Sibling", kind: "hello", text: "hello there", at, video: undefined }).message.id);
+  });
+});
+
+describe("family channel: quiet during a critical task", () => {
+  const now = new Date("2026-11-15T10:00:00Z");
+  it("holds notices for a few hours after a check for a critical task, or until the task is done", () => {
+    const f = F.startFocus({}, "v1", "eva", now);
+    assert.equal(F.focusNow(f, "v1", now).task, "eva");
+    assert.equal(F.focusNow(f, "v1", new Date(now.getTime() + (F.FOCUS_HOURS - 0.1) * 3600000))?.task, "eva");
+    assert.equal(F.focusNow(f, "v1", new Date(now.getTime() + F.FOCUS_HOURS * 3600000 + 1)), null, "ends by itself");
+    assert.equal(F.focusNow(F.endFocus(f, "v1"), "v1", now), null, "I'm done");
+    assert.equal(F.focusNow(f, "other", now), null, "only for that crew member");
+  });
+  it("reads back only well-formed holds, and keeps them on this device", () => {
+    assert.deepEqual(F.cleanFocus({ v1: { task: "eva", until: "2026-11-15T14:00:00Z" }, bad: { task: 3 }, x: null }), { v1: { task: "eva", until: "2026-11-15T14:00:00.000Z" } });
+    assert.ok(LOCAL_ONLY.includes(F.FOCUS_KEY));
+  });
+});

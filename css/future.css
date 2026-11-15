@@ -72,3 +72,12 @@
   .masthead .utc { display: none; }
 }
 @media (max-width: 759px) { .fb-fig { width: 44%; } }
+
+/* the realistic body, and the AI skeleton pictures by bone density on top of it */
+.fb-fig.fb-photo { position: relative; width: 78%; max-width: 300px; }
+.fb-photo .body-photo { display: block; width: 100%; height: auto; filter: drop-shadow(0 14px 22px rgba(15, 23, 42, .18)); transition: opacity .3s; }
+.fb-bones { position: absolute; inset: 0; }
+.fb-bone { position: absolute; inset: 0; width: 100%; height: auto; opacity: 0; transition: opacity .2s linear; }
+.fb-photo.has-bones .body-photo { opacity: 0; }
+@media (max-width: 759px) { .fb-fig.fb-photo { width: 64%; } }
+@media (prefers-reduced-motion: reduce) { .fb-bone { transition: none; } }

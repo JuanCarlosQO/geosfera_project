@@ -2,6 +2,7 @@
 // All decisions (code rules, hashing, waits, fingerprint check) come from access-core.js.
 
 import * as core from "./access-core.js";
+import { current } from "./store.js";
 
 const STORE = "geosfera.crew-access";
 const OPEN_DURATION = 3800;
@@ -32,7 +33,11 @@ function timeOfDay() {
   return "Good evening";
 }
 
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
 function markup() {
+  const who = current(); // the crew member last active on this device, if a crew is registered
+  const name = who ? esc(who.name.split(" ")[0]) : "Commander";
   const keys = Array.from({ length: 10 }, (_, n) =>
     `<button type="button" class="key" style="--i:${n}" data-key="${n}" aria-label="Digit ${n}">${n}</button>`).join("");
   const bolts = [0, 1, 2, 3].map((i) => `<span class="bolt" style="--i:${i}"></span>`).join("");
@@ -50,8 +55,10 @@ function markup() {
       <time class="utc" data-utc>--:-- UTC</time>
     </div>
     <div class="hs-title">
-      <h1 id="hs-heading">${timeOfDay()}, Commander</h1>
+      ${who ? `<p class="hs-who"><span class="hs-avatar" aria-hidden="true">${esc(who.name.split(" ").map((w) => w[0]).slice(0, 2).join(""))}</span>${esc(who.name)} · ${esc(who.role)}</p>` : ""}
+      <h1 id="hs-heading">${timeOfDay()}, ${name}</h1>
       <p data-ref="hint"></p>
+      <div class="hs-dots" data-ref="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
 
@@ -81,12 +88,12 @@ function markup() {
   <div class="hs-foot">
     <p class="readout" role="status" aria-live="polite" data-ref="readout"></p>
     <div class="choices" data-ref="choices"></div>
-    <p class="disclaimer">Device lock, not encryption. The code never leaves this device and is kept only as a salted hash.</p>
+    <p class="disclaimer">Device lock, not encryption. Your code never leaves this device.</p>
   </div>
 
   <div class="arrival" aria-hidden="true">
     <span class="eyebrow">Pressure equalised</span>
-    <h2>Welcome aboard,<br>Commander.</h2>
+    <h2>Welcome aboard,<br>${name}.</h2>
     <p>Opening the station…</p>
   </div>
 
@@ -177,6 +184,8 @@ export class Hatch {
 
   async show() {
     this.root.innerHTML = markup();
+    // the keys pop in once; after that a lit key only pulses (no replay of the entrance)
+    setTimeout(() => this.root.querySelector(".hatch-screen")?.classList.add("settled"), 1100);
     this.screen = this.root.firstElementChild;
     const ref = (name) => this.screen.querySelector(`[data-ref="${name}"]`);
     this.ui = { hatch: ref("hatch"), hint: ref("hint"), readout: ref("readout"), choices: ref("choices"), veil: ref("veil") };
@@ -199,6 +208,7 @@ export class Hatch {
 
   drawBolts() {
     this.bolts.forEach((b, i) => b.classList.toggle("shot", i < this.digits.length));
+    this.screen.querySelectorAll(".hs-dots i").forEach((d, i) => d.classList.toggle("on", i < this.digits.length));
   }
 
   lockKeys(off) {

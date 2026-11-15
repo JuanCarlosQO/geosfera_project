@@ -59,3 +59,6 @@ body.family-only .masthead { max-width: 620px; }
 .fm-form[hidden] { display: none; }
 .fm-invite { margin-top: 16px; }
 .fm-invite .fm-acts { align-items: center; }
+.fm-video { display: block; width: min(100%, 420px); max-height: 60vh; margin: 12px 0 4px; border-radius: 14px; background: #000; border: 1px solid var(--seam); }
+.fm-video[hidden] { display: none; }
+.fm-attach .fm-video[data-ref="video-live"] { transform: scaleX(-1); } /* a mirror while recording, like a selfie camera */

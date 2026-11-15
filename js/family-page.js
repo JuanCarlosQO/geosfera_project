@@ -5,6 +5,9 @@
 import { readInvite } from "./mailbox-core.js";
 import { mountWrite } from "./family.js";
 import { initFold } from "./fold.js";
+import { initI18n } from "./i18n.js";
+
+initI18n();
 
 const host = document.getElementById("station");
 const invite = readInvite(location.hash.replace(/^#/, ""));

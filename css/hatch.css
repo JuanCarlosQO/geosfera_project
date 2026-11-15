@@ -4,15 +4,27 @@
   position: fixed; inset: 0; z-index: 20; overflow: hidden auto;
   display: flex; flex-direction: column; align-items: center;
   padding: max(18px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
-  background: radial-gradient(ellipse at 50% 46%, #0b1622 0%, var(--night) 62%);
+  background: var(--h-screen);
+  /* the hatch's own palette: light here, dark in css/dark.css */
+  --h-screen: radial-gradient(ellipse at 50% 40%, #ffffff 0%, var(--night) 70%);
+  --h-m1: #e6ecf5; --h-m2: #f8fafd; --h-m3: #dbe3ef; --h-m4: #f3f6fb; --h-m5: #cfd9e8;
+  --h-line: #c2cde0; --h-rivet: #aab8cf;
+  --h-leaf-a: #f7f9fc; --h-leaf-b: #d3dcea; --h-leaf-c: #e7edf5; --h-handle: #c6d1e1; --h-handle-line: #a7b5cb;
+  --h-port: #b4c1d5; --h-port-in: #eef2f8; --h-bolt: #c2cde0;
+  --h-key: #ffffff; --h-key-shadow: 0 8px 18px -10px rgba(24, 33, 47, .55);
 }
 .hatch-screen .sky { position: absolute; }
 
 .hs-fade { position: relative; transition: opacity .6s ease 1.4s; }
 .hs-top { width: 100%; max-width: 420px; display: flex; align-items: center; justify-content: space-between; }
 .hs-title { margin-top: clamp(14px, 4vh, 40px); text-align: center; }
-.hs-title h1 { margin: 0; font-weight: 300; font-size: clamp(24px, 7.4vw, 31px); }
-.hs-title p { margin: 8px 0 0; font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+.hs-title h1 { margin: 0; font-weight: 500; font-size: clamp(26px, 7.6vw, 32px); letter-spacing: -.01em; }
+.hs-title p { margin: 8px 0 0; font-size: 15px; color: var(--ink-2); }
+.hs-title .hs-who { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 4px 12px 4px 4px; border-radius: 20px; background: var(--hull); border: 1px solid var(--seam); font-size: 13px; color: var(--ink-2); }
+.hs-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--beacon); color: #ffffff; font-weight: 600; font-size: 12px; }
+.hs-dots { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+.hs-dots i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--seam-hi); transition: background .2s, border-color .2s, transform .2s, box-shadow .2s; }
+.hs-dots i.on { background: var(--beacon); border-color: var(--beacon); transform: scale(1.15); box-shadow: 0 0 12px color-mix(in srgb, var(--beacon) 60%, transparent); }
 
 /* ---- the hatch ---- */
 .hatch {
@@ -24,6 +36,11 @@
 }
 .hatch-art { position: absolute; inset: 0; width: 100%; height: 100%; }
 .hatch-art .slow { transform-origin: 50% 50%; animation: turn 140s linear infinite; }
+.hatch-art stop:nth-child(1) { stop-color: var(--h-m1); } .hatch-art stop:nth-child(2) { stop-color: var(--h-m2); } .hatch-art stop:nth-child(3) { stop-color: var(--h-m3); }
+.hatch-art stop:nth-child(4) { stop-color: var(--h-m4); } .hatch-art stop:nth-child(5) { stop-color: var(--h-m5); }
+.hatch-art circle { stroke: var(--h-line); }
+.hatch-art circle[r=".9"] { fill: var(--h-rivet); stroke: none; }
+.hatch { filter: drop-shadow(0 22px 34px rgba(24, 33, 47, .22)); }
 
 .window {
   position: absolute; inset: 18%; border-radius: 50%; overflow: hidden;
@@ -33,16 +50,16 @@
 .window .station-big { position: absolute; left: 17%; top: 27%; width: 66%; animation: float 10s ease-in-out infinite; }
 
 .leaf { position: absolute; top: 0; width: 50%; height: 100%; transition: transform 1.1s cubic-bezier(.6, 0, .2, 1) .6s; }
-.leaf.left { left: 0; background: linear-gradient(132deg, #3c4652, #1e252e 58%, #2f3842); box-shadow: inset -1px 0 #0a0d11; }
-.leaf.right { right: 0; background: linear-gradient(228deg, #3c4652, #1e252e 58%, #2f3842); box-shadow: inset 1px 0 #4a5562; }
-.leaf i { position: absolute; top: 36%; width: 7%; height: 28%; border-radius: 3px; background: #141a20; border: 1px solid #48535f; }
+.leaf.left { left: 0; background: linear-gradient(132deg, var(--h-leaf-a), var(--h-leaf-b) 58%, var(--h-leaf-c)); box-shadow: inset -1px 0 var(--h-line); }
+.leaf.right { right: 0; background: linear-gradient(228deg, var(--h-leaf-a), var(--h-leaf-b) 58%, var(--h-leaf-c)); box-shadow: inset 1px 0 var(--h-leaf-a); }
+.leaf i { position: absolute; top: 36%; width: 7%; height: 28%; border-radius: 3px; background: var(--h-handle); border: 1px solid var(--h-handle-line); }
 .leaf.left i { right: 9%; }
 .leaf.right i { left: 9%; }
 
 .porthole {
   position: absolute; inset: 25.5%; border-radius: 50%; overflow: hidden;
   background: radial-gradient(circle at 50% 185%, #2f78de 0 44%, #0c3168 57%, #030714 72%);
-  box-shadow: inset 0 0 0 5px #4c5866, inset 0 0 0 7px #10151b, 0 0 0 1px #0a0d11;
+  box-shadow: inset 0 0 0 5px var(--h-port), inset 0 0 0 7px var(--h-port-in), 0 0 0 1px var(--h-line);
   transition: opacity .4s ease .3s;
 }
 .porthole .station-small { position: absolute; left: 30%; top: 30%; width: 40%; animation: pass 8s linear infinite; }
@@ -50,7 +67,7 @@
 
 .bolt {
   position: absolute; left: 50%; top: 50%; width: 8px; height: 18px; margin: -9px 0 0 -4px; border-radius: 3px;
-  background: #29313b;
+  background: var(--h-bolt);
   transform: rotate(calc(var(--i) * 90deg)) translateY(calc(var(--d) * -.365));
   transition: background .3s, box-shadow .3s;
 }
@@ -59,18 +76,18 @@
 
 .key {
   position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0;
-  border-radius: 50%; border: 1px solid var(--seam-hi); background: var(--hull);
-  font-family: var(--mono); font-size: 17px; cursor: pointer; touch-action: manipulation;
+  border-radius: 50%; border: 1px solid var(--seam-hi); background: var(--h-key); color: var(--ink); box-shadow: var(--h-key-shadow);
+  font-family: var(--sans); font-weight: 500; font-size: 18px; cursor: pointer; touch-action: manipulation;
   transform: rotate(calc(var(--i) * 36deg)) translateY(calc(var(--ring) * -1)) rotate(calc(var(--i) * -36deg));
   transition: background .25s, color .25s, box-shadow .25s;
 }
-.key:hover { background: #1b242e; }
-.key.lit { background: var(--beacon); color: var(--beacon-ink); box-shadow: 0 0 18px #6fe3ff88; }
+.key:hover { border-color: var(--beacon); }
+.key.lit { background: var(--beacon); border-color: var(--beacon); color: #ffffff; box-shadow: 0 0 18px color-mix(in srgb, var(--beacon) 60%, transparent); }
 .key:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ---- below the hatch ---- */
 .hs-foot { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; transition: opacity .6s ease 1.4s; }
-.readout { min-height: 20px; margin: 0; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--ink-2); }
+.readout { min-height: 20px; margin: 0; text-align: center; font-size: 14px; color: var(--ink-2); }
 .readout.warn { color: var(--alarm); }
 .choices { margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .choices .pair { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
@@ -80,19 +97,19 @@
 }
 .cta:hover { border-color: var(--beacon); }
 .cta.main { background: var(--beacon); border-color: var(--beacon); color: var(--beacon-ink); font-weight: 600; padding: 0 24px; }
-.cta.stop { background: var(--alarm); border-color: var(--alarm); color: #2b0804; font-weight: 600; padding: 0 22px; }
+.cta.stop { background: var(--alarm); border-color: var(--alarm); color: #ffffff; font-weight: 600; padding: 0 22px; }
 .cta.busy { animation: breathe .9s ease-in-out infinite; }
 .textlink { background: none; border: 0; color: var(--beacon); font-size: 14px; padding: 12px; cursor: pointer; }
-.textlink:hover { color: #b9f2ff; }
-.disclaimer { margin: 18px 0 0; text-align: center; font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--ink-3); }
+.textlink:hover { color: var(--holo-deep); }
+.disclaimer { margin: 16px 0 0; padding: 0 76px; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ink-3); }
 
 /* ---- arrival ---- */
 .arrival {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
   padding: 32px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 1s ease 2.9s;
-  background: radial-gradient(circle at 50% 122%, #1f63c8 0 30%, #08224b 48%, var(--night) 76%);
+  background: radial-gradient(circle at 50% 122%, var(--beacon) 0 30%, var(--tint-hi) 48%, var(--night) 76%);
 }
-.arrival h2 { margin: 0; font-weight: 300; font-size: 34px; line-height: 1.15; }
+.arrival h2 { margin: 0; font-weight: 500; font-size: 34px; line-height: 1.15; }
 .arrival p { margin: 0; color: var(--ink-2); }
 
 .hatch-screen.opening .leaf.left { transform: translateX(-104%); }
@@ -103,7 +120,7 @@
 .hatch-screen.opening .arrival { opacity: 1; }
 
 /* ---- forgot code ---- */
-.veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 24px; background: #05070ae0; }
+.veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 24px; background: color-mix(in srgb, var(--night) 88%, transparent); }
 .veil[hidden] { display: none; }
 .sheet { max-width: 360px; padding: 24px; border-radius: 18px; background: var(--hull); border: 1px solid var(--seam-hi); }
 .sheet h2 { margin: 0 0 8px; font-weight: 400; font-size: 22px; }
@@ -112,9 +129,42 @@
 @keyframes turn { to { transform: rotate(360deg); } }
 @keyframes float { 50% { transform: translate(-2%, 2%) rotate(2deg); } }
 @keyframes pass { from { transform: translateX(-165%) rotate(-8deg); } to { transform: translateX(165%) rotate(-8deg); } }
-@keyframes breathe { 50% { box-shadow: 0 0 0 6px #6fe3ff22; border-color: var(--beacon); color: var(--beacon); } }
+@keyframes breathe { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--beacon) 14%, transparent); border-color: var(--beacon); color: var(--beacon); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: .01s !important; transition-delay: 0s !important; }
   .hatch-screen.opening .hatch { transform: none; }
+}
+
+/* ---- motion, like the Cupola: the keys pop in around the ring, a tap presses and lights the key,
+   the porthole shows a moving sky. `scale` composes with each key's ring position. ---- */
+.hatch-screen .key { transition: background .25s, color .25s, box-shadow .25s, scale .14s; }
+.hatch-screen:not(.settled) .key { animation: key-in .42s cubic-bezier(.2, .9, .3, 1.3) both; animation-delay: calc(240ms + var(--i) * 45ms); }
+.hatch-screen .key:hover:not(:disabled) { scale: 1.08; box-shadow: 0 0 0 4px color-mix(in srgb, var(--beacon) 16%, transparent), var(--h-key-shadow); }
+.hatch-screen .key:active:not(:disabled) { scale: .9; }
+.hatch-screen.settled .key.lit { animation: key-pop .32s ease-out; }
+.hatch-screen .porthole { animation: port-in .6s cubic-bezier(.2, .8, .2, 1) .1s both; }
+.hatch-screen .porthole::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .8;
+  background:
+    radial-gradient(1px 1px at 22% 30%, #ffffff 98%, transparent), radial-gradient(1px 1px at 70% 22%, #cfe8ff 98%, transparent),
+    radial-gradient(1.2px 1.2px at 40% 48%, #ffffff 98%, transparent), radial-gradient(1px 1px at 82% 44%, #ffffff 98%, transparent),
+    radial-gradient(1px 1px at 58% 12%, #e6f3ff 98%, transparent), radial-gradient(1px 1px at 12% 52%, #ffffff 98%, transparent);
+  animation: twinkle 3.5s ease-in-out infinite alternate;
+}
+.hatch-screen .hs-dots i { transition: background .2s, box-shadow .2s, scale .2s; }
+.hatch-screen #hs-heading { animation: hs-rise .5s ease both .05s; }
+.hatch-screen .hs-who { animation: hs-rise .5s ease both; }
+
+@keyframes key-in { from { scale: 0; opacity: 0; } }
+@keyframes key-pop { 0% { scale: .88; } 55% { scale: 1.16; } 100% { scale: 1; } }
+@keyframes port-in { from { scale: .6; opacity: 0; } }
+@keyframes twinkle { to { opacity: .35; } }
+@keyframes hs-rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* the SOS button sits bottom-right on phones: keep the footer text clear of it */
+@media (max-width: 700px) { .hatch-screen .hs-foot { padding-bottom: 92px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hatch-screen .key, .hatch-screen .key.lit, .hatch-screen .porthole, .hatch-screen .porthole::before, .hatch-screen #hs-heading, .hatch-screen .hs-who { animation: none; }
 }

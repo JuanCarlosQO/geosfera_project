@@ -17,6 +17,7 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const readBox = () => { try { return F.cleanBox(JSON.parse(localStorage.getItem(F.FAMILY_KEY))); } catch { return {}; } };
 const writeBox = (box) => { try { localStorage.setItem(F.FAMILY_KEY, JSON.stringify(box)); return true; } catch { return false; } };
 const readSeen = () => { try { const v = JSON.parse(localStorage.getItem(B.SEEN_KEY)); return Array.isArray(v) ? v : []; } catch { return []; } };
+const readFocus = () => { try { return F.cleanFocus(JSON.parse(localStorage.getItem(F.FOCUS_KEY))); } catch { return {}; } };
 const writeSeen = (ids) => { try { localStorage.setItem(B.SEEN_KEY, JSON.stringify(ids)); } catch { /* storage blocked */ } };
 
 export function mountFamilyNotify() {
@@ -38,9 +39,10 @@ export function mountFamilyNotify() {
       ${m.text ? `<p class="fn-text">${esc(m.text)}</p>` : ""}
       ${m.photo ? `<img class="fm-photo" src="${esc(m.photo)}" alt="Photo sent by ${esc(m.from)}">` : ""}
       ${m.audio ? `<audio class="fm-audio" controls preload="metadata" src="${esc(m.audio)}"></audio>` : ""}
+      ${m.video ? `<video class="fm-video" controls playsinline preload="metadata" src="${esc(m.video)}"></video>` : ""}
       <div class="fn-acts"><button type="button" class="cta main" data-fn="close">Close</button><a class="textlink" href="#family" data-fn="all">All messages</a>${extra}</div>` : `
       <p class="fn-top"><span class="fn-env" aria-hidden="true">✉</span><strong>A message from home</strong>${extra}</p>
-      <p class="fn-who"><strong>${esc(m.from)}</strong> · ${esc(m.rel)} <span class="fm-kind">${esc(F.kindLabel(m.kind))}</span>${m.photo ? ` <span class="fm-kind">photo</span>` : ""}${m.audio ? ` <span class="fm-kind">voice note</span>` : ""}</p>
+      <p class="fn-who"><strong>${esc(m.from)}</strong> · ${esc(m.rel)} <span class="fm-kind">${esc(F.kindLabel(m.kind))}</span>${F.mediaWords(m).map((w) => ` <span class="fm-kind">${w}</span>`).join("")}</p>
       <p class="fn-fine">Sealed. Open it now, or whenever you like.</p>
       <div class="fn-acts"><button type="button" class="cta main" data-fn="open">Open it</button><button type="button" class="cta" data-fn="later">Later</button></div>`;
   }
@@ -56,6 +58,7 @@ export function mountFamilyNotify() {
     if (!me) return;
     const box = readBox();
     if (F.isPaused(box, me.id)) return; // kept sealed, and nothing is announced
+    if (F.focusNow(readFocus(), me.id)) return; // a critical task: the notice waits until it is over
     const fresh = B.unannounced(box[me.id], readSeen());
     if (!fresh.length) return;
     writeSeen(B.markSeen(readSeen(), fresh.map((m) => m.id)));
@@ -98,11 +101,13 @@ export function mountFamilyNotify() {
         if (added && writeBox(box)) { check(); document.dispatchEvent(new CustomEvent("ergosphere:family-read")); }
       }
     }
+    check(); // also lets a notice held during a critical task out once the task is over
     timer = setTimeout(poll, wait);
   }
 
   document.addEventListener("ergosphere:family", check);
-  window.addEventListener("storage", (e) => { if (e.key === F.FAMILY_KEY) check(); });
+  window.addEventListener("storage", (e) => { if (e.key === F.FAMILY_KEY || e.key === F.FOCUS_KEY) check(); });
+  document.addEventListener("ergosphere:focus", check);
   window.addEventListener("hashchange", () => setTimeout(check, 50)); // a link just delivered, or another crew member chosen
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { check(); poll(); } });
   window.addEventListener("online", poll);

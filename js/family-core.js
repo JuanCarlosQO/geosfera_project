@@ -19,6 +19,9 @@ export const KINDS = [
 export const MAX_PHOTO = 170000;   // about 125 KB of JPEG
 export const MAX_AUDIO = 280000;   // about 45 s of voice at a low bit rate
 export const MAX_VOICE_S = 45;
+export const MAX_VIDEO = 360000;   // about 260 KB: a few seconds of small, low-bit-rate video
+export const MAX_VIDEO_S = 8;
+export const MAX_MEDIA = 560000;   // photo + voice + video together, so a message fits the mailbox
 export const FEELS = [
   { id: "better", label: "Better" },
   { id: "same", label: "About the same" },
@@ -32,6 +35,7 @@ const dataUrl = (raw, head, max) => {
 };
 export const cleanPhoto = (raw) => dataUrl(raw, /^data:image\/jpeg;base64,/, MAX_PHOTO);
 export const cleanAudio = (raw) => dataUrl(raw, /^data:audio\/(webm|mp4|ogg|mpeg)(;codecs=[\w.,-]+)?;base64,/, MAX_AUDIO);
+export const cleanVideo = (raw) => dataUrl(raw, /^data:video\/(webm|mp4)(;codecs=[\w.,-]+)?;base64,/, MAX_VIDEO);
 
 export const RELATIONS = ["Partner", "Parent", "Child", "Sibling", "Friend", "Family"];
 export const kindLabel = (id) => KINDS.find((k) => k.id === id)?.label ?? "Message";
@@ -43,17 +47,20 @@ const line = (raw, n) => clean(raw, n).replace(/\s+/g, " ");
 const hash = (s) => { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
 
 /** Builds a message from what the family member typed. Returns { ok, message } or { ok: false, why }. */
-export function makeMessage({ to, from, rel, kind, text, photo, audio, at = new Date() }) {
+export function makeMessage({ to, from, rel, kind, text, photo, audio, video, at = new Date() }) {
   const m = { v: 1, to: line(to, 40), from: line(from, 40), rel: RELATIONS.includes(rel) ? rel : "Family", kind: KINDS.some((k) => k.id === kind) ? kind : null, text: clean(text, MAX_TEXT), at: iso(at) };
   if (m.from.length < 2) return { ok: false, why: "Write your name, so they know who it is from." };
   if (!m.kind) return { ok: false, why: "Choose what kind of message it is." };
-  const p = cleanPhoto(photo), a = cleanAudio(audio);
+  const p = cleanPhoto(photo), a = cleanAudio(audio), v = cleanVideo(video);
   if (photo && !p) return { ok: false, why: "That photo could not be used. Try another one." };
   if (audio && !a) return { ok: false, why: "That voice note could not be used. Record it again, a little shorter." };
-  if (m.text.length < 2 && !p && !a) return { ok: false, why: "Write your message, or add a photo or a voice note." };
+  if (video && !v) return { ok: false, why: "That video could not be used. Record a shorter one." };
+  if ((p?.length ?? 0) + (a?.length ?? 0) + (v?.length ?? 0) > MAX_MEDIA) return { ok: false, why: "Too much to send at once. Keep the video and leave out the photo or the voice note, or send them in two messages." };
+  if (m.text.length < 2 && !p && !a && !v) return { ok: false, why: "Write your message, or add a photo, a voice note or a short video." };
   if (p) m.photo = p;
   if (a) m.audio = a;
-  m.id = `fm-${ms(at).toString(36)}-${hash(`${m.from}${m.text}${p?.length ?? 0}.${a?.length ?? 0}`)}`;
+  if (v) m.video = v;
+  m.id = `fm-${ms(at).toString(36)}-${hash(`${m.from}${m.text}${p?.length ?? 0}.${a?.length ?? 0}${v ? `.${v.length}` : ""}`)}`; // older ids stay the same
   return { ok: true, message: m };
 }
 
@@ -173,7 +180,10 @@ export function homesick(box, memberId) {
   return rated.length === 2 && rated.every((m) => m.feel === "worse");
 }
 
-export const hasMedia = (m) => Boolean(m.photo || m.audio);
+export const hasMedia = (m) => Boolean(m.photo || m.audio || m.video);
+
+/** The words for what a message carries besides text: "photo", "voice note", "video". */
+export const mediaWords = (m) => [m.photo && "photo", m.audio && "voice note", m.video && "video"].filter(Boolean);
 
 /* ---------- a message with a photo or a voice note travels as a small file ---------- */
 
@@ -189,3 +199,25 @@ export function fromFile(text) {
     return r.ok ? { ok: true, message: r.message } : { ok: false };
   } catch { return { ok: false }; }
 }
+
+/* ---------- quiet during a critical task (app rule) ---------- */
+// After a "Fit for duty" check for a spacewalk, a docking or another critical task, notices of
+// new family messages are held until the task is over: messages still arrive and stay sealed,
+// and the notice comes afterwards. Ends by itself after FOCUS_HOURS or with "I'm done".
+export const FOCUS_KEY = "geosfera.focus"; // { [memberId]: { task, until } }, this device only
+export const FOCUS_HOURS = 4;
+
+export function cleanFocus(raw) {
+  const out = {};
+  for (const [id, f] of Object.entries(raw && typeof raw === "object" ? raw : {})) {
+    if (typeof f?.task === "string" && f.task.length <= 20 && !Number.isNaN(ms(f.until))) out[String(id).slice(0, 40)] = { task: f.task, until: iso(f.until) };
+  }
+  return out;
+}
+/** The task being protected right now for this crew member, or null. */
+export function focusNow(focus, memberId, now = new Date()) {
+  const f = focus?.[memberId];
+  return f && ms(f.until) > ms(now) ? f : null;
+}
+export const startFocus = (focus, memberId, task, now = new Date(), hours = FOCUS_HOURS) => ({ ...focus, [memberId]: { task, until: iso(ms(now) + hours * 3600000) } });
+export const endFocus = (focus, memberId) => { const out = { ...focus }; delete out[memberId]; return out; };

@@ -73,7 +73,7 @@ export function spanWords(from, to) {
   return h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
 }
 
-export const emptyStore = () => ({ doses: [], supplements: {}, own: [], weekly: [], raised: {} });
+export const emptyStore = () => ({ doses: [], supplements: {}, own: [], weekly: [], raised: {}, exported: [] });
 
 /* ---------- the crew member's own medications (Dose Tracker: personal and chronic meds) ---------- */
 
@@ -144,6 +144,17 @@ export function whenToAt(id, now = new Date()) {
   return { at: d, recalled: true };
 }
 
+/** The sentence typed or spoken in the quick log, kept with the dose as it was said. */
+const cleanSaid = (raw) => (typeof raw === "string" && raw.trim() ? raw.replace(/\s+/g, " ").trim().slice(0, 140) : null);
+
+/** The readings logged alongside a dose: numbers only, nothing concluded from them. */
+export const CONTEXT_KEYS = ["missionDay", "sleepHours", "co2"];
+function cleanContext(raw) {
+  const out = {};
+  for (const k of CONTEXT_KEYS) if (Number.isFinite(raw?.[k])) out[k] = raw[k];
+  return Object.keys(out).length ? out : null;
+}
+
 /** Keeps only well-formed data read back from the device. */
 export function cleanStore(raw, kit, supplements = []) {
   const sup = new Set(supplements.map((s) => s.id));
@@ -155,12 +166,16 @@ export function cleanStore(raw, kit, supplements = []) {
     const dose = { id: String(d.id ?? `${d.medId}-${d.at}`), medId: d.medId, units: d.units, at: iso(d.at), reason: d.reason ?? null, outcome: null };
     if (d.recalled === true) dose.recalled = true;
     if (d.scheduled === true) dose.scheduled = true;
+    if (cleanSaid(d.said)) dose.said = cleanSaid(d.said);
+    if (cleanContext(d.context)) dose.context = cleanContext(d.context);
     if (OUTCOMES.some((o) => o.id === d.outcome?.worked)) {
       dose.outcome = { worked: d.outcome.worked, effects: Array.isArray(d.outcome.effects) ? d.outcome.effects.map(String) : [], at: d.outcome.at ?? null };
       if (SEVERITY.some((x) => x.id === d.outcome.severity)) dose.outcome.severity = d.outcome.severity;
     }
     out.doses.push(dose);
   }
+  const ids = new Set(out.doses.map((d) => d.id));
+  out.exported = [...new Set((Array.isArray(raw?.exported) ? raw.exported : []).map(String))].filter((id) => ids.has(id));
   for (const [id, at] of Object.entries(raw?.raised ?? {}).slice(-60)) if (!Number.isNaN(ms(at))) out.raised[String(id)] = iso(at);
   out.weekly = (Array.isArray(raw?.weekly) ? raw.weekly : []).filter((w) => ["none", "yes"].includes(w?.answer) && !Number.isNaN(ms(w.at))).map((w) => ({ at: iso(w.at), answer: w.answer })).slice(-20);
   for (const [day, ids] of Object.entries(raw?.supplements ?? {})) {
@@ -183,12 +198,14 @@ export const inCategories = (kit, categories) => kit.filter((m) => categories.in
 /* ---------- the log ---------- */
 
 /** Records a dose. The record is never refused for being early or large: an honest log matters more. */
-export function logDose(store, kit, { medId, units = 1, reason = null, at = new Date(), recalled = false, scheduled = false }) {
+export function logDose(store, kit, { medId, units = 1, reason = null, at = new Date(), recalled = false, scheduled = false, said = null, context = null }) {
   if (!kit.some((k) => k.id === medId)) return { ok: false, why: "This medication is not in the kit list." };
   if (!Number.isInteger(units) || units < 1) return { ok: false, why: "Choose how many you took." };
   const dose = { id: `${medId}-${ms(at)}`, medId, units, at: iso(at), reason, outcome: null };
   if (recalled) dose.recalled = true;
   if (scheduled) dose.scheduled = true;
+  if (cleanSaid(said)) dose.said = cleanSaid(said);
+  if (cleanContext(context)) dose.context = cleanContext(context);
   return { ok: true, dose, store: { ...store, doses: [...store.doses, dose] } };
 }
 
@@ -317,6 +334,42 @@ export function patterns(store, kit, now = new Date(), log = {}) {
 
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "talk" ? -1 : 1));
 }
+
+/* ---------- what goes in the log next to a dose ---------- */
+
+/**
+ * Facts shown before "Log it" and stored with the dose: when this medication was last logged,
+ * how many in the last 24 hours, and the readings of the moment. Readings, not reasons: nothing
+ * here says what caused a symptom or what to take.
+ *   { rows: [{ id, label, value, simulated? }], snapshot: { missionDay?, sleepHours?, co2? } }
+ */
+export function logContext({ med, doses, kit, now = new Date(), log = {}, co2 = null, missionDay = null }) {
+  const rows = [];
+  const earlier = doses.filter((d) => d.medId === med.id && ms(d.at) <= ms(now)).sort((a, b) => ms(b.at) - ms(a.at))[0];
+  const plural = (n) => `${n} ${med.unit}${n === 1 ? "" : "s"}`;
+  rows.push({ id: "last", label: `Last ${med.name.toLowerCase()} in your log`, value: earlier ? `${earlier.recalled ? dayOf(earlier.at) : `${spanWords(earlier.at, now)} ago`} · ${plural(earlier.units)}` : "None yet" });
+  const day = recentDoses(med, kit, doses, now).reduce((n, d) => n + d.units, 0);
+  rows.push({ id: "day", label: "Logged in the last 24 hours", value: day ? plural(day) : "Nothing" });
+  const sleep = log?.[dayOf(now)]?.sleepHours?.value;
+  rows.push({ id: "sleep", label: "Sleep last night", value: Number.isFinite(sleep) ? `${sleep} h` : "Not checked in today" });
+  if (Number.isFinite(co2)) rows.push({ id: "co2", label: "Cabin CO₂ now", value: `${co2} mmHg`, simulated: true });
+  if (Number.isFinite(missionDay)) rows.push({ id: "day-n", label: "Mission day", value: String(missionDay) });
+  return { rows, snapshot: cleanContext({ missionDay, sleepHours: sleep, co2 }) ?? {} };
+}
+
+/** Patterns that logging this entry would add to "Patterns to raise" (the log still records it). */
+export function patternsAfter(store, kit, entry, now = new Date(), log = {}) {
+  const r = logDose(store, kit, entry);
+  if (!r.ok) return [];
+  const before = new Set(patterns(store, kit, now, log).map((p) => p.id));
+  return patterns(r.store, kit, now, log).filter((p) => !before.has(p.id));
+}
+
+/** Doses not yet in an export for the flight surgeon, oldest first. */
+export const queued = (store) => store.doses.filter((d) => !(store.exported ?? []).includes(d.id)).sort((a, b) => ms(a.at) - ms(b.at));
+
+/** Remembers which doses went out in an export. */
+export const markExported = (store, ids) => ({ ...store, exported: [...new Set([...(store.exported ?? []), ...ids])] });
 
 /* ---------- follow-up alerts and reminders ---------- */
 

@@ -11,6 +11,7 @@ import * as M from "./mind-core.js";
 import { mountBrain } from "./brain3d.js";
 import { mountBrainGl } from "./brain-gl.js";
 import { fold } from "./fold.js";
+import { tile } from "./icons.js";
 import { SUPPORT_FACTS, LEVELS, COMFORT, REASONS } from "./data/support.js";
 import { STATUS } from "./data/body-systems.js";
 import { RANGES } from "./data/vital-ranges.js";
@@ -190,7 +191,7 @@ export function mountMind(host, { talk }) {
     const st = STATUS[all.status] ?? STATUS.none;
     $("head").innerHTML = `<span class="tone-${st.tone}" aria-hidden="true">${st.shape}</span> ${esc(all.title)}`;
     $("brain").setAttribute(photo ? "alt" : "aria-label", `3D illustration of a brain with five zones. ${all.title}. ${signals.map((x) => `${x.label}: ${(STATUS[x.status] ?? STATUS.none).word}`).join(". ")}.`);
-    $("signals").innerHTML = signals.map((x) => { const t = STATUS[x.status] ?? STATUS.none; return `<button type="button" class="bs-chip" data-signal="${x.id}" data-tone="${t.tone}" aria-pressed="${x.id === s.id}"><span class="tone-${t.tone}" aria-hidden="true">${t.shape}</span><span>${x.label}<small>${esc(x.value)}</small></span><span class="sr-only">${t.word}</span></button>`; }).join("");
+    $("signals").innerHTML = signals.map((x) => { const t = STATUS[x.status] ?? STATUS.none; return `<button type="button" class="bs-chip" data-signal="${x.id}" data-tone="${t.tone}" aria-pressed="${x.id === s.id}">${tile(x.id, 18)}<span>${x.label}<small><span class="tone-${t.tone}" aria-hidden="true">${t.shape}</span> ${esc(x.value)}</small></span><span class="sr-only">${t.word}</span></button>`; }).join("");
     $("detail").innerHTML = detailHtml(s);
     brain.set({ zones: M.zoneStatus(signals), selected: s.zones, signals, chosen: s.id });
   }

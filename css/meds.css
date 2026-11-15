@@ -208,3 +208,62 @@
 .before-take .fine { display: block; margin-top: 4px; }
 .pt-send { margin: 10px 0 0; min-height: 44px; }
 .pt-sent { margin: 8px 0 0; font-size: 13px; color: var(--tone-normal); }
+
+/* ---------- quick log, the readings logged with an entry, flight-surgeon export ---------- */
+
+.quick { margin: 0 0 14px; padding: 16px; border-radius: 16px; background: var(--hull); border: 1px solid var(--seam); }
+.quick .step-label { display: block; }
+.quick-row { display: flex; gap: 8px; align-items: stretch; margin-top: 4px; }
+.quick-row input { flex: 1; min-width: 0; min-height: 50px; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--seam-hi); background: transparent; color: var(--ink); font: 16px var(--sans); }
+.quick-row input::placeholder { color: var(--ink-3); }
+.quick-row input:focus-visible { outline: 2px solid var(--beacon); outline-offset: 1px; border-color: var(--beacon); }
+.quick-row .cta { min-height: 50px; padding: 0 18px; white-space: nowrap; }
+.quick-mic { flex: none; width: 50px; min-height: 50px; display: grid; place-items: center; border-radius: 14px; border: 1.5px solid var(--seam-hi); background: transparent; color: var(--beacon); cursor: pointer; }
+.quick-mic[hidden] { display: none; }
+.quick-mic:hover { border-color: var(--beacon); }
+.quick-mic[aria-pressed="true"] { background: var(--tone-act); border-color: var(--tone-act); color: #ffffff; animation: mic-live 1.2s ease-in-out infinite; }
+@keyframes mic-live { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--tone-act) 22%, transparent); } }
+.quick > .fine { margin: 10px 0 0; }
+
+.draft { margin: 0 0 14px; padding: 16px; border-radius: 16px; background: var(--hull); border: 1.5px solid var(--beacon); }
+.draft-said { margin: 0 0 12px; color: var(--ink-2); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.draft-med { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.draft-med > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.draft-med strong { font-size: 19px; font-weight: 600; }
+.draft-med .mono { color: var(--ink-3); }
+.draft-med .pill3d { pointer-events: none; flex: none; }
+.draft .fu-sub { margin: 14px 0 8px; }
+.draft .when { margin-top: 14px; }
+.draft .sp-acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.draft .sp-acts .cta { min-height: 50px; padding: 0 26px; }
+
+.ctx { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--soft, transparent); border: 1px solid var(--seam); }
+.ctx .step-label { color: var(--ink-3); }
+.ctx-rows { margin: 4px 0 0; }
+.ctx-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--seam); font-size: 14px; }
+.ctx-rows > div:last-child { border-bottom: 0; }
+.ctx-rows dt { color: var(--ink-2); }
+.ctx-rows dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ctx .fine { margin: 8px 0 0; }
+.ctx-raise { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--tone-watch); font-size: 14px; line-height: 1.45; }
+.ctx-raise p { margin: 0 0 6px; }
+.ctx-raise p:last-child { margin: 0; }
+.meds .sim { font: 600 10px var(--mono); letter-spacing: .08em; color: var(--ink-3); vertical-align: middle; }
+@media (max-width: 420px) {
+  .quick-row { flex-wrap: wrap; }
+  .quick-row input { flex-basis: 100%; }
+  .quick-row .cta { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .quick-mic[aria-pressed="true"] { animation: none; } }
+
+/* the realistic body picture on the "what for" stage */
+.body-stage.with-photo { max-width: 430px; aspect-ratio: 1 / 1.17; }
+.body-stage.with-photo .stage-fig { left: 12%; width: 76%; }
+.body-stage.with-photo .body-photo { display: block; width: 100%; height: auto; filter: drop-shadow(0 14px 22px rgba(15, 23, 42, .18)); transition: opacity .25s; }
+.body-stage.with-photo.focused .body-photo { opacity: .82; }
+.body-stage.with-photo .zone-btn { width: 23%; }
+.body-stage.with-photo .zone-dot { background: #ffffff; border: 2.5px solid var(--beacon); width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+.body-stage.with-photo .zone-dot.on { background: var(--beacon); border-color: #ffffff; }
+.body-stage.with-photo .zone-lines line { stroke: color-mix(in srgb, var(--beacon) 55%, transparent); }
+.body-stage.with-photo .zone-lines line.on { stroke: var(--beacon); stroke-width: 2; stroke-dasharray: none; }
+.stage-note { margin: 4px 0 12px; text-align: center; }

@@ -22,3 +22,4 @@ body.al-act .fn-card { top: 92px; }
 .fn-acts { display: flex; align-items: center; gap: 10px; }
 .fn-acts .cta { min-height: 46px; }
 @media (prefers-reduced-motion: reduce) { .fn-card { animation: none; } }
+.fn-card .fm-video { display: block; width: 100%; max-height: 46vh; margin: 0 0 10px; border-radius: 12px; background: #000; }

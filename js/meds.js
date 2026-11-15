@@ -11,13 +11,19 @@ import { confirmHere } from "./ask.js";
 import * as M from "./meds-core.js";
 import { RED_FLAGS, KIT, SIDE_EFFECTS, KIT_FACTS } from "./data/med-kit.js";
 import { SUPPLEMENTS } from "./data/supplements.js";
-import { ZONES } from "./data/med-zones.js";
+import { ZONES, OTHER_NAMES } from "./data/med-zones.js";
 import { STATUS } from "./data/body-systems.js";
-import { figureSvg } from "./anatomy.js";
+import { photoFigure, PHOTO_NOTE } from "./anatomy.js";
 import { pill3d, enableDrag } from "./pill3d.js";
 import { readLog } from "./store.js";
 import { sendAlert } from "./support.js";
-import { tabsHtml, showTab } from "./fold.js";
+import { tabsHtml, showTab, fold } from "./fold.js";
+import * as Q from "./quicklog-core.js";
+import { toBundle, bundleJson } from "./fhir-core.js";
+import { FLOW_FACTS } from "./data/med-flow.js";
+import { snapshot, startFeed } from "./feed.js";
+import { current } from "./store.js";
+import { missionDay } from "./today-core.js";
 
 const WORKED = {
   yes: { ...STATUS.normal, word: "It worked" },
@@ -26,10 +32,13 @@ const WORKED = {
 };
 const KIT_URL = KIT_FACTS.carried.url;
 
-// The figure is 200 x 450 units and sits in the middle 46% of the stage.
-const FIG = { left: 27, width: 46 };
-const px = (x) => FIG.left + (x / 200) * FIG.width;
-const py = (y) => (y / 450) * 100;
+// The body picture (2:3) sits in the middle of the stage; a spot on it is given in % of the
+// picture, and each "what for" button has its own height so none covers the open hands.
+const FIG = { left: 12, width: 76, stage: 1.17 }; // stage height = 1.17 x its width
+const ON_PHOTO = { sleep: [50, 3.2], head: [54, 6.5], nose: [50.5, 9.6], stomach: [53, 31.5], back: [43.5, 36.5], gut: [50, 39.6], skin: [26.5, 39] };
+const BTN_TOP = { sleep: 0, head: 4.5, nose: 11.7, stomach: 16.7, back: 23.4, gut: 59, skin: 59 };
+const px = (id) => FIG.left + (ON_PHOTO[id][0] / 100) * FIG.width;
+const py = (id) => (ON_PHOTO[id][1] / 100) * ((FIG.width * 1.5) / FIG.stage);
 
 let LIST = KIT; // kit list plus the crew member's own medications, refreshed on every paint
 const med = (id) => LIST.find((k) => k.id === id);
@@ -59,17 +68,85 @@ function download(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/* ---------- quick log: one sentence, typed or spoken ---------- */
+
+const MIC = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>`;
+const QUICK_NOTE = "Name what you took. Nothing is logged until you confirm it.";
+
+const quickHtml = () => `<form class="quick" novalidate autocomplete="off">
+    <label class="mono step-label" for="md-quick">QUICK LOG · SAY IT OR TYPE IT</label>
+    <div class="quick-row">
+      <input id="md-quick" name="said" type="text" maxlength="${Q.MAX_SAID}" placeholder="two ibuprofen for back pain" enterkeyhint="go" autocapitalize="off" spellcheck="false">
+      <button type="button" class="quick-mic" data-med-act="mic" aria-pressed="false" aria-label="Speak instead of typing" hidden>${MIC}</button>
+      <button type="submit" class="cta main">Read it</button>
+    </div>
+    <p class="fine" data-ref="quick-note" role="status" aria-live="polite">${QUICK_NOTE}</p>
+    ${fold("Why a quick log", `<p>NASA's own medication app for ISS crews collected far more entries than recall interviews, ${quote(FLOW_FACTS.usability)}</p>
+      <p>Its authors expect that ${quote(FLOW_FACTS.better)}</p>
+      <p>So the shortest path here is one sentence and one tap. The sentence is only read for a medication name, a count and what it was for: Ergosphere never picks a medication from a symptom and never turns milligrams into a number of tablets.</p>
+      <p class="voice-note" hidden>Voice uses this browser's speech recognition, which may send the audio to the browser maker's servers; a flight version would recognise speech on board. Typing stays on this device.</p>`)}
+  </form>
+  <div data-ref="draft" aria-live="polite"></div>`;
+
+/* ---------- what is logged next to a dose ---------- */
+
+function missionDayOn(at) {
+  let start = null;
+  try { start = JSON.parse(localStorage.getItem("geosfera.mission"))?.start ?? null; } catch { /* no mission start saved */ }
+  return start ? missionDay(start, at) : null;
+}
+
+/** Readings of the moment for one entry. A dose remembered later gets that day's log, not today's sensors. */
+function contextFor(store, m, when) {
+  const co2 = when.recalled ? null : (snapshot() ?? startFeed())?.readout?.channels?.co2?.value ?? null;
+  return M.logContext({ med: m, doses: store.doses, kit: LIST, now: when.at, log: readLog(), co2, missionDay: missionDayOn(when.at) });
+}
+
+function contextHtml(ctx, added, recalled) {
+  return `<div class="ctx">
+    <p class="mono step-label">LOGGED WITH THIS ENTRY</p>
+    <dl class="ctx-rows">${ctx.rows.map((r) => `<div><dt>${esc(r.label)}</dt><dd>${esc(r.value)}${r.simulated ? ` <span class="sim">SIMULATED</span>` : ""}</dd></div>`).join("")}</dl>
+    ${recalled ? `<p class="fine">Remembered later: the sensors' readings of today are not attached.</p>` : ""}
+    ${added.length ? `<div class="ctx-raise"><p><strong>${STATUS.watch.shape} This entry adds to “Patterns to raise”.</strong> It is still logged as you took it.</p>${added.map((p) => `<p>${p.text}${p.quote ? ` “${p.quote}” ${link(p.url, "NASA kit list")}` : ""}${p.illustrative ? ` <span class="fine">Illustrative app rule.</span>` : ""}</p>`).join("")}</div>` : ""}
+    <p class="fine">Readings, not reasons. Ergosphere does not say what caused a symptom or what to take: your crew medical officer reads them together.</p>
+  </div>`;
+}
+
+const beforeHtml = (m) => (m.beforeTaking ? `<strong>Before you take it.</strong> ${m.beforeTaking} <span class="fine">Pharmacist review (${m.reviewedBy}).</span>` : "");
+
+function draftHtml(d) {
+  const m = d.med;
+  const differs = Q.strengthDiffers(d.strength, m);
+  const counts = [...new Set([1, 2, 3, d.units].filter(Boolean))].sort((a, b) => a - b);
+  const picked = d.units ?? (differs ? null : 1);
+  return `<div class="draft">
+    <p class="mono step-label">CHECK IT · NOTHING IS LOGGED YET</p>
+    <p class="draft-said">${d.via === "voice" ? "Heard" : "Read"}: “${esc(d.said)}”</p>
+    <div class="draft-med">${pill3d(m, 64)}<div><strong>${esc(m.name)}</strong><span class="mono">${m.own ? "your own" : `${m.strength}${m.rx ? " · Rx" : ""}`}</span>${d.close ? `<span class="fine">Closest name to “${esc(d.word)}”. Not it? Cancel and try again.</span>` : !Q.norm(m.name).includes(d.word) ? `<span class="fine">“${esc(d.word)}” is listed here as ${esc(m.name)}.</span>` : ""}</div></div>
+    ${differs ? `<p class="before-take"><strong>You said ${esc(d.strength)}.</strong> The log counts ${m.unit}s, and the kit's ${m.unit} is ${m.strength}. Ergosphere does not convert one into the other: choose how many you took.</p>` : ""}
+    ${m.beforeTaking ? `<p class="before-take">${beforeHtml(m)}</p>` : ""}
+    <p class="fu-sub">How many</p>
+    <div class="chips" role="radiogroup" aria-label="How many">${counts.map((n) => `<label class="chip"><input type="radio" name="d-units" value="${n}" ${n === picked ? "checked" : ""}><span>${units(m, n)}</span></label>`).join("")}</div>
+    <p class="fu-sub">What for</p>
+    <div class="chips" role="radiogroup" aria-label="What it was for">${ZONES.map((z) => `<label class="chip"><input type="radio" name="d-zone" value="${z.id}" ${z.id === d.zoneId ? "checked" : ""}><span>${z.reason}</span></label>`).join("")}</div>
+    <label class="when"><span>When</span><select name="d-when">${M.WHEN.map((w) => `<option value="${w.id}">${w.label}</option>`).join("")}</select></label>
+    <div data-ref="draft-ctx"></div>
+    <div class="sp-acts"><button type="button" class="cta main" data-med-act="draft-log">Log it</button><button type="button" class="cta" data-med-act="draft-cancel">Cancel</button></div>
+  </div>`;
+}
+
 /* ---------- step 1: what it was for ---------- */
 
 function stageHtml() {
-  const lines = ZONES.map((z) => `<line data-zone-line="${z.id}" x1="${z.side === "left" ? 25 : 75}" y1="${z.top + 5.5}" x2="${px(z.at[0]).toFixed(1)}" y2="${py(z.at[1]).toFixed(1)}"/>`).join("");
-  const dots = ZONES.map((z) => `<span class="zone-dot" data-zone-dot="${z.id}" style="left:${px(z.at[0]).toFixed(1)}%;top:${py(z.at[1]).toFixed(1)}%" aria-hidden="true"></span>`).join("");
-  const labels = ZONES.map((z) => `<button type="button" class="zone-btn" data-zone="${z.id}" data-side="${z.side}" style="top:${z.top}%" aria-pressed="false">${z.label}</button>`).join("");
-  return `<div class="body-stage" data-ref="stage">
-    <div class="stage-fig" aria-hidden="true">${figureSvg()}</div>
+  const lines = ZONES.map((z) => `<line data-zone-line="${z.id}" x1="${z.side === "left" ? 23 : 77}" y1="${BTN_TOP[z.id] + 4.6}" x2="${px(z.id).toFixed(1)}" y2="${py(z.id).toFixed(1)}"/>`).join("");
+  const dots = ZONES.map((z) => `<span class="zone-dot" data-zone-dot="${z.id}" style="left:${px(z.id).toFixed(1)}%;top:${py(z.id).toFixed(1)}%" aria-hidden="true"></span>`).join("");
+  const labels = ZONES.map((z) => `<button type="button" class="zone-btn" data-zone="${z.id}" data-side="${z.side}" style="top:${BTN_TOP[z.id]}%" aria-pressed="false">${z.label}</button>`).join("");
+  return `<div class="body-stage with-photo" data-ref="stage">
+    <div class="stage-fig" aria-hidden="true">${photoFigure()}</div>
     <svg class="zone-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
     ${dots}${labels}
-  </div>`;
+  </div>
+  <p class="fine stage-note">${PHOTO_NOTE}</p>`;
 }
 
 /* ---------- steps 2 and 3: what you took, how many ---------- */
@@ -102,6 +179,7 @@ function pickHtml(z) {
     <p class="before-take" data-ref="before" hidden></p>
     <div class="chips" role="radiogroup" aria-label="How many">${[1, 2, 3].map((n) => `<label class="chip"><input type="radio" name="units" value="${n}" ${n === 1 ? "checked" : ""}><span data-unit-label="${n}">${n}</span></label>`).join("")}</div>
     <label class="when"><span>When</span><select name="when">${M.WHEN.map((w) => `<option value="${w.id}">${w.label}</option>`).join("")}</select></label>
+    <div data-ref="ctx"></div>
     <button type="button" class="cta main log-btn" data-med-act="log">Log it</button>
   </div>`;
 }
@@ -220,6 +298,8 @@ function recordHtml(store) {
 export function mountMeds(host) {
   let store = load();
   let open = null;
+  let draft = null; // the quick-log entry being checked: { said, med, units, strength, zoneId, close, via }
+  let rec = null;   // speech recognition while it listens
 
   host.innerHTML = `
   <section class="meds" aria-labelledby="md-title">
@@ -230,7 +310,8 @@ export function mountMeds(host) {
     <div data-ref="due" aria-live="polite"></div>
 
     ${tabsHtml("meds", [
-      { id: "log", label: "Log a dose", html: `<div class="meds-main">
+      { id: "log", label: "Log a dose", html: `${quickHtml()}
+    <div class="meds-main">
       <div class="meds-left">
         ${stageHtml()}
         <form class="alarm" novalidate autocomplete="off">
@@ -273,12 +354,23 @@ export function mountMeds(host) {
       <p>It stays on this device. ${KIT_FACTS.record.text}${quote(KIT_FACTS.record)}</p>
       <div data-ref="record"></div>
       <div class="data-btns"><button type="button" class="cta" data-med-act="csv">Export CSV</button><button type="button" class="textlink" data-med-act="reset">Clear the demo log</button></div>
+    </section>
+    <section class="data-card" aria-labelledby="fs-h">
+      <h2 id="fs-h">For the flight surgeon</h2>
+      <p>Your log as HL7 FHIR R4 <em>MedicationStatement</em> records, a standard health-record format. It holds what you say you took, never an instruction.</p>
+      <p data-ref="queue"></p>
+      <div class="data-btns"><button type="button" class="cta" data-med-act="fhir">Export FHIR (JSON)</button></div>
+      ${fold("About this format", `<p>What a MedicationStatement is: ${quote(FLOW_FACTS.fhirWhat)}</p>
+      <p>Who may report it: ${quote(FLOW_FACTS.fhirSource)}</p>
+      <p>Crews already used NASA's own medication app ${quote(FLOW_FACTS.share)}</p>
+      <p>That study stopped early: ${quote(FLOW_FACTS.ended)}</p>`)}
+      <p class="fine"><span class="sim">SIMULATED</span> link. Ergosphere has no connection to the ground: the file is what would wait for the next link window, and nothing leaves this device until you export it. Medications and reasons are written as text, with no clinical codes.</p>
     </section>` }
     ])}
 
     <a class="duty-link" href="#duty"><span>Fit for duty check<small>Before a spacewalk, docking or another critical task</small></span><span>Open →</span></a>
 
-    <p class="fine rule-note">Ergosphere never suggests a medication or a dose and never interprets a symptom. Names and categories come from NASA's ISS medical kit list (2015); the 3D shapes are illustrations, not the real products. Warnings quote that list or are marked as illustrative app rules; the waiting time before "Did it work?" and the alarm-sign list are app rules too. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Ergosphere never suggests a medication or a dose and never interprets a symptom. The quick log only reads the words you say; the readings stored next to an entry are facts for your crew medical officer, with no conclusion drawn. Names and categories come from NASA's ISS medical kit list (2015); the 3D shapes are illustrations, not the real products. Warnings quote that list or are marked as illustrative app rules; the waiting time before "Did it work?" and the alarm-sign list are app rules too. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".meds");
@@ -307,6 +399,93 @@ export function mountMeds(host) {
     $("panel").innerHTML = HINT;
   }
 
+  const picked = (name) => root.querySelector(`input[name="${name}"]:checked`)?.value;
+  const quickNote = (text) => { $("quick-note").textContent = text; };
+
+  /** The tap-by-tap entry as it stands, or null while no medication is picked. */
+  function stepEntry() {
+    const medId = picked("take");
+    if (!medId) return null;
+    const when = M.whenToAt(root.querySelector('select[name="when"]')?.value ?? "0");
+    return { m: med(medId), when, entry: { medId, units: Number(picked("units") ?? 1), reason: zone(open)?.reason ?? null, ...when } };
+  }
+
+  function draftEntry() {
+    const when = M.whenToAt(root.querySelector('select[name="d-when"]')?.value ?? "0");
+    const n = Number(picked("d-units"));
+    return { m: draft.med, when, entry: { medId: draft.med.id, units: Number.isInteger(n) && n > 0 ? n : null, reason: zone(picked("d-zone"))?.reason ?? null, said: draft.said, ...when } };
+  }
+
+  /** Fills "Logged with this entry" for whichever entry is on screen and returns its snapshot. */
+  function paintContext(ref, x) {
+    const ctx = contextFor(store, x.m, x.when);
+    const added = x.entry.units ? M.patternsAfter(store, LIST, x.entry, new Date(), readLog()) : [];
+    if ($(ref)) $(ref).innerHTML = contextHtml(ctx, added, x.when.recalled);
+    return ctx.snapshot;
+  }
+
+  function closeDraft() {
+    draft = null;
+    $("draft").innerHTML = "";
+  }
+
+  function readQuick(text, via) {
+    LIST = M.medList(KIT, store);
+    const p = Q.parseQuick(text, LIST, ZONES, OTHER_NAMES);
+    if (!p.said) { quickNote("Say or type what you took, for example “two ibuprofen for back pain”."); return; }
+    if (!p.med) {
+      closeDraft();
+      if (p.zone) { openZone(p.zone.id); quickNote(`No medication name in that. Opened “${p.zone.reason}”: pick what you took below.`); }
+      else quickNote("No medication from the kit list or your own list in that. Say its name, or tap the figure below.");
+      return;
+    }
+    closeZone();
+    draft = { ...p, zoneId: p.zone?.id ?? null, via };
+    $("draft").innerHTML = draftHtml(draft);
+    paintContext("draft-ctx", draftEntry());
+    quickNote(QUICK_NOTE);
+    $("draft").scrollIntoView({ block: "nearest" });
+  }
+
+  const SR = globalThis.SpeechRecognition ?? globalThis.webkitSpeechRecognition;
+  if (SR) {
+    root.querySelector(".quick-mic").hidden = false;
+    root.querySelector(".voice-note").hidden = false;
+  }
+
+  function listen() {
+    const mic = root.querySelector(".quick-mic"), input = root.querySelector("#md-quick");
+    if (rec) { rec.stop(); return; }
+    let heard = "";
+    try {
+      rec = new SR();
+      rec.lang = "en-US";
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+      rec.onresult = (ev) => {
+        const all = [...ev.results];
+        input.value = all.map((r) => r[0].transcript).join(" ").replace(/\s+/g, " ").trim().slice(0, Q.MAX_SAID);
+        if (all.some((r) => r.isFinal)) heard = input.value;
+      };
+      rec.onerror = (ev) => {
+        quickNote(ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "The microphone is blocked for this page. Type it instead."
+          : ev.error === "no-speech" ? "Nothing heard. Tap the microphone and try again, or type it." : "Voice did not work here. Type it instead.");
+      };
+      rec.onend = () => {
+        rec = null;
+        mic.setAttribute("aria-pressed", "false");
+        if (heard) readQuick(heard, "voice");
+      };
+      rec.start();
+      mic.setAttribute("aria-pressed", "true");
+      quickNote("Listening… say the medication, how many, and what it was for.");
+    } catch {
+      rec = null;
+      mic.setAttribute("aria-pressed", "false");
+      quickNote("Voice did not work here. Type it instead.");
+    }
+  }
+
   function paint(keepMsg = false) {
     const now = new Date();
     LIST = M.medList(KIT, store);
@@ -315,6 +494,8 @@ export function mountMeds(host) {
     $("patterns").innerHTML = patternsHtml(store, now);
     $("supps").innerHTML = supplementsHtml(store, M.dayOf(now));
     $("record").innerHTML = recordHtml(store);
+    const waiting = M.queued(store).length;
+    $("queue").innerHTML = !store.doses.length ? "Nothing logged yet." : waiting ? `<strong>${waiting} of ${store.doses.length}</strong> ${store.doses.length === 1 ? "entry" : "entries"} waiting for the next export.` : `Nothing waiting: all ${store.doses.length} ${store.doses.length === 1 ? "entry is" : "entries are"} in your last export.`;
     if (!keepMsg) $("msg").textContent = "";
   }
 
@@ -323,10 +504,13 @@ export function mountMeds(host) {
       const m = med(e.target.value);
       $("howmany").hidden = false;
       root.querySelectorAll("[data-unit-label]").forEach((s) => { s.textContent = units(m, Number(s.dataset.unitLabel)); });
-      $("before").innerHTML = m.beforeTaking ? `<strong>Before you take it.</strong> ${m.beforeTaking} <span class="fine">Pharmacist review (${m.reviewedBy}).</span>` : "";
+      $("before").innerHTML = beforeHtml(m);
       $("before").hidden = !m.beforeTaking;
+      paintContext("ctx", stepEntry());
       $("howmany").scrollIntoView({ block: "nearest" });
     }
+    if (["units", "when"].includes(e.target.name) && stepEntry()) paintContext("ctx", stepEntry());
+    if (["d-units", "d-zone", "d-when"].includes(e.target.name) && draft) paintContext("draft-ctx", draftEntry());
     if (e.target.name === "effect") {
       const form = e.target.closest(".followup");
       const real = [...form.querySelectorAll('input[name="effect"]:checked')].some((i) => i.value !== "none");
@@ -371,6 +555,34 @@ export function mountMeds(host) {
     if (!t) return;
     const act = t.dataset.medAct;
     if (act === "close") { closeZone(); stage.scrollIntoView({ block: "nearest" }); return; }
+    if (act === "mic") { listen(); return; }
+    if (act === "draft-cancel") { closeDraft(); quickNote(QUICK_NOTE); root.querySelector("#md-quick").focus({ preventScroll: true }); return; }
+    if (act === "draft-log") {
+      if (!draft) return;
+      const x = draftEntry();
+      if (!x.entry.units) { $("msg").textContent = "Choose how many you took."; $("msg").scrollIntoView({ block: "nearest" }); return; }
+      const r = M.logDose(store, LIST, { ...x.entry, context: paintContext("draft-ctx", x) });
+      if (!r.ok) { $("msg").textContent = r.why; return; }
+      store = r.store;
+      if (!save(store)) { $("msg").textContent = "This browser blocked saving. The dose was not stored."; return; }
+      const m = x.m;
+      closeDraft();
+      root.querySelector("#md-quick").value = "";
+      paint(true);
+      $("msg").textContent = x.when.recalled
+        ? `Logged for ${dayWords(x.when.at.toISOString())}: ${m.name}, ${units(m, x.entry.units)}, marked as remembered later. Did it work? is waiting at the top.`
+        : `Logged: ${m.name}, ${units(m, x.entry.units)}. Ergosphere will ask whether it worked in ${M.spanWords(new Date(), new Date(Date.now() + m.askAfterHours * 3600000))}.`;
+      $("msg").scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (act === "fhir") {
+      if (!store.doses.length) { $("msg").textContent = "Nothing to export yet."; return; }
+      download(`ergosphere-medications-${M.dayOf()}.fhir.json`, bundleJson(toBundle(store.doses, LIST, { who: `${current()?.name ?? "Crew member"} (simulated crew profile)` })), "application/fhir+json");
+      store = M.markExported(store, store.doses.map((d) => d.id));
+      save(store);
+      paint(true);
+      return;
+    }
     if (act === "csv") { download(`ergosphere-medications-${M.dayOf()}.csv`, M.toCsv(store.doses, LIST), "text/csv"); return; }
     if (act === "goto-own") { showTab(root, "meds", "own"); $("own-card").scrollIntoView({ block: "start" }); root.querySelector('.own-form input[name="name"]').focus({ preventScroll: true }); return; }
     if (act === "week-none" || act === "week-yes") {
@@ -386,7 +598,7 @@ export function mountMeds(host) {
       const medId = root.querySelector('input[name="take"]:checked')?.value;
       const n = Number(root.querySelector('input[name="units"]:checked')?.value ?? 1);
       const when = M.whenToAt(root.querySelector('select[name="when"]')?.value ?? "0");
-      const r = M.logDose(store, LIST, { medId, units: n, reason: zone(open)?.reason ?? null, ...when });
+      const r = M.logDose(store, LIST, { medId, units: n, reason: zone(open)?.reason ?? null, ...when, context: medId ? contextFor(store, med(medId), when).snapshot : null });
       if (!r.ok) { $("msg").textContent = r.why; return; }
       store = r.store;
       if (!save(store)) { $("msg").textContent = "This browser blocked saving. The dose was not stored."; return; }
@@ -400,6 +612,8 @@ export function mountMeds(host) {
   });
 
   root.addEventListener("submit", (e) => {
+    const qf = e.target.closest(".quick");
+    if (qf) { e.preventDefault(); readQuick(qf.said.value, "typed"); return; }
     const of = e.target.closest(".own-form");
     if (of) {
       e.preventDefault();
