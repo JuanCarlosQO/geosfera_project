@@ -22,7 +22,25 @@ export const RULES = {
   stillWatch: 60,                   // app rule: minutes without moving before a reminder
   stillAct: 120,                    // app rule: minutes without moving before "move now"
   radiationSpike: 10,               // app rule: dose rate this many times the replay's median
-  smoothSeconds: 10                 // app rule: vital signs are judged on their 10-second average
+  smoothSeconds: 10,                // app rule: vital signs are judged on their 10-second average
+  // --- from the team's simulator engine; illustrative app rules, not NASA limits ---
+  age: 40,                          // estimated maximum heart rate = 220 − age (demo value)
+  hrExercise: [0.85, 0.95],         // watch / act as a fraction of that maximum while exercising
+  hrEva: [0.70, 0.85],              // the same during a spacewalk
+  hrRestAct: 130,                   // resting heart rate that is "act now"
+  hrRecovery: 115,                  // still above this 45 s after stopping: slow recovery
+  recoveryAfter: 45,
+  recoverySeconds: 60,              // how long the recovery phase lasts
+  sysEffort: 210,                   // systolic pressure worth a look during effort
+  sysLow: 90,
+  smoke: [50, 150],                 // µg/m³ of particles: watch / act
+  ammonia: [3, 20],                 // ppm
+  power: [70, 40],                  // % of power available (below)
+  hydration: [80, 65],              // % of estimated hydration (below)
+  pressureLow: [97, 92],            // kPa (below), around the ISS's usual 101.3
+  leakKpaMin: 2,                    // cabin pressure falling this fast is a leak
+  raiseAfter: 3,                    // readings in a row before an alert is raised
+  clearAfter: 5                     // readings in a row back to normal before it is cleared
 };
 
 /* NASA limits used by the simulator (quotes and links in js/data/telemetry.js). */
@@ -39,11 +57,22 @@ export const LIMITS = {
 };
 
 export const SCENARIOS = {
-  nominal: { label: "Nominal", note: "Everything at NASA's usual cabin values." },
-  co2: { label: "CO₂ scrubber fault", note: "Simulated: CO₂ removal slows and cabin CO₂ climbs." },
-  solar: { label: "Solar particle event", note: "Simulated: a burst of particles multiplies the dose rate." },
-  still: { label: "Long time still", note: "Simulated: hours at a console without moving." }
+  nominal: { label: "Reset all", note: "Everything at NASA's usual cabin values.", group: "reset" },
+  co2: { label: "CO₂ scrubber fault", note: "Simulated: CO₂ removal slows and cabin CO₂ climbs.", group: "cabin" },
+  solar: { label: "Solar particle event", note: "Simulated: a burst of particles multiplies the dose rate.", group: "cabin" },
+  depress: { label: "Cabin leak", note: "Simulated: the cabin loses pressure, and gets colder and drier.", group: "cabin" },
+  thermal: { label: "Cooling failure", note: "Simulated: thermal control stops; heat and humidity build up.", group: "cabin" },
+  fire: { label: "Fire", note: "Simulated: smoke particles rise fast, with heat and some CO₂.", group: "cabin" },
+  nh3: { label: "Ammonia leak", note: "Simulated: coolant ammonia reaches the cabin air.", group: "cabin" },
+  power: { label: "Power loss", note: "Simulated: power drops; fans slow, so CO₂ and temperature rise.", group: "cabin" },
+  exercise: { label: "Exercise session", note: "Simulated: a workout. A high heart rate is expected and judged as effort.", group: "crew" },
+  eva: { label: "Spacewalk", note: "Simulated: work outside in the suit. Effort limits are stricter.", group: "crew" },
+  still: { label: "Long time still", note: "Simulated: hours at a console without moving.", group: "crew" },
+  hydration: { label: "Dehydration", note: "Simulated: estimated hydration falls; heart rate rises, pressure drops.", group: "crew" },
+  tachy: { label: "Racing heart", note: "Simulated: heart rate jumps at rest with no effort.", group: "crew" }
 };
+export const EFFORT = ["exercise", "eva"];
+const EFFORT_END = { exercise: 110, eva: 240 }; // seconds before the effort ends by itself
 
 /* ---------- a repeatable random source, so tests and demos behave the same ---------- */
 export function rng(seed = 1) {
@@ -103,6 +132,13 @@ export function startState({ hr = null, sys = null, dia = null } = {}, radiation
     temperature: 22.4,
     humidity: 46,
     pressure: LIMITS.pressureIss,
+    smoke: 5,
+    ammonia: 0,
+    power: 100,
+    hydration: 95,
+    active: {},
+    mode: "rest",
+    presHist: [],
     radIndex: 0,
     radiation,
     base: { hr: hr ?? 70, sys: sys ?? 116, dia: dia ?? 75 }
@@ -112,30 +148,100 @@ export function startState({ hr = null, sys = null, dia = null } = {}, radiation
 /** Moves a value a little toward its target, with some noise. */
 const drift = (value, target, pull, noise, rand) => value + (target - value) * pull + (rand() - 0.5) * 2 * noise;
 
-/** One second later. Pure: same state, scenario and random source give the same result. */
-export function step(state, rand) {
-  const s = { ...state, t: state.t + 1, since: state.since + 1 };
-  const k = s.scenario;
-  const ramp = Math.min(1, s.since / 45); // scenarios build up over about 45 seconds
+/** What one active scenario adds to each channel's target, ramping up over its own time. */
+function contribution(id, c) {
+  if (EFFORT.includes(id) && c.phase === "rec") { const r = Math.exp(-c.t / 20); return Object.fromEntries(Object.entries(c.c0 ?? {}).map(([k, v]) => [k, v * r])); }
+  const k = (n) => Math.min(c.since, n) / n;
+  switch (id) {
+    case "co2": return { co2: 4.4 * k(45), hr: 9 * k(45), sys: 6 * k(45), dia: 4 * k(45) };
+    case "solar": return { hr: 4 * k(45) };
+    case "still": return { hr: -4 * k(45) };
+    case "depress": return { pressure: -16.8 * k(90), temperature: -2.4 * k(90), humidity: -12 * k(90), hr: 28 * k(90), sys: 14 * k(90) };
+    case "thermal": return { temperature: 10.5 * k(80), humidity: 30 * k(80), hr: 8 * k(80) };
+    case "fire": return { smoke: 200 * k(40), temperature: 4 * k(40), co2: 1.5 * k(40), hr: 15 * k(40), humidity: -5 * k(40) };
+    case "nh3": return { ammonia: 30 * k(50), hr: 10 * k(50) };
+    case "power": return { power: -65 * k(90), co2: 2.2 * k(90), temperature: 4 * k(90), hr: 3 * k(90) };
+    case "hydration": return { hydration: -35 * k(90), hr: 22 * k(90), sys: -12 * k(90) };
+    case "tachy": return { hr: 75 * k(30) };
+    case "exercise": return { hr: 77 * k(20), sys: 32 * k(20), dia: 6 * k(20), temperature: 0.5 * k(20), humidity: 8 * k(20), co2: 0.4 * k(20) };
+    case "eva": return { hr: 40 * k(15), sys: 15 * k(15), dia: 4 * k(15) };
+    default: return {};
+  }
+}
 
-  const co2Target = k === "co2" ? 2.2 + ramp * 4.4 : 2.2;
-  const hrTarget = s.base.hr + (k === "co2" ? ramp * 9 : 0) + (k === "solar" ? ramp * 4 : 0) + (k === "still" ? -ramp * 4 : 0);
-  s.co2 = clamp(drift(s.co2, co2Target, 0.12, 0.05, rand), 0.4, 12);
-  s.heartRate = clamp(drift(s.heartRate, hrTarget, 0.15, 1.2, rand), 35, 190);
-  s.systolic = clamp(drift(s.systolic, s.base.sys + (k === "co2" ? ramp * 6 : 0), 0.12, 1.1, rand), 80, 200);
-  s.diastolic = clamp(drift(s.diastolic, s.base.dia + (k === "co2" ? ramp * 4 : 0), 0.12, 0.8, rand), 45, 130);
-  s.temperature = clamp(drift(s.temperature, 22.4, 0.08, 0.05, rand), 10, 35);
-  s.humidity = clamp(drift(s.humidity, 46, 0.08, 0.4, rand), 5, 95);
-  s.pressure = clamp(drift(s.pressure, LIMITS.pressureIss, 0.2, 0.05, rand), 30, 110);
+/** "exercise", "eva", "recovery" (just stopped an effort) or "rest". */
+export function modeOf(active = {}) {
+  if (active.eva && active.eva.phase !== "rec") return "eva";
+  if (active.exercise && active.exercise.phase !== "rec") return "exercise";
+  if (EFFORT.some((id) => active[id]?.phase === "rec")) return "recovery";
+  return "rest";
+}
+/** Seconds since the last effort stopped (0 when not recovering). */
+export const recoveryTime = (active = {}) => Math.max(0, ...EFFORT.map((id) => (active[id]?.phase === "rec" ? active[id].t : 0)));
+
+/** One second later. Pure: same state, scenarios and random source give the same result. */
+export function step(state, rand) {
+  const s = { ...state, t: state.t + 1, since: state.since + 1, active: {} };
+  for (const [id, c0] of Object.entries(state.active ?? {})) {
+    const c = { ...c0, since: c0.since + 1 };
+    if (EFFORT.includes(id)) {
+      if (c.phase === "rec") { c.t += 1; if (c.t > RULES.recoverySeconds) continue; }
+      else if (c.since > EFFORT_END[id]) Object.assign(c, { phase: "rec", t: 0, c0: contribution(id, c) });
+    }
+    s.active[id] = c;
+  }
+  s.mode = modeOf(s.active);
+  const T = { hr: s.base.hr, sys: s.base.sys, dia: s.base.dia, co2: 2.2, temperature: 22.4, humidity: 46, pressure: LIMITS.pressureIss, smoke: 5, ammonia: 0, power: 100, hydration: 95 };
+  for (const [id, c] of Object.entries(s.active)) for (const [k, v] of Object.entries(contribution(id, c))) T[k] += v;
+
+  s.co2 = clamp(drift(s.co2, T.co2, 0.12, 0.05, rand), 0.4, 12);
+  s.heartRate = clamp(drift(s.heartRate, T.hr, 0.15, 1.2, rand), 35, 200);
+  s.systolic = clamp(drift(s.systolic, T.sys, 0.12, 1.1, rand), 70, 230);
+  s.diastolic = clamp(drift(s.diastolic, T.dia, 0.12, 0.8, rand), 45, 130);
+  s.temperature = clamp(drift(s.temperature, T.temperature, 0.08, 0.05, rand), 10, 40);
+  s.humidity = clamp(drift(s.humidity, T.humidity, 0.08, 0.4, rand), 5, 95);
+  s.pressure = clamp(drift(s.pressure, T.pressure, 0.2, 0.05, rand), 30, 110);
   // one simulated second stands for one minute at the console
-  s.still = k === "still" ? s.still + 1 : Math.max(0, s.still + (rand() < 0.08 ? -s.still : 0.25));
+  const resting = s.mode === "rest";
+  s.still = !resting ? 0 : s.active.still ? s.still + 1 : Math.max(0, s.still + (rand() < 0.08 ? -s.still : 0.25));
+  s.smoke = clamp(drift(s.smoke ?? 5, T.smoke, 0.15, 0.5, rand), 0, 400);
+  s.ammonia = clamp(drift(s.ammonia ?? 0, T.ammonia, 0.15, 0.03, rand), 0, 60);
+  s.power = clamp(drift(s.power ?? 100, T.power, 0.1, 0.15, rand), 0, 100);
+  s.hydration = clamp(drift(s.hydration ?? 95, T.hydration, 0.06, 0.1, rand), 30, 100);
+  s.presHist = [...(state.presHist ?? []), s.pressure].slice(-12);
   s.radIndex = (s.radIndex + 1) % (s.radiation?.values.length || 1);
   return s;
 }
 
+/** Several scenarios can run at once. Starting one twice changes nothing. */
+export function startScenario(state, id) {
+  if (!SCENARIOS[id] || id === "nominal" || state.active?.[id]) return state;
+  const c = { since: 0, ...(EFFORT.includes(id) ? { phase: "on" } : {}) };
+  return { ...state, scenario: id, since: 0, active: { ...(state.active ?? {}), [id]: c }, ...(id === "still" ? { still: Math.max(state.still, 30) } : {}) };
+}
+
+/** Stopping an effort starts its recovery (heart rate comes down little by little); anything else just ends. */
+export function stopScenario(state, id) {
+  const c = state.active?.[id];
+  if (!c) return state;
+  const active = { ...state.active };
+  if (EFFORT.includes(id) && c.phase !== "rec") active[id] = { ...c, phase: "rec", t: 0, c0: contribution(id, c) };
+  else delete active[id];
+  const left = Object.keys(active);
+  return { ...state, active, scenario: left.at(-1) ?? "nominal" };
+}
+
+export const toggleScenario = (state, id) => (state.active?.[id] && state.active[id].phase !== "rec" ? stopScenario(state, id) : startScenario(stopRecovery(state, id), id));
+const stopRecovery = (state, id) => { if (state.active?.[id]?.phase !== "rec") return state; const active = { ...state.active }; delete active[id]; return { ...state, active }; };
+
+/** Stops everything; an effort still goes through its recovery, as a body would. */
+export const resetAll = (state) => Object.keys(state.active ?? {}).reduce((st, id) => (st.active[id]?.phase === "rec" ? st : stopScenario(st, id)), state);
+
+/** Only this scenario (or none, for "nominal"): what the single-scenario buttons and the tests use. */
 export function changeScenario(state, scenario) {
   if (!SCENARIOS[scenario]) return state;
-  return { ...state, scenario, since: 0, ...(scenario === "still" ? { still: Math.max(state.still, 30) } : {}) };
+  const clean = { ...state, active: {}, scenario: "nominal", since: 0 };
+  return scenario === "nominal" ? clean : startScenario(clean, scenario);
 }
 
 /** The real dose rate at this point of the replay; the solar scenario multiplies it (simulated). */
@@ -143,8 +249,9 @@ export function doseRate(state) {
   const values = state.radiation?.values ?? [];
   if (!values.length) return { value: null, real: false };
   const real = values[state.radIndex];
-  if (state.scenario !== "solar") return { value: real, real: true, time: state.radiation.times[state.radIndex] };
-  const factor = 1 + Math.min(1, state.since / 20) * 39; // up to 40× in 20 s
+  const solar = state.active?.solar;
+  if (!solar) return { value: real, real: true, time: state.radiation.times[state.radIndex] };
+  const factor = 1 + Math.min(1, solar.since / 20) * 39; // up to 40× in 20 s
   return { value: round(real * factor, 2), real: false, time: state.radiation.times[state.radIndex] };
 }
 
@@ -168,6 +275,40 @@ export const judgeHumidity = (rh) => zone(rh, LIMITS.rhHealth, LIMITS.rhComfort)
 export const judgePressure = (kPa) => (kPa <= LIMITS.pressure[0] || kPa > LIMITS.pressure[1] ? "act" : "normal");
 export const judgeStill = (min) => (min >= RULES.stillAct ? "act" : min >= RULES.stillWatch ? "watch" : "normal");
 export const judgeDose = (rate, typical) => (rate != null && typical > 0 && rate >= typical * RULES.radiationSpike ? "watch" : "normal");
+const below = (v, [watch, act]) => (v < act ? "act" : v < watch ? "watch" : "normal");
+const atOrAbove = (v, [watch, act]) => (v >= act ? "act" : v >= watch ? "watch" : "normal");
+export const judgeSmoke = (v) => atOrAbove(v, RULES.smoke);
+export const judgeAmmonia = (v) => atOrAbove(v, RULES.ammonia);
+export const judgePower = (v) => below(v, RULES.power);
+export const judgeHydration = (v) => below(v, RULES.hydration);
+export const maxHeartRate = () => 220 - RULES.age;
+
+/** kPa per minute over the last readings (negative = falling), from averaged ends so noise does not count. */
+export function pressureRate(hist = []) {
+  if (hist.length < 10) return 0;
+  const mean = (l) => l.reduce((a, b) => a + b, 0) / l.length;
+  return ((mean(hist.slice(-3)) - mean(hist.slice(0, 3))) / (hist.length - 3)) * 60;
+}
+/** NASA's range first; then the team's leak rule around the ISS's usual pressure (illustrative). */
+export function judgeCabinPressure(kPa, hist) {
+  if (judgePressure(kPa) === "act") return "act";
+  const leak = pressureRate(hist) < -RULES.leakKpaMin, [watch, act] = RULES.pressureLow;
+  if (kPa < act || (leak && kPa < watch)) return "act";
+  return kPa < watch || leak ? "watch" : "normal";
+}
+/** Heart rate in context: effort is judged against an estimated maximum, rest against the ranges. */
+export function judgeHeart(mode, hr, band, recovering = 0) {
+  const max = maxHeartRate();
+  if (mode === "exercise" || mode === "eva") { const [w, a] = mode === "exercise" ? RULES.hrExercise : RULES.hrEva; return hr > a * max ? "act" : hr > w * max ? "watch" : "normal"; }
+  if (mode === "recovery") return recovering >= RULES.recoveryAfter && hr > RULES.hrRecovery ? "watch" : "normal";
+  return hr > RULES.hrRestAct ? "act" : judgeVital("heartRate", hr, band);
+}
+export function judgePressureArterial(mode, bp, band) {
+  if (mode !== "rest") return bp[0] > RULES.sysEffort ? "watch" : "normal";
+  const st = judgeVital("bloodPressure", bp, band);
+  return st === "normal" && bp[0] < RULES.sysLow ? "watch" : st;
+}
+
 export const co2Ppm = (mmHg) => Math.round(mmHg * LIMITS.co2PpmPerMmHg);
 
 /**
@@ -183,6 +324,12 @@ export function conditions(typicalDose = 0) {
     { key: "pressure", basis: "nasa", watch: null, act: `${L.pressure[0]} kPa or less, or above ${L.pressure[1]} kPa`, facts: ["pressure"] },
     { key: "dose", basis: "app", watch: `${R.radiationSpike} times the replay's median or more${typicalDose ? ` (${round(typicalDose * R.radiationSpike, 1)} µGy/h)` : ""}`, act: null, facts: [] },
     { key: "still", basis: "app", watch: `${R.stillWatch} minutes or more`, act: `${R.stillAct} minutes or more`, facts: [] },
+    { key: "pressure", name: "Cabin leak", basis: "app", watch: `below ${R.pressureLow[0]} kPa, or falling ${R.leakKpaMin} kPa a minute or faster`, act: `below ${R.pressureLow[1]} kPa, or falling that fast below ${R.pressureLow[0]} kPa`, facts: [] },
+    { key: "smoke", basis: "app", watch: `${R.smoke[0]} µg/m³ or more`, act: `${R.smoke[1]} µg/m³ or more`, facts: [] },
+    { key: "ammonia", basis: "app", watch: `${R.ammonia[0]} ppm or more`, act: `${R.ammonia[1]} ppm or more`, facts: [] },
+    { key: "power", basis: "app", watch: `below ${R.power[0]} %`, act: `below ${R.power[1]} %`, facts: [] },
+    { key: "hydration", basis: "app", watch: `below ${R.hydration[0]} %`, act: `below ${R.hydration[1]} %`, facts: [] },
+    { key: "heartRate", name: "Heart rate in effort", basis: "app", watch: `exercise: above ${Math.round(R.hrExercise[0] * 100)} % of an estimated maximum of ${220 - R.age} bpm; spacewalk: above ${Math.round(R.hrEva[0] * 100)} %; ${R.recoveryAfter} s after stopping: still above ${R.hrRecovery} bpm`, act: `exercise: above ${Math.round(R.hrExercise[1] * 100)} %; spacewalk: above ${Math.round(R.hrEva[1] * 100)} %; at rest: above ${R.hrRestAct} bpm`, facts: [] },
     { key: "heartRate", basis: "team", watch: `outside 60–100 bpm, or outside your usual range, on the ${R.smoothSeconds}-second average`, act: null, facts: [] },
     { key: "bloodPressure", basis: "team", watch: `top number 120 or more, bottom 80 or more, or outside your usual range, on the ${R.smoothSeconds}-second average`, act: "140/90 or more", facts: [] }
   ];
@@ -200,12 +347,17 @@ export function judgeVital(key, value, band) {
 const ORDER = ["act", "watch", "normal", "pending", "none"];
 export const worst = (list) => ORDER.find((s) => list.includes(s)) ?? "none";
 
+const CABIN = ["co2", "pressure", "dose", "smoke", "ammonia", "temperature", "power"];
+
 /**
  * Everything the screen shows for this second, and the alerts worst first.
  * bands: { hr, sys } from baseline(); typicalDose: median of the real replay.
+ * Context rules from the team's engine: effort changes how heart rate and blood pressure are
+ * judged; with a cabin emergency, mild heart-rate and pressure notices are noise and are dropped.
  */
 export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   const dose = doseRate(state);
+  const mode = state.mode ?? modeOf(state.active), rec = recoveryTime(state.active);
   const hr = round(state.heartRate);
   const bp = [round(state.systolic), round(state.diastolic)];
   // judge vital signs on a short average so one noisy second does not raise an alert
@@ -213,25 +365,63 @@ export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   const hrJ = avg(history.heartRate, hr);
   const bpJ = [avg(history.bloodPressure, bp[0]), avg(history.diastolic, bp[1])];
   const co2 = round(state.co2, 1);
+  const rest = mode === "rest";
   const ch = {
-    heartRate: { value: hr, status: judgeVital("heartRate", hrJ, bands.hr), mine: versusBaseline(hrJ, bands.hr) },
-    bloodPressure: { value: bp, status: judgeVital("bloodPressure", bpJ, bands.sys), mine: versusBaseline(bpJ[0], bands.sys) },
+    heartRate: { value: hr, status: judgeHeart(mode, hrJ, bands.hr, rec), mine: rest ? versusBaseline(hrJ, bands.hr) : null },
+    bloodPressure: { value: bp, status: judgePressureArterial(mode, bpJ, bands.sys), mine: rest ? versusBaseline(bpJ[0], bands.sys) : null },
     still: { value: Math.floor(state.still), status: judgeStill(state.still) },
+    hydration: { value: round(state.hydration ?? 95), status: judgeHydration(state.hydration ?? 95) },
     co2: { value: co2, ppm: co2Ppm(co2), status: judgeCo2(co2) },
     temperature: { value: round(state.temperature, 1), status: judgeTemperature(state.temperature) },
     humidity: { value: round(state.humidity), status: judgeHumidity(state.humidity) },
-    pressure: { value: round(state.pressure, 1), status: judgePressure(state.pressure) },
+    pressure: { value: round(state.pressure, 1), status: judgeCabinPressure(state.pressure, state.presHist), rate: round(pressureRate(state.presHist), 1) },
+    smoke: { value: round(state.smoke ?? 5), status: judgeSmoke(state.smoke ?? 5) },
+    ammonia: { value: round(state.ammonia ?? 0, 1), status: judgeAmmonia(state.ammonia ?? 0) },
+    power: { value: round(state.power ?? 100), status: judgePower(state.power ?? 100) },
     dose: { value: dose.value, real: dose.real, time: dose.time, status: judgeDose(dose.value, typicalDose) }
   };
-  const alerts = [];
+  let alerts = [];
+  const hrId = { exercise: "hrExercise", eva: "hrEva", recovery: "hrRecovery" }[mode] ?? "heartRate";
   if (ch.co2.status !== "normal") alerts.push({ id: "co2", status: ch.co2.status });
   if (ch.dose.status !== "normal") alerts.push({ id: "dose", status: ch.dose.status });
-  if (ch.heartRate.status === "act" || ch.heartRate.status === "watch") alerts.push({ id: "heartRate", status: ch.heartRate.status });
-  if (ch.bloodPressure.status === "act" || ch.bloodPressure.status === "watch") alerts.push({ id: "bloodPressure", status: ch.bloodPressure.status });
+  if (ch.heartRate.status === "act" || ch.heartRate.status === "watch") alerts.push({ id: hrId, status: ch.heartRate.status, vital: true });
+  if (ch.bloodPressure.status === "act" || ch.bloodPressure.status === "watch") alerts.push({ id: "bloodPressure", status: ch.bloodPressure.status, vital: true });
   if (ch.still.status !== "normal") alerts.push({ id: "still", status: ch.still.status });
-  for (const id of ["temperature", "humidity", "pressure"]) if (ch[id].status !== "normal") alerts.push({ id, status: ch[id].status });
+  for (const id of ["temperature", "humidity", "pressure", "smoke", "ammonia", "power", "hydration"]) if (ch[id].status !== "normal") alerts.push({ id, status: ch[id].status });
+  const cabinAct = CABIN.some((k) => ch[k].status === "act");
+  if (cabinAct) {
+    alerts = alerts.filter((a) => !(a.vital && a.status === "watch"));
+    if (mode === "exercise") alerts.push({ id: "stopExercise", status: "act" });
+  }
+  if (mode === "eva" && ch.dose.status !== "normal") alerts.push({ id: "endEva", status: "act" });
   alerts.sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status));
-  return { channels: ch, alerts, overall: worst(Object.values(ch).map((c) => c.status)) };
+  return { channels: ch, alerts, mode, overall: worst(Object.values(ch).map((c) => c.status)) };
+}
+
+/* ---------- steady alerts: raised after a few readings in a row, cleared after a few back to normal ---------- */
+
+export const makeTracker = () => ({ active: {}, up: {}, down: {} });
+
+/** Returns { tracker, active: [{ id, status }], events: [{ type: "raised" | "resolved", id, status }] }. */
+export function track(tracker, alerts) {
+  const t = { active: { ...tracker.active }, up: {}, down: { ...tracker.down } };
+  const events = [], rank = { watch: 1, act: 2 }, seen = new Set();
+  for (const a of alerts) {
+    seen.add(a.id); t.down[a.id] = 0;
+    const prev = tracker.up[a.id];
+    const n = prev && prev.status === a.status ? prev.n + 1 : 1;
+    t.up[a.id] = { status: a.status, n };
+    const cur = t.active[a.id];
+    if (n >= RULES.raiseAfter && (!cur || rank[a.status] > rank[cur])) { t.active[a.id] = a.status; events.push({ type: "raised", id: a.id, status: a.status }); }
+    else if (cur && rank[a.status] < rank[cur] && n >= RULES.raiseAfter) t.active[a.id] = a.status;
+  }
+  for (const id of Object.keys(t.active)) {
+    if (seen.has(id)) continue;
+    t.down[id] = (t.down[id] ?? 0) + 1;
+    if (t.down[id] >= RULES.clearAfter) { events.push({ type: "resolved", id, status: t.active[id] }); delete t.active[id]; delete t.down[id]; }
+  }
+  const active = Object.entries(t.active).map(([id, status]) => ({ id, status })).sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status));
+  return { tracker: t, active, events };
 }
 
 /** Keeps the last HISTORY values of each sparkline. */
@@ -246,6 +436,7 @@ export function remember(history, r) {
   push("temperature", r.channels.temperature.value);
   push("humidity", r.channels.humidity.value);
   push("pressure", r.channels.pressure.value);
+  for (const k of ["smoke", "ammonia", "power", "hydration"]) push(k, r.channels[k].value);
   push("dose", r.channels.dose.value);
   return next;
 }

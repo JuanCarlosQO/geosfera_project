@@ -83,3 +83,17 @@
   .tm-tr span:nth-child(3)::before { content: "⯃ Act now: "; color: var(--tone-act); font-weight: 600; }
   .tm-tr span:nth-child(4) { color: var(--ink-3); font-size: 13px; }
 }
+
+/* team engine: grouped simulations, effort mode, event log */
+.tm-glabel { flex: 0 0 100%; font-size: 11px; letter-spacing: .14em; color: var(--ink-3); margin-bottom: -2px; }
+.tm-scn[data-group="cabin"][aria-pressed="true"] { background: var(--tone-act); border-color: var(--tone-act); color: #ffffff; }
+.tm-scn.rec { border-style: dashed; border-color: var(--tone-watch); color: var(--tone-watch); }
+.tm-scn.rec::after { content: " · recovering"; font-size: 12px; }
+.tm-reset { border-style: dashed; }
+.tm-mode { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--seam-hi); font-size: 12px; color: var(--ink-2); }
+.tm-mode[data-mode="exercise"], .tm-mode[data-mode="eva"] { border-color: var(--beacon); color: var(--beacon); }
+.tm-mode[data-mode="recovery"] { border-color: var(--tone-watch); color: var(--tone-watch); }
+.tm-log { margin: 10px 0 0; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--seam); background: var(--hull); }
+.tm-log summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.tm-log ol { list-style: none; margin: 10px 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; max-height: 260px; overflow: auto; }
+.tm-log .mono { color: var(--ink-3); font-size: 12px; margin-right: 6px; }

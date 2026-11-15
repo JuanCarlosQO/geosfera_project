@@ -127,7 +127,7 @@ describe("live telemetry: sources", () => {
 
 describe("exact alert conditions", () => {
   it("writes each condition from the numbers the judges use", () => {
-    const c = Object.fromEntries(T.conditions(5).map((x) => [x.key, x]));
+    const c = {}; for (const x of T.conditions(5)) c[x.key] ??= x;
     assert.match(c.co2.watch, /^above 3 mmHg \(3947 ppm\)$/);
     assert.match(c.co2.act, /^above 4\.5 mmHg/);
     assert.equal(T.judgeCo2(3), "normal"); assert.equal(T.judgeCo2(3.1), "watch"); assert.equal(T.judgeCo2(4.6), "act");
@@ -136,5 +136,100 @@ describe("exact alert conditions", () => {
     assert.match(c.dose.watch, /^10 times the replay's median or more \(50 µGy\/h\)$/);
     assert.match(c.still.watch, /^60 minutes/);
     for (const x of T.conditions()) for (const f of x.facts) assert.ok(LIMIT_FACTS[f], `${x.key}: ${f}`);
+  });
+});
+
+describe("the team's engine: several scenarios, effort and steady alerts", () => {
+  const start = () => T.startState({}, RADLAB_ISS);
+  const play = (s, n, seed = 3, h = {}) => { const rand = T.rng(seed); let hist = h, r; for (let i = 0; i < n; i += 1) { s = T.step(s, rand); r = T.readout(s, {}, T.median(RADLAB_ISS.values), hist); hist = T.remember(hist, r); } return { s, r, hist }; };
+  const ids = (r) => r.alerts.map((a) => a.id);
+
+  it("runs several scenarios at once and adds their effects", () => {
+    let s = T.startScenario(T.startScenario(start(), "fire"), "nh3");
+    assert.deepEqual(Object.keys(s.active), ["fire", "nh3"]);
+    const { r } = play(s, 70);
+    assert.equal(r.channels.smoke.status, "act");
+    assert.equal(r.channels.ammonia.status, "act");
+    assert.equal(T.startScenario(s, "fire"), s, "starting it twice changes nothing");
+  });
+  it("every new scenario ends in its own alert", () => {
+    for (const [id, alert] of [["depress", "pressure"], ["thermal", "temperature"], ["fire", "smoke"], ["nh3", "ammonia"], ["power", "power"], ["hydration", "hydration"], ["tachy", "heartRate"]]) {
+      const { r } = play(T.startScenario(start(), id), 130);
+      assert.ok(ids(r).includes(alert), `${id} → ${ids(r)}`);
+    }
+  });
+  it("judges a workout as effort: a heart rate of 140 raises nothing", () => {
+    const { s, r } = play(T.startScenario(start(), "exercise"), 60);
+    assert.equal(r.mode, "exercise");
+    assert.ok(s.heartRate > 130 && s.heartRate < 0.85 * T.maxHeartRate() + 6, String(s.heartRate));
+    assert.deepEqual(ids(r).filter((x) => x.startsWith("hr") || x === "heartRate"), []);
+    assert.equal(T.judgeHeart("exercise", 160, null), "watch");
+    assert.equal(T.judgeHeart("exercise", 175, null), "act");
+    assert.equal(T.judgeHeart("eva", 130, null), "watch");
+    assert.equal(T.judgeHeart("rest", 135, null), "act");
+  });
+  it("recovers little by little after stopping, then goes back to rest", () => {
+    let { s, hist } = play(T.startScenario(start(), "exercise"), 60);
+    s = T.stopScenario(s, "exercise");
+    assert.equal(T.modeOf(s.active), "recovery");
+    const mid = play(s, 20, 5, hist);
+    assert.ok(mid.s.heartRate < 135 && mid.s.heartRate > 80, String(mid.s.heartRate));
+    const end = play(mid.s, 50, 6, mid.hist);
+    assert.equal(end.r.mode, "rest");
+    assert.deepEqual(end.s.active, {});
+    assert.equal(T.judgeHeart("recovery", 120, null, 50), "watch");
+    assert.equal(T.judgeHeart("recovery", 120, null, 20), "normal");
+  });
+  it("in a cabin emergency drops mild heart notices and tells whoever is exercising to stop", () => {
+    const { r } = play(T.startScenario(T.startScenario(start(), "exercise"), "fire"), 60);
+    assert.ok(ids(r).includes("smoke") && ids(r).includes("stopExercise"), String(ids(r)));
+    assert.ok(!r.alerts.some((a) => a.vital && a.status === "watch"));
+    const sw = play(T.startScenario(T.startScenario(start(), "eva"), "solar"), 40);
+    assert.ok(ids(sw.r).includes("endEva"));
+  });
+  it("sees a leak by how fast the pressure falls, not by noise", () => {
+    assert.equal(T.pressureRate(Array(12).fill(101.3)), 0);
+    assert.ok(T.pressureRate(Array.from({ length: 12 }, (_, i) => 101.3 - i * 0.15)) < -2);
+    assert.equal(T.judgeCabinPressure(100, Array.from({ length: 12 }, (_, i) => 101.6 - i * 0.15)), "watch");
+    assert.equal(T.judgeCabinPressure(96, Array.from({ length: 12 }, (_, i) => 97.6 - i * 0.15)), "act");
+    assert.equal(T.judgeCabinPressure(91, []), "act");
+    const quiet = play(start(), 120);
+    assert.equal(quiet.r.channels.pressure.status, "normal");
+  });
+  it("raises an alert after 3 readings in a row and clears it after 5 back to normal", () => {
+    let t = T.makeTracker(), out;
+    const a = [{ id: "co2", status: "watch" }];
+    out = T.track(t, a); t = out.tracker; assert.deepEqual(out.events, []);
+    out = T.track(t, a); t = out.tracker; assert.deepEqual(out.active, []);
+    out = T.track(t, a); t = out.tracker;
+    assert.deepEqual(out.events, [{ type: "raised", id: "co2", status: "watch" }]);
+    for (let i = 0; i < 3; i += 1) { out = T.track(t, [{ id: "co2", status: "act" }]); t = out.tracker; }
+    assert.deepEqual(out.events, [{ type: "raised", id: "co2", status: "act" }], "escalates once");
+    for (let i = 0; i < 4; i += 1) { out = T.track(t, []); t = out.tracker; assert.equal(out.active.length, 1); }
+    out = T.track(t, []);
+    assert.deepEqual(out.events, [{ type: "resolved", id: "co2", status: "act" }]);
+    assert.deepEqual(out.active, []);
+  });
+  it("a single odd reading raises nothing", () => {
+    let t = T.makeTracker(), out;
+    for (const list of [[{ id: "smoke", status: "watch" }], [], [{ id: "smoke", status: "watch" }], [{ id: "smoke", status: "watch" }], []]) { out = T.track(t, list); t = out.tracker; assert.deepEqual(out.events, []); }
+  });
+  it("a workout alone does not push cabin CO₂ over NASA's limit", () => {
+    const { r } = play(T.startScenario(start(), "exercise"), 100);
+    assert.equal(r.channels.co2.status, "normal", String(r.channels.co2.value));
+    assert.deepEqual(ids(r), []);
+  });
+  it("reset stops everything but lets an effort recover", () => {
+    const { s } = play(T.startScenario(T.startScenario(start(), "exercise"), "fire"), 30);
+    const r = T.resetAll(s);
+    assert.deepEqual(Object.keys(r.active), ["exercise"]);
+    assert.equal(T.modeOf(r.active), "recovery");
+    assert.deepEqual(T.resetAll(r).active, r.active);
+  });
+  it("has words for every alert it can raise", () => {
+    for (const id of ["co2", "dose", "heartRate", "hrExercise", "hrEva", "hrRecovery", "bloodPressure", "still", "temperature", "humidity", "pressure", "smoke", "ammonia", "power", "hydration", "stopExercise", "endEva"]) {
+      assert.ok(RESPONSES[id]?.title && RESPONSES[id].steps.length, id);
+      for (const f of RESPONSES[id].facts) assert.ok(LIMIT_FACTS[f], `${id}: ${f}`);
+    }
   });
 });

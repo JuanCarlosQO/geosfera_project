@@ -23,10 +23,14 @@ const CARDS = {
   heartRate: { name: "Heart rate", unit: "bpm", group: "crew" },
   bloodPressure: { name: "Blood pressure", unit: "mmHg", group: "crew" },
   still: { name: "Time without moving", unit: "min", group: "crew" },
+  hydration: { name: "Estimated hydration", unit: "%", group: "crew" },
   co2: { name: "Cabin CO₂", unit: "mmHg", group: "cabin" },
   temperature: { name: "Cabin temperature", unit: "°C", group: "cabin" },
   humidity: { name: "Relative humidity", unit: "%", group: "cabin" },
   pressure: { name: "Cabin pressure", unit: "kPa", group: "cabin" },
+  smoke: { name: "Smoke particles", unit: "µg/m³", group: "cabin" },
+  ammonia: { name: "Ammonia", unit: "ppm", group: "cabin" },
+  power: { name: "Power available", unit: "%", group: "cabin" },
   dose: { name: "Radiation dose rate", unit: "µGy/h", group: "rad" }
 };
 const BASIS = { nasa: "NASA limit", team: "Team reference (Earth clinical ranges)", app: "App rule" };
@@ -40,6 +44,10 @@ const LIMIT_TEXT = {
   temperature: "NASA: 18–27 °C · comfort 20–25 °C",
   humidity: "NASA: 25–75 % · comfort 30–60 %",
   pressure: "NASA: 34.5–103 kPa · ISS 101.3 kPa",
+  hydration: `App rule: below ${T.RULES.hydration[0]} % watch, ${T.RULES.hydration[1]} % act`,
+  smoke: `App rule: ${T.RULES.smoke[0]} watch, ${T.RULES.smoke[1]} act`,
+  ammonia: `App rule: ${T.RULES.ammonia[0]} ppm watch, ${T.RULES.ammonia[1]} act`,
+  power: `App rule: below ${T.RULES.power[0]} % watch, ${T.RULES.power[1]} % act`,
   dose: `Real ISS data · median ${TYPICAL_DOSE.toFixed(1)} µGy/h`
 };
 
@@ -64,6 +72,7 @@ function alertHtml(a) {
     <p class="tm-a-head"><strong>${st.shape} ${r.title}</strong><span>${st.word}</span></p>
     <ol>${r.steps.map((s) => `<li>${s}</li>`).join("")}</ol>
     ${r.facts.map((f) => src(LIMIT_FACTS[f])).join("")}
+    ${r.illustrative ? `<p class="fine">Threshold and steps: illustrative app rule from the team simulator, not a NASA procedure. On a real vehicle the crew follows its own emergency procedures.</p>` : ""}
     ${r.link ? `<a class="tm-go" href="${r.link.href}">${r.link.text} →</a>` : ""}
   </li>`;
 }
@@ -102,24 +111,27 @@ export function mountLive(host) {
   <section class="live" aria-labelledby="lv-title">
     <p class="eyebrow">Module 10 · Live telemetry</p>
     <h1 id="lv-title" tabindex="-1">Sensors, second by second</h1>
-    <p class="lede">A feed like the one a cabin and a wearable would send. Crew and cabin values are <strong>simulated</strong>; the radiation dose rate is <strong>real NASA data</strong> from the International Space Station, replayed. Every limit comes from NASA.</p>
+    <p class="lede">A feed like the one a cabin and a wearable would send. Crew and cabin values are <strong>simulated</strong>; the radiation dose rate is <strong>real NASA data</strong> from the International Space Station, replayed. Limits come from NASA wherever NASA publishes one; the rest are marked as app rules.</p>
 
     <div class="tm-status" data-ref="status" aria-live="polite"></div>
 
-    <div class="tm-controls" role="group" aria-label="Scenario">
-      ${Object.entries(T.SCENARIOS).map(([id, s]) => `<button type="button" class="tm-scn" data-scn="${id}" aria-pressed="${id === "nominal"}">${s.label}</button>`).join("")}
-      <button type="button" class="tm-pause" data-ref="pause" aria-pressed="false">Pause</button>
-    </div>
+    <p class="fine">Simulations can be combined: tap one or several. Tap again to stop one.</p>
+    ${[["cabin", "Cabin"], ["crew", "Crew member"]].map(([g, label]) => `<div class="tm-controls" role="group" aria-label="${label} simulations"><span class="tm-glabel mono">${label}</span>
+      ${Object.entries(T.SCENARIOS).filter(([, x]) => x.group === g).map(([id, x]) => `<button type="button" class="tm-scn" data-scn="${id}" data-group="${g}" aria-pressed="false">${x.label}</button>`).join("")}</div>`).join("")}
+    <div class="tm-controls"><button type="button" class="tm-scn tm-reset" data-scn="nominal">${T.SCENARIOS.nominal.label}</button>
+      <button type="button" class="tm-pause" data-ref="pause" aria-pressed="false">Pause</button></div>
     <p class="fine" data-ref="note">${T.SCENARIOS.nominal.note}</p>
 
     <ul class="tm-alerts" data-ref="alerts" aria-live="polite"></ul>
+    <details class="tm-log"><summary>Event log · <span data-ref="logn">0</span></summary><ol data-ref="log"></ol>
+      <p class="fine">An alert is raised after ${T.RULES.raiseAfter} readings in a row and cleared after ${T.RULES.clearAfter} back to normal, so one odd reading raises nothing. The log lasts while this screen is open.</p></details>
 
     <h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
     <p class="fine">${bands.hr ? `Your usual range (app rule, last ${T.RULES.baselineDays} days, ${bands.hr.n} readings): heart rate ${bands.hr.low}–${bands.hr.high} bpm${bands.sys ? `, top blood pressure ${bands.sys.low}–${bands.sys.high} mmHg` : ""}. Values outside it are flagged even inside the reference range.` : `Log heart rate and blood pressure on ${T.RULES.baselineMin} days and the feed will also compare you with yourself.`}</p>
-    <ul class="tm-grid">${["heartRate", "bloodPressure", "still"].map(card).join("")}</ul>
+    <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration"].map(card).join("")}</ul>
 
     <h2 class="tm-h">Cabin</h2>
-    <ul class="tm-grid">${["co2", "temperature", "humidity", "pressure"].map(card).join("")}</ul>
+    <ul class="tm-grid">${["co2", "temperature", "humidity", "pressure", "smoke", "ammonia", "power"].map(card).join("")}</ul>
 
     <h2 class="tm-h">Radiation</h2>
     <ul class="tm-grid tm-one">${card("dose")}</ul>
@@ -143,25 +155,41 @@ export function mountLive(host) {
       <h2 class="tm-h" id="tm-cond-h">Exactly when an alert fires</h2>
       <div class="tm-table" role="table" aria-label="Alert conditions">
         <div class="tm-tr tm-th" role="row"><span role="columnheader">Channel</span><span role="columnheader">${STATUS.watch.shape} Watch when</span><span role="columnheader">${STATUS.act.shape} Act now when</span><span role="columnheader">Based on</span></div>
-        ${T.conditions(TYPICAL_DOSE).map((c) => `<div class="tm-tr" role="row"><span role="cell"><strong>${CARDS[c.key].name}</strong></span><span role="cell">${c.watch ?? "—"}</span><span role="cell">${c.act ?? "—"}</span><span role="cell">${BASIS[c.basis]}${[...new Map(c.facts.map((f) => [LIMIT_FACTS[f].source, LIMIT_FACTS[f]])).values()].map((f) => ` <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`).join(",")}</span></div>`).join("")}
+        ${T.conditions(TYPICAL_DOSE).map((c) => `<div class="tm-tr" role="row"><span role="cell"><strong>${c.name ?? CARDS[c.key].name}</strong></span><span role="cell">${c.watch ?? "—"}</span><span role="cell">${c.act ?? "—"}</span><span role="cell">${BASIS[c.basis]}${[...new Map(c.facts.map((f) => [LIMIT_FACTS[f].source, LIMIT_FACTS[f]])).values()].map((f) => ` <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`).join(",")}</span></div>`).join("")}
       </div>
       <p class="fine">NASA's CO₂ limit is a 1-hour average. The simulator compares the current value so the demo reacts in seconds; a real detector would average over the hour. Crew vital signs are judged on a ${T.RULES.smoothSeconds}-second average so one noisy reading raises nothing.</p>
     </section>
 
-    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. "Your usual range", the movement reminder and the dose-rate alert are app rules. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules. "Your usual range", the movement reminder and the dose-rate alert are app rules. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".live");
   const $ = (r) => root.querySelector(`[data-ref="${r}"]`);
   let lastAlerts = "";
+  let tracker = T.makeTracker();
+  let steady = [];
+  const events = [];
+  const MODES = { rest: "At rest", exercise: "Exercising", eva: "On a spacewalk", recovery: "Recovering from effort" };
+  const clock = (t) => `T+${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 
-  function paint() {
+  function paint(advance = false) {
     const r = T.readout(state, bands, TYPICAL_DOSE, history);
     history = T.remember(history, r);
-    const st = STATUS[r.overall] ?? STATUS.none;
-    const sc = T.SCENARIOS[state.scenario];
-    $("status").dataset.status = r.overall;
-    $("status").innerHTML = `<span class="tm-live-dot" aria-hidden="true"></span><strong class="tone-${st.tone}">${st.shape} ${r.alerts.length ? `${r.alerts.length} ${r.alerts.length === 1 ? "alert" : "alerts"}` : "All channels nominal"}</strong><span>${sc.label} · T+${state.t}s</span>`;
+    if (advance) {
+      const out = T.track(tracker, r.alerts);
+      tracker = out.tracker; steady = out.active;
+      for (const ev of out.events) events.unshift({ ...ev, t: state.t });
+      if (out.events.length) {
+        events.length = Math.min(events.length, 30);
+        $("logn").textContent = events.length;
+        $("log").innerHTML = events.map((ev) => `<li><span class="mono">${clock(ev.t)}</span> <span class="tone-${ev.type === "resolved" ? STATUS.normal.tone : STATUS[ev.status].tone}">${ev.type === "resolved" ? `${STATUS.normal.shape} Resolved` : `${STATUS[ev.status].shape} ${STATUS[ev.status].word}`}</span> ${RESPONSES[ev.id].title}</li>`).join("");
+      }
+    }
+    const top = steady.some((a) => a.status === "act") ? "act" : steady.length ? "watch" : "normal";
+    const st = STATUS[top];
+    const active = Object.keys(state.active);
+    $("status").dataset.status = top;
+    $("status").innerHTML = `<span class="tm-live-dot" aria-hidden="true"></span><strong class="tone-${st.tone}">${st.shape} ${steady.length ? `${steady.length} ${steady.length === 1 ? "alert" : "alerts"}` : "All channels nominal"}</strong><span class="tm-mode" data-mode="${r.mode}">${MODES[r.mode]}</span><span>${active.length ? `${active.length} ${active.length === 1 ? "simulation" : "simulations"}` : "Nominal"} · ${clock(state.t)}</span>`;
     for (const [k, c] of Object.entries(r.channels)) {
       root.querySelector(`[data-val="${k}"]`).textContent = fmt(k, c);
       const s = STATUS[c.status] ?? STATUS.none;
@@ -170,29 +198,35 @@ export function mountLive(host) {
       root.querySelector(`[data-spark="${k}"]`).setAttribute("d", sparkPath(history[k] ?? [], 120, 32));
     }
     root.querySelector('[data-extra="co2"]').textContent = ` ≈ ${r.channels.co2.ppm} ppm`;
+    root.querySelector('[data-extra="pressure"]').textContent = Math.abs(r.channels.pressure.rate) >= 0.5 ? ` · ${r.channels.pressure.rate > 0 ? "+" : ""}${r.channels.pressure.rate} kPa/min` : "";
+    root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : "";
     root.querySelector('[data-extra="dose"]').textContent = r.channels.dose.time ? ` · ISS ${r.channels.dose.time} UTC` : "";
     root.querySelector('[data-tag="dose"]').textContent = r.channels.dose.real ? "REAL NASA DATA" : "REAL × SIMULATED EVENT";
     for (const k of ["heartRate", "bloodPressure"]) {
       const mine = r.channels[k].mine;
       if (mine && mine !== "inside") root.querySelector(`[data-st="${k}"]`).insertAdjacentHTML("beforeend", ` <small>${mine} your usual</small>`);
     }
-    const sig = r.alerts.map((a) => `${a.id}:${a.status}`).join(",");
-    if (sig !== lastAlerts) { $("alerts").innerHTML = r.alerts.map(alertHtml).join(""); lastAlerts = sig; }
+    root.querySelectorAll("[data-scn][data-group]").forEach((b) => {
+      const c = state.active[b.dataset.scn];
+      b.setAttribute("aria-pressed", String(Boolean(c) && c.phase !== "rec"));
+      b.classList.toggle("rec", c?.phase === "rec");
+    });
+    $("note").textContent = active.length ? active.map((id) => T.SCENARIOS[id].note).join(" ") : T.SCENARIOS.nominal.note;
+    const sig = steady.map((a) => `${a.id}:${a.status}`).join(",");
+    if (sig !== lastAlerts) { $("alerts").innerHTML = steady.map(alertHtml).join(""); lastAlerts = sig; }
   }
 
   const timer = setInterval(() => {
     if (!root.isConnected) { clearInterval(timer); return; } // left the screen: stop the feed
     if (paused) return;
     state = T.step(state, rand);
-    paint();
+    paint(true);
   }, T.TICK_MS);
 
   root.addEventListener("click", (e) => {
     const b = e.target.closest("[data-scn]");
     if (b) {
-      state = T.changeScenario(state, b.dataset.scn);
-      root.querySelectorAll("[data-scn]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      $("note").textContent = T.SCENARIOS[b.dataset.scn].note;
+      state = b.dataset.scn === "nominal" ? T.resetAll(state) : T.toggleScenario(state, b.dataset.scn);
       paint();
       return;
     }

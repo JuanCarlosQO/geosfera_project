@@ -228,6 +228,14 @@ Quotes read on 14 November 2026 in the PDF text of NASA OCHMO-TB-004 Rev D (CO2)
 
 **App rules (not NASA limits):** "your usual range" = mean ± 2 standard deviations of the crew member's last 14 days, shown after 5 readings and never narrower than ±3 % · minutes without moving: reminder at 60, "move now" at 120 · dose rate at 10 times the replay's median raises "Watch" · heart rate and blood pressure are judged on their 10-second average · the response steps under each alert, except the quoted ones.
 
+### Simulator engine from the team (illustrative app rules)
+
+A team member's engine was merged into module 10: twelve simulations that can run together (CO₂ scrubber fault, solar particle event, cabin leak, cooling failure, fire, ammonia leak, power loss, exercise session, spacewalk, long time still, dehydration, racing heart), effort and recovery, steady alerts (raised after 3 readings in a row, cleared after 5) and priorities in an emergency. Its thresholds are the team's own values, shown in the app as "app rule" and never as NASA limits: smoke particles 50 / 150 µg/m³; ammonia 3 / 20 ppm; power below 70 / 40 %; estimated hydration below 80 / 65 %; cabin pressure below 97 / 92 kPa or falling 2 kPa a minute; heart rate in effort against an estimated maximum of 220 − age (age 40 in the demo): exercise 85 / 95 %, spacewalk 70 / 85 %; at rest above 130 bpm; systolic pressure above 210 mmHg in effort or below 90 at rest; heart rate still above 115 bpm 45 s after stopping. Hydration has no real sensor behind it. The emergency steps are general and point to the vehicle's own procedures.
+
+Kept from before, with their NASA quotes: CO₂ (3 mmHg 1-hour average, not the engine's 4.0 / 5.3), cabin temperature, humidity, the allowed pressure range and the real dose-rate replay.
+
+**To verify:** the ammonia values match what NASA's Spacecraft Maximum Allowable Concentrations list is remembered to give for 7 days and 24 hours; the document has not been read and quoted yet.
+
 ## Module 5 — future body
 
 NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 39, [V1 4027], its rationale, and [V1 4028]); the others are already listed above.
