@@ -79,3 +79,14 @@ describe("support words are verified", () => {
     assert.ok(REASONS.length >= 6 && LEVELS.talk && LEVELS.emergency);
   });
 });
+
+import { setTargets, targetLabel, TARGETS } from "../js/support-core.js";
+describe("who the SOS needs first", () => {
+  it("keeps only the three known targets, once each, and labels them", () => {
+    const list = [{ id: "a1", level: "emergency", at: "2026-11-15T10:00:00Z", from: { id: "x" }, reasons: [], acks: [] }];
+    assert.deepEqual(setTargets(list, "a1", ["medical", "lead", "medical", "pizza"])[0].to, ["medical", "lead"]);
+    assert.deepEqual(setTargets(list, "a1", [])[0].to, []);
+    assert.equal(TARGETS.length, 3);
+    assert.equal(targetLabel("engineers"), "Engineers");
+  });
+});

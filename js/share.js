@@ -52,7 +52,7 @@ function requestRow(r, view) {
   return `<li class="sh-req sh-${st}">
     <div class="sh-req-top"><strong>${itemsLine(r.items)}</strong><span class="mc-pill ${st === "pending" ? "mc-watch" : st === "declined" ? "mc-act" : "mc-ok"}">${STATUS_WORDS[st]}</span></div>
     ${r.reason ? `<p class="sh-why">“<span data-no-i18n>${esc(r.reason)}</span>”</p>` : ""}
-    <p class="fine">Asked ${stamp(r.at)}</p>
+    <p class="fine">Requested ${stamp(r.at)}</p>
     ${view === "ground" && st === "pending" ? `<div class="sh-decide">
       <label>For <select data-sh-min="${r.id}">${H.DURATIONS.map((d) => `<option value="${d.minutes}">${d.label}</option>`).join("")}</select></label>
       <button type="button" class="cta main" data-sh-approve="${r.id}">Approve</button>

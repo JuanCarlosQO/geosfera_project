@@ -94,7 +94,7 @@ function alertRow(a, me) {
   if (a.closedWhy === "mistake") return `<li class="mind-alert" data-level="${a.level}"><p><strong>${lv.short}</strong> · ${a.from.id === me?.id ? "you" : esc(a.from.name)} · ${P.ago(a.at)} · cancelled, sent by mistake</p></li>`;
   const acks = a.acks.length ? a.acks.map((k) => `${esc(k.name)} ${k.kind === "coming" ? "is on the way" : "saw it"}`).join(" · ") : "No answer yet";
   return `<li class="mind-alert" data-level="${a.level}">
-    <p><strong>${a.level === "emergency" ? "⯃" : "●"} ${lv.short}</strong> · ${a.from.id === me?.id ? "you" : esc(a.from.name)} · ${P.ago(a.at)}${a.closed ? " · closed" : ""}</p>
+    <p><strong>${a.level === "emergency" ? "■" : "●"} ${lv.short}</strong> · ${a.from.id === me?.id ? "you" : esc(a.from.name)} · ${P.ago(a.at)}${a.closed ? " · closed" : ""}</p>
     ${a.reasons.length || a.note ? `<p class="fine">${a.reasons.map((id) => REASONS.find((r) => r.id === id)?.label ?? id).join(" · ")}${a.note ? ` — “${esc(a.note)}”` : ""}</p>` : ""}
     <p class="fine">${acks}</p>
     ${a.from.id === me?.id && !a.closed ? `<button type="button" class="textlink" data-close="${a.id}">I'm OK now — close it</button>` : ""}

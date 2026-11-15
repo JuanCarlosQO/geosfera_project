@@ -639,3 +639,30 @@ Screening, not diagnosis. Wording checked word for word on the pages below (Univ
 - "As in the R-UCLA, each person's responses to the questions are summed, with higher scores indicating greater loneliness." (https://pmc.ncbi.nlm.nih.gov/articles/PMC2394670/) The paper gives no cut-off for "lonely"; the app does not use one.
 
 App rules (not from the sources): PHQ-2 + GAD-2 every 14 days (the questionnaires ask about the last 2 weeks); PSS-4 + UCLA-3 every 28 days (the PSS asks about the last month); the rest of the PHQ-9 / GAD-7 only after a positive PHQ-2 / GAD-2 (3 or more, the sources cut-off); the ground can ask for one at any time. Flags for the ground: PHQ-9 question 9 above "Not at all" = Act now and a request to talk is sent; PHQ-9 15 or more or GAD-7 15 or more = Act now; PHQ-9 10 or more, GAD-7 8 or more, or a positive PHQ-2 / GAD-2 = Take a look; PSS-4 up 4 or more or UCLA-3 up 2 or more since their last answer = Take a look. The crew member sees no score. Questions are shown in English: a validated Spanish version was not verified (phqscreeners.com hides its translations behind a terms page; the CMU list has no 4-item Spanish PSS).
+
+## After the mission: support and suicide prevention; loneliness and connection (15 Nov 2026)
+
+Resources only: the app gives no clinical advice and names no method of harm. Each sentence below was read on its page.
+
+- "some astronauts and analog crews can take months to fully re-adapt when they return home" (NASA, Five tips from NASA crew on emerging from isolation, https://www.nasa.gov/humans-in-space/five-tips-from-nasa-crew-on-emerging-from-isolation/)
+- "A whole team works to help them readjust back to life on Earth." (NASA, Five tips from NASA crew on emerging from isolation, https://www.nasa.gov/humans-in-space/five-tips-from-nasa-crew-on-emerging-from-isolation/)
+- "The 988 Lifeline is available 24/7/365. Your conversations are free and confidential." (988 Suicide & Crisis Lifeline, https://988lifeline.org/)
+- "The 988 Lifeline is for everyone." (988 Suicide & Crisis Lifeline, https://988lifeline.org/)
+- "Text AYUDA to 988 for Spanish-language services or PRIDE to 988 for specialized support for LGBTQ+ youth." (988 Lifeline, What to expect, https://988lifeline.org/get-help/what-to-expect/)
+- "These evidence-based action steps provide a blueprint for reaching and helping someone in crisis." (988 Lifeline, Help someone else, https://988lifeline.org/help-someone-else/)
+- "Es gratuita, confidencial y funciona 24/7." (Ministerio de Salud y Protección Social de Colombia, Línea 106, https://www.minsalud.gov.co/salud/publica/salud-mental/Paginas/linea-106.aspx)
+- "Llama a la 106 siempre que necesites apoyo emocional, estés en crisis, te sientas en riesgo o simplemente necesites hablar con un profesional de salud mental." (Ministerio de Salud y Protección Social de Colombia, Línea 106, https://www.minsalud.gov.co/salud/publica/salud-mental/Paginas/linea-106.aspx)
+- "Free, confidential support from a helpline or hotline near you. Online chat, text or phone." (Find A Helpline, https://findahelpline.com/)
+- "With timely, evidence-based and often low-cost interventions, suicides can be prevented." (World Health Organization, Suicide fact sheet, https://www.who.int/news-room/fact-sheets/detail/suicide)
+- "experiencing conflict, disaster, violence, abuse or loss and a sense of isolation are strongly associated with suicidal behaviour." (World Health Organization, Suicide fact sheet, https://www.who.int/news-room/fact-sheets/detail/suicide)
+- "the longing for loved ones, or feeling unable to assist with family emergencies back on Earth" (NASA, The human body in space, https://www.nasa.gov/humans-in-space/the-human-body-in-space/)
+- "Crew members aboard the International Space Station can virtually talk with family and medical professionals for support" (NASA, Risk of behavioral conditions and psychiatric disorders, https://www.nasa.gov/reference/risk-of-behavioral-conditions-and-psychiatric-disorders/)
+- "Astronauts write in journals as a safe place to vent frustrations" (NASA, The human body in space, https://www.nasa.gov/humans-in-space/the-human-body-in-space/)
+- "Sleep loss, circadian desynchronization, and work overload compound this issue" (NASA, Hazard: isolation and confinement, https://www.nasa.gov/hrp/hazard-isolation-and-confinement/)
+- "The prolonged isolation and confinement that astronauts face in space can increase risks of behavioral issues" (NASA, Risk of behavioral conditions and psychiatric disorders, https://www.nasa.gov/reference/risk-of-behavioral-conditions-and-psychiatric-disorders/)
+
+The 988 Lifeline's five action steps, as listed on https://988lifeline.org/help-someone-else/: Ask. Be there. Help keep them safe. Help them connect. Follow up.
+
+Lines: 988 Suicide & Crisis Lifeline (call 988, text 988, chat https://chat.988lifeline.org/; https://988lifeline.org/); Línea 106 (call 106; https://www.minsalud.gov.co/salud/publica/salud-mental/Paginas/linea-106.aspx). Colombia: the Ministry of Health page says to dial 106 directly. Other countries: Find A Helpline (https://findahelpline.com/), which lists lines its partner organisations verify; the app links to its country page.
+
+App rules: check-ins continue every two weeks for a year after landing; 2 requests to talk that mention home in 14 days raise a flag; the trusted people and the private journal stay on the crew member's device (never synced, never exported). NASA's ISS contact quote describes what exists today; the "private call with home" button is the app's request to the ground, not a NASA service.

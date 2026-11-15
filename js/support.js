@@ -9,7 +9,7 @@
 
 import * as P from "./support-core.js";
 import { REASONS, LEVELS, SUPPORT_FACTS } from "./data/support.js";
-import { current } from "./store.js";
+import { current, getCrew } from "./store.js";
 
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
@@ -37,29 +37,40 @@ export function sendAlert(level, extra = {}) {
   return r.alert;
 }
 
+/** The person on the crew who holds a role (the commander, the crew medical officer), if any. */
+const holder = (role) => (role ? getCrew().members.find((m) => m.role === role) : null);
+
+// After the SOS: three big buttons (who should answer first), Cancel for a mistake, Close.
+// Everything else (what is going on, a few words, where it went) is folded away.
 function sentHtml(a, undo) {
   const lv = LEVELS[a.level];
   return `<div class="sp-sheet sp-sent" data-level="${a.level}" role="dialog" aria-modal="true" aria-labelledby="sp-sent-h">
-    <p class="sp-big" id="sp-sent-h">${a.level === "emergency" ? "⯃ SOS sent" : "● Request sent"}</p>
-    ${undo ? `<button type="button" class="sp-undo" data-sp="undo">Sent by mistake? Cancel · <span data-ref="undo-s">${P.UNDO_S}</span> s</button>` : ""}
-    <p>${lv.note}</p>
-    <ul class="sp-route">
-      <li>${linked() ? "✓ Linked crew devices on this station" : "○ No station linked: only this device has it"}</li>
-      <li>◌ Mission Control (simulated) · up to 20 min one way</li>
-    </ul>
-    <form class="sp-details" novalidate autocomplete="off">
-      <p class="sp-sub">If you can, add what is going on <span class="fine">(optional — help is already on its way)</span></p>
-      <div class="chips">${REASONS.map((r) => `<label class="chip"><input type="checkbox" name="reason" value="${r.id}"><span>${r.label}</span></label>`).join("")}</div>
-      <label class="sp-note"><span>A few words</span><textarea name="note" rows="2" maxlength="280"></textarea></label>
-      <div class="sp-acts"><button type="submit" class="cta main">Add to the alert</button><button type="button" class="cta" data-sp="close">Close</button></div>
-    </form>
-    <p class="fine">“${SUPPORT_FACTS.delay.quote}” <a href="${SUPPORT_FACTS.delay.url}" target="_blank" rel="noopener">${SUPPORT_FACTS.delay.source}</a></p>
+    <p class="sp-big" id="sp-sent-h">${a.level === "emergency" ? "■ SOS sent" : "● Request sent"}</p>
+    <p class="sp-lead">${a.level === "emergency" ? "Your crew and Mission Control have it. Who do you need first?" : "Who would you like to talk to?"}</p>
+    <div class="sp-to" role="group" aria-label="Who do you need first">${P.TARGETS.map((t) => { const h = holder(t.role); return `<button type="button" class="sp-to-btn" data-to="${t.id}" aria-pressed="${(a.to ?? []).includes(t.id)}"><b>${t.label}</b><small>${h ? `<span data-no-i18n>${esc(h.name)}</span><br>` : ""}<span>${t.sub}</span></small></button>`; }).join("")}</div>
+    <p class="sp-sub" role="status" data-ref="to-msg"></p>
+    <div class="sp-acts">
+      ${undo ? `<button type="button" class="sp-undo" data-sp="undo">Sent by mistake? Cancel · <span data-ref="undo-s">${P.UNDO_S}</span> s</button>` : ""}
+      <button type="button" class="cta" data-sp="close">Close</button>
+    </div>
+    <details class="sp-more">
+      <summary>Add details (optional)</summary>
+      <form class="sp-details" novalidate autocomplete="off">
+        <div class="chips">${REASONS.map((r) => `<label class="chip"><input type="checkbox" name="reason" value="${r.id}"><span>${r.label}</span></label>`).join("")}</div>
+        <label class="sp-note"><span>A few words</span><textarea name="note" rows="2" maxlength="280"></textarea></label>
+        <div class="sp-acts"><button type="submit" class="cta main">Add to the alert</button></div>
+      </form>
+      <p class="fine">${lv.note}</p>
+      <p class="fine">${linked() ? "✓ Linked crew devices on this station" : "○ No station linked: only this device has it"} · ◌ Mission Control (simulated)</p>
+      <p class="fine">“${SUPPORT_FACTS.delay.quote}” <a href="${SUPPORT_FACTS.delay.url}" target="_blank" rel="noopener">${SUPPORT_FACTS.delay.source}</a></p>
+    </details>
   </div>`;
 }
 
 function bannerHtml(list) {
   return list.slice(0, 2).map((a) => `<div class="sp-banner" data-level="${a.level}" role="alert">
-    <p><strong>${a.level === "emergency" ? "⯃ SOS" : "● Support"} · ${esc(a.from.name)}${a.from.role ? `, ${esc(a.from.role)}` : ""}</strong> <span>${P.ago(a.at)}</span></p>
+    <p><strong>${a.level === "emergency" ? "■ SOS" : "● Support"} · ${esc(a.from.name)}${a.from.role ? `, ${esc(a.from.role)}` : ""}</strong> <span>${P.ago(a.at)}</span></p>
+    ${a.to?.length ? `<p class="sp-why"><strong>Needs first: ${a.to.map(P.targetLabel).join(" · ")}</strong></p>` : ""}
     ${a.reasons.length || a.note ? `<p class="sp-why">${a.reasons.map(reasonLabel).join(" · ")}${a.note ? ` — “${esc(a.note)}”` : ""}</p>` : ""}
     <div class="sp-acts"><button type="button" class="cta main" data-ack="${a.id}" data-kind="coming">I'm on my way</button><button type="button" class="textlink" data-ack="${a.id}" data-kind="seen">Seen</button></div>
   </div>`).join("");
@@ -107,6 +118,15 @@ export function mountSupport() {
       if (left <= 0) { clearInterval(undoTimer); veil?.querySelector('[data-sp="undo"]')?.remove(); }
     }, 1000);
     veil.addEventListener("click", (e) => {
+      const to = e.target.closest("[data-to]");
+      if (to) {
+        to.setAttribute("aria-pressed", String(to.getAttribute("aria-pressed") !== "true"));
+        const picked = [...veil.querySelectorAll('[data-to][aria-pressed="true"]')].map((b) => b.dataset.to);
+        saveAlerts(P.setTargets(getAlerts(), alert.id, picked));
+        changed();
+        veil.querySelector('[data-ref="to-msg"]').textContent = picked.length ? `✓ Asked first: ${picked.map(P.targetLabel).join(" · ")}` : "";
+        return;
+      }
       if (e.target.closest('[data-sp="close"]')) { closeSheet(); fab.focus(); return; }
       if (e.target.closest('[data-sp="undo"]')) {
         saveAlerts(P.closeAlert(getAlerts(), alert.id, new Date(), "mistake"));
@@ -121,7 +141,7 @@ export function mountSupport() {
       const reasons = [...f.querySelectorAll('input[name="reason"]:checked')].map((i) => i.value);
       saveAlerts(P.addDetails(getAlerts(), alert.id, { reasons, note: f.note.value }));
       changed();
-      f.innerHTML = `<p class="sp-sub">✓ Added to the alert.</p><button type="button" class="cta" data-sp="close">Close</button>`;
+      f.innerHTML = `<p class="sp-sub">✓ Added to the alert.</p>`;
     });
     const title = veil.querySelector("#sp-sent-h");
     title.tabIndex = -1;

@@ -40,6 +40,21 @@ export function acknowledge(list, alertId, by, kind = "coming", at = new Date())
 
 export const closeAlert = (list, alertId, at = new Date(), why = "ok") => list.map((a) => (a.id === alertId && !a.closed ? { ...a, closed: iso(at), closedWhy: why } : a));
 
+// Who the crew member needs most, picked with one tap after the SOS (the SOS already went to
+// everyone; this only says who should answer first). App rule, simulated delivery.
+export const TARGETS = [
+  { id: "medical", label: "Medical team", sub: "Flight surgeon and crew medical officer", role: "Crew Medical Officer" },
+  { id: "engineers", label: "Engineers", sub: "Mission Control, station systems" },
+  { id: "lead", label: "Person in charge", sub: "Commander and flight director", role: "Commander" }
+];
+export const targetLabel = (id) => TARGETS.find((t) => t.id === id)?.label ?? id;
+
+/** Sets who should answer first (replaces the earlier choice). */
+export function setTargets(list, alertId, to = []) {
+  const ok = [...new Set(to)].filter((x) => TARGETS.some((t) => t.id === x));
+  return list.map((a) => (a.id !== alertId ? a : { ...a, to: ok }));
+}
+
 /** Adds what is going on after an SOS was sent (the SOS itself never waits for it). */
 export function addDetails(list, alertId, { reasons = [], note = "" } = {}) {
   return list.map((a) => (a.id !== alertId ? a : { ...a, reasons: [...new Set([...a.reasons, ...reasons])].slice(0, 8), note: String(note ?? "").trim().slice(0, 280) || a.note }));

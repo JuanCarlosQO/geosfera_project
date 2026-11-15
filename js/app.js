@@ -23,6 +23,7 @@ import { mountCrewHome } from "./crew-home.js";
 import { mountGround } from "./ground.js";
 import { mountAnalysis } from "./analysis.js";
 import { mountDrill } from "./drill.js";
+import { mountAfter } from "./after.js";
 import { startClocks } from "./clock.js";
 import { grantedRoutesFor } from "./share.js";
 import { getRole, setRole, isGround, closeEmergency } from "./role.js";
@@ -120,7 +121,7 @@ function paintDock(name) {
 
 function render() {
   const [view = "", arg, rest] = location.hash.replace(/^#/, "").split("/");
-  const known = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices", "crew", "ground", "analysis", "drill"];
+  const known = ["today", "body", "log", "mission", "meds", "duty", "live", "future", "sources", "mind", "family", "devices", "crew", "ground", "analysis", "drill", "after"];
   const st = getRole();
   let name = known.includes(view) ? view : homeFor(st);
   if (!canSee(st, name, new Date(), granted(st))) {
@@ -134,6 +135,7 @@ function render() {
   if (name === "ground") mountGround(station);
   if (name === "analysis") mountAnalysis(station);
   if (name === "drill") mountDrill(station);
+  if (name === "after") mountAfter(station);
   if (["today", "log", "mind"].includes(name)) autoSync(); // readings from the devices arrive before the screen is drawn
   setTimeout(refreshWatchAlerts, 0); // and the watch's alerts follow the profile that is open
   if (name === "devices") mountDevices(station);
@@ -152,7 +154,7 @@ function render() {
   if (name === "log") mountLog(station, { go }, /^\d{4}-\d{2}-\d{2}$/.test(arg ?? "") ? arg : undefined);
   if (name === "mission") mountMission(station);
   for (const a of nav.querySelectorAll("a")) {
-    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: getRole().role === "crew" ? "crew" : "body", drill: getRole().role === "ground" ? "ground" : "crew", devices: getRole().role === "ground" ? "analysis" : "log", today: getRole().role === "ground" ? "analysis" : "today" }[name] ?? name)) a.setAttribute("aria-current", "page");
+    if (a.dataset.view === ({ duty: "meds", future: "mission", mind: "body", family: getRole().role === "crew" ? "crew" : "body", drill: getRole().role === "ground" ? "ground" : "crew", after: getRole().role === "ground" ? "ground" : "crew", devices: getRole().role === "ground" ? "analysis" : "log", today: getRole().role === "ground" ? "analysis" : "today" }[name] ?? name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (!station.inert) station.querySelector("h1")?.focus({ preventScroll: true });

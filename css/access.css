@@ -157,3 +157,31 @@ html.look-new .ci-opt:hover { background: var(--yellow); }
 html.look-new .ci-bar i { background: var(--yellow); }
 html.look-new .ci-due { box-shadow: inset 0 0 0 2px var(--yellow), var(--card-shadow); }
 .ci-when span + span::before { content: " · "; }
+
+/* ---------- after the mission, connection ---------- */
+.after .ch-lead .af-q, .af-q { display: inline; }
+.af-lines { display: grid; gap: 10px; margin-top: 10px; }
+.af-line { padding: 14px 16px; border-radius: 18px; background: var(--soft); display: grid; gap: 8px; }
+.af-line > strong { font-size: 16px; }
+.af-line .fine { margin: 0; }
+.af-team { margin-top: 8px; }
+.af-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.af-911 { margin: 4px 0 0; font-weight: 600; }
+.af-people { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+.af-people li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--soft); }
+.af-people li > span { flex: 1; min-width: 140px; }
+.af-people small { display: block; color: var(--ink-3); }
+.af-add { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.af-add label { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
+.af-add input, .cn-journal textarea { min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--seam-hi); background: var(--hull); color: var(--ink); font: inherit; }
+.af-steps { margin: 8px 0 12px; padding-left: 22px; display: grid; gap: 6px; font-size: 17px; font-weight: 700; }
+.af-back { border-color: var(--beacon); }
+.cn-journal { margin-top: 8px; }
+.cn-journal summary { cursor: pointer; font-weight: 600; min-height: 40px; display: flex; align-items: center; }
+.cn-journal textarea { width: 100%; box-sizing: border-box; resize: vertical; }
+.cn-entries { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.cn-entries li { padding: 10px 12px; border-radius: 12px; background: var(--soft); }
+.cn-entries p { margin: 4px 0 0; white-space: pre-wrap; }
+.cn-ideas { margin: 6px 0 10px; padding-left: 18px; display: grid; gap: 8px; line-height: 1.5; }
+html.look-new .af-line { border-radius: 22px; }
+.cn-ground .an-out b { white-space: normal; font-size: 22px; }

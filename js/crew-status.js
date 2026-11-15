@@ -10,6 +10,7 @@ import * as P from "./predict-core.js";
 import * as X from "./exercise-core.js";
 import { exerciseStore } from "./exercise.js";
 import { getAlerts } from "./support.js";
+import { targetLabel } from "./support-core.js";
 import { getOpenings } from "./role.js";
 import { openingsFor, openNow, reasonLabel } from "./role-core.js";
 import { MEDS_KEY, cleanStore, forMember, patterns } from "./meds-core.js";
@@ -17,6 +18,7 @@ import { KIT } from "./data/med-kit.js";
 import { SUPPLEMENTS } from "./data/supplements.js";
 import { REQUESTS_KEY, cleanRequests, itemLabel } from "./share-core.js";
 import * as Q from "./screen-core.js";
+import { connection } from "./after-core.js";
 
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
 const hhmm = (t) => { const d = new Date(t); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
@@ -36,7 +38,7 @@ export function crewStatus(member, now = new Date()) {
 
   // what they asked for, in their own words
   for (const a of getAlerts().filter((x) => x.from?.id === member.id && !x.closed)) {
-    add(a.level === "emergency" ? "act" : "watch", "request", `${a.level === "emergency" ? "SOS" : "Asked to talk to someone"} · ${hhmm(a.at)}${a.note ? ` · “${a.note}”` : ""}`);
+    add(a.level === "emergency" ? "act" : "watch", "request", `${a.level === "emergency" ? "SOS" : "Asked to talk to someone"} · ${hhmm(a.at)}${a.to?.length ? ` · Needs: ${a.to.map(targetLabel).join(" · ")}` : ""}${a.note ? ` · “${a.note}”` : ""}`);
   }
   for (const r of cleanRequests(read(REQUESTS_KEY, [])).filter((x) => x.member === member.id && x.status === "pending")) {
     add("watch", "access", `Asks to see: ${r.items.map(itemLabel).join(" · ")} · ${hhmm(r.at)}${r.reason ? ` · “${r.reason}”` : ""}`);
@@ -49,6 +51,8 @@ export function crewStatus(member, now = new Date()) {
   const checkins = read(Q.CHECKINS_KEY, []);
   for (const f of Q.flags(checkins, member.id)) add(f.level, "mind", f.text);
   if (Q.due(checkins, read(Q.ASKS_KEY, []), member.id, now).due) add("info", "mind", "Check-in due: not answered yet");
+  const cn = connection({ alerts: getAlerts(), member: member.id, now });
+  if (cn.flag) add(cn.flag.level, "mind", cn.flag.text);
 
   // the morning question
   const check = C.sleepCheck(log, today);

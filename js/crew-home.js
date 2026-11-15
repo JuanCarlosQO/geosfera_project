@@ -21,6 +21,8 @@ import { checkEmergencyCode, reasonLabel } from "./role-core.js";
 import { clocksHtml } from "./clock.js";
 import { snapshot } from "./feed.js";
 import { crewCheckinHtml, bindCrewCheckin } from "./checkin.js";
+import { crewConnectHtml, bindCrewConnect } from "./connect.js";
+import { phase } from "./after-core.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const read = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
@@ -53,6 +55,7 @@ function html(me) {
       </div>
     </header>
 
+    ${(() => { const ph = phase(missionInfo()); return ph.phase === "after" ? `<section class="ch-card af-back"><h2>Welcome back to Earth · day ${ph.daysAfter}</h2><p>Coming home takes time. Support, help lines and the people you trust are in one place.</p><a class="cta main" href="#after">After the mission ›</a></section>` : ""; })()}
     ${clocksHtml({ compact: true })}
 
     ${sleepCheckHtml(me, { missionDay: mday, view: "crew" })}
@@ -68,6 +71,8 @@ function html(me) {
     </section>
 
     <div data-ref="ex-wrap">${crewExerciseHtml(me)}</div>
+
+    <div data-ref="cn-wrap">${crewConnectHtml(me)}</div>
 
     <div class="ch-grid">
       <a class="ch-tile" href="#meds"><strong>Log a medication</strong><small>What you took, what for, how many</small></a>
@@ -98,6 +103,8 @@ export function mountCrewHome(host) {
   const ciWrap = host.querySelector('[data-ref="ci-wrap"]');
   const redrawCheckin = () => { ciWrap.innerHTML = crewCheckinHtml(me); ciWrap.querySelector(".ci-opt, [data-ci]")?.focus({ preventScroll: true }); };
   bindCrewCheckin(ciWrap, me, redrawCheckin);
+  const cnWrap = host.querySelector('[data-ref="cn-wrap"]');
+  bindCrewConnect(cnWrap, me, (msg) => { const open = cnWrap.querySelector(".cn-journal")?.open; cnWrap.innerHTML = crewConnectHtml(me, msg); if (open) cnWrap.querySelector(".cn-journal").open = true; });
   const shWrap = host.querySelector('[data-ref="sh-wrap"]');
   const redrawShare = () => { shWrap.innerHTML = crewShareHtml(me); bindCrewShare(shWrap, me, redrawShare); document.dispatchEvent(new CustomEvent("ergosphere:role")); };
   bindCrewShare(shWrap, me, redrawShare);

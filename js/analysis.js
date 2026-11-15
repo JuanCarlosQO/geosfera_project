@@ -17,6 +17,7 @@ import { fold } from "./fold.js";
 import { groundShareHtml, bindGroundShare } from "./share.js";
 import { exportHtml, bindExport } from "./export.js";
 import { groundCheckinHtml, bindGroundCheckin, checkinAboutHtml } from "./checkin.js";
+import { groundConnectHtml } from "./connect.js";
 
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const quote = (f) => `“${f.quote}” <a href="${f.url}" target="_blank" rel="noopener">${f.source}</a>`;
@@ -119,6 +120,7 @@ export function mountAnalysis(host) {
 
     ${groundCheckinHtml(me)}
     ${fold("About these questionnaires", checkinAboutHtml())}
+    ${groundConnectHtml(me)}
 
     ${groundShareHtml(me)}
     ${exportHtml({ only: me.id })}

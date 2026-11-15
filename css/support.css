@@ -102,3 +102,20 @@ html.comfort-focus .rule-note { opacity: .8; }
 .mind-sos p { margin: 0; line-height: 1.45; font-size: 14px; color: var(--ink-2); }
 .mind-sos strong { color: var(--ink); }
 .mind-sos-dot { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: #e5484d; color: #ffffff; font: 700 13px var(--sans); }
+
+/* the short SOS sheet: who first, cancel, close; details folded */
+.sp-lead { margin: 0 0 12px; font-size: 16px; color: var(--ink-2); }
+.sp-to { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.sp-to-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 88px; padding: 14px; border-radius: 18px; border: 2px solid var(--seam-hi); background: var(--hull); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.sp-to-btn b { font-size: 17px; }
+.sp-to-btn small { font-size: 12px; color: var(--ink-2); line-height: 1.35; }
+.sp-to-btn:hover { border-color: var(--beacon); }
+.sp-to-btn[aria-pressed="true"] { border-color: #e5484d; background: color-mix(in srgb, #e5484d 12%, var(--hull)); }
+.sp-to-btn[aria-pressed="true"] b::before { content: "✓ "; color: #e5484d; }
+.sp-sent > .sp-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 4px; }
+.sp-more { margin-top: 10px; }
+.sp-more summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; font-weight: 600; color: var(--ink-2); }
+@media (max-width: 520px) { .sp-to { grid-template-columns: 1fr; } .sp-to-btn { min-height: 64px; } }
+html.look-new .sp-to-btn { border-color: transparent; background: var(--soft); }
+html.look-new .sp-to-btn[aria-pressed="true"] { border-color: var(--heart); background: color-mix(in srgb, var(--heart) 14%, var(--hull)); }
+.sp-sent > .sp-acts .sp-undo { width: auto; flex: 1 1 200px; margin: 0; }

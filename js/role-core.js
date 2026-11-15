@@ -25,7 +25,7 @@ export const EMERGENCY_REASONS = [
 
 // What a crew member opens without an emergency: their own home, the medication log (they log
 // what they took) and the family channel. Everything else shows readings.
-export const CREW_ROUTES = ["crew", "meds", "family", "drill"];
+export const CREW_ROUTES = ["crew", "meds", "family", "drill", "after"];
 // Never for the ground: the crew member's home and their messages from home.
 export const CREW_ONLY = ["crew", "family"];
 // The ground's own screen (the crew roster); a crew member never opens it.

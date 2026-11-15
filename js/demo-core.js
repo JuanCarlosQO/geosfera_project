@@ -25,7 +25,7 @@ export const DEMO_CREW = [
   { id: "demo-amehta", name: "Arjun Mehta", role: "Crew Medical Officer", body: "m", age: 44, home: "India", avatar: "m2" }
 ];
 export const DEMO_CODES = { "demo-vreyes": "3719", "demo-tokafor": "8264", "demo-amorimoto": "5081", "demo-amehta": "6427" };
-export const DEMO_VERSION = 4;
+export const DEMO_VERSION = 5;
 // the crew's emergency code for the demo mission (shown on the profiles screen so anyone can try it)
 export const DEMO_EMERGENCY_CODE = "246810";
 
@@ -234,7 +234,8 @@ export function buildDemo(now = new Date()) {
     ],
     requests: [{ id: "req-demo-1", member: DEMO_CREW[1].id, items: ["sleepHours", "heartRate"], reason: "I want to see how my sleep is doing before the spacewalk prep.", at: at(today, 6, 40).toISOString(), status: "pending" }],
     // Aiko asked to talk to someone this morning (support channel)
-    alerts: [{ id: "al-demo-1", at: at(today, 7, 5).toISOString(), level: "talk", from: { id: aId, name: "Aiko Morimoto", role: "Mission Specialist" }, reasons: ["low", "home"], note: "Long day outside yesterday. Would like a private call with home when possible.", acks: [], closed: null }],
+    alerts: [{ id: "al-demo-1", at: at(today, 7, 5).toISOString(), level: "talk", from: { id: aId, name: "Aiko Morimoto", role: "Mission Specialist" }, reasons: ["low", "home"], note: "Long day outside yesterday. Would like a private call with home when possible.", acks: [], closed: null },
+      { id: "al-demo-2", at: at(days[days.length - 5], 19, 30).toISOString(), level: "talk", from: { id: aId, name: "Aiko Morimoto", role: "Mission Specialist" }, reasons: ["home"], note: "", acks: [], closed: at(days[days.length - 5], 21, 0).toISOString() }],
     // Arjun opened his own data during a loss of signal two days ago, for 25 minutes
     openings: [{ member: jId, reason: "los", at: at(days[days.length - 3], 14, 5).toISOString(), closedAt: at(days[days.length - 3], 14, 30).toISOString() }],
     // two messages from home waiting sealed for Valentina (family channel), 20 minutes in transit

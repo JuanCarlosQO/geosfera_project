@@ -43,7 +43,7 @@ function emergencyHtml(members) {
       <h2 id="mc-drill-h">Emergency drills</h2>
       <p class="fine">Rehearse a cardiac arrest on board (simulated): alarm, emergency code, data open, time it took.</p>
       ${drills.length ? `<ul class="dr-past">${drills.map((d) => { const t = timings(d); return `<li><strong data-no-i18n>${esc(name(d.patient))}</strong><span>${stamp(d.startedAt)}</span><span>${d.endedAt ? `Data open in ${clockOf(t.toOpen)} · ${t.wrongCodes} wrong` : "Running now"}</span>${d.outcome ? `<span>${outcomeLabel(d.outcome)}</span>` : ""}</li>`; }).join("")}</ul>` : ""}
-      <a class="cta stop" href="#drill">Run a drill</a>
+      <div class="sh-row"><a class="cta stop" href="#drill">Run a drill</a><a class="cta" href="#after">After the mission: support ›</a></div>
     </section>
   </div>`;
 }
