@@ -1,7 +1,7 @@
 // Module 2 — Body hologram. A human figure on a ring of light, one control per body system
 // around it, and a panel with NASA's own words about the risks for that system.
 
-import { figureSvg } from "./anatomy.js";
+import { figureSvg, photoFigure, PHOTO_NOTE } from "./anatomy.js";
 import { SYSTEMS, STATUS } from "./data/body-systems.js";
 import { NASA_RISKS, RISKS_SOURCE } from "./data/nasa-risks.js";
 
@@ -10,6 +10,14 @@ const FIG_X = 80;
 const FIG_Y = 10;
 const STAGE_W = 360;
 const STAGE_H = 470;
+
+// Day look: a realistic body picture, 260 wide at x 50, y 40 of the stage. Each system's anchor
+// on it is given in % of the picture. (The night look keeps the hologram and its own anchors.)
+const PHOTO_BOX = { x: 50, y: 40, w: 260, h: 390 };
+const ON_PHOTO = { brain: [50, 4.2], mind: [54, 7], heart: [54.5, 24], lungs: [44.5, 22.5], immune: [50, 34], musculo: [40.5, 66], radiation: [61, 31] };
+const anchorOf = (s, photo) => (photo
+  ? [PHOTO_BOX.x + (ON_PHOTO[s.id][0] / 100) * PHOTO_BOX.w, PHOTO_BOX.y + (ON_PHOTO[s.id][1] / 100) * PHOTO_BOX.h]
+  : [FIG_X + s.anchor[0], FIG_Y + s.anchor[1]]);
 
 const PLACES = {
   brain: { side: "left", y: 58 },
@@ -42,11 +50,10 @@ function controlPosition(id) {
   return { x: p.side === "left" ? 34 : STAGE_W - 34, y: p.y, side: p.side };
 }
 
-function connectors() {
+function connectors(photo) {
   return SYSTEMS.map((s) => {
     const c = controlPosition(s.id);
-    const ax = FIG_X + s.anchor[0];
-    const ay = FIG_Y + s.anchor[1];
+    const [ax, ay] = anchorOf(s, photo);
     const startX = c.side === "left" ? c.x + 26 : c.x - 26;
     const kneeX = c.side === "left" ? 92 : STAGE_W - 92;
     return `<g class="link" data-system="${s.id}">
@@ -129,19 +136,23 @@ function countUp(root) {
 }
 
 export function mountBody(host) {
+  const photo = document.documentElement.dataset.theme !== "night"; // day: the realistic body; night: the hologram
   host.innerHTML = `
-  <section class="body-module" aria-labelledby="body-title">
+  <section class="body-module${photo ? " with-photo" : ""}" aria-labelledby="body-title">
     <header class="module-head">
       <p class="eyebrow">Module 2</p>
-      <h1 id="body-title" tabindex="-1">Body hologram</h1>
+      <h1 id="body-title" tabindex="-1">${photo ? "Body systems" : "Body hologram"}</h1>
       <a class="fb-link" href="#future"><span>Future body<small>Bone density over a mission, against NASA's requirement</small></span><span>Open →</span></a>
       <a class="fb-link" href="#mind"><span>Mind &amp; support<small>Mood and sleep this week, comfort settings, and asking for help</small></span><span>Open →</span></a>
     </header>
     <div class="body-layout">
       <div class="stage" data-ref="stage">
-        <svg class="links" viewBox="0 0 ${STAGE_W} ${STAGE_H}" aria-hidden="true">${connectors()}</svg>
-        <div class="figure-wrap" style="left:${(FIG_X / STAGE_W) * 100}%;top:${(FIG_Y / STAGE_H) * 100}%;width:${(200 / STAGE_W) * 100}%">${figureSvg()}</div>
+        ${photo
+    ? `<div class="figure-wrap" style="left:${(PHOTO_BOX.x / STAGE_W) * 100}%;top:${(PHOTO_BOX.y / STAGE_H) * 100}%;width:${(PHOTO_BOX.w / STAGE_W) * 100}%">${photoFigure()}</div>`
+    : `<div class="figure-wrap" style="left:${(FIG_X / STAGE_W) * 100}%;top:${(FIG_Y / STAGE_H) * 100}%;width:${(200 / STAGE_W) * 100}%">${figureSvg()}</div>`}
+        <svg class="links" viewBox="0 0 ${STAGE_W} ${STAGE_H}" aria-hidden="true">${connectors(photo)}</svg>
         ${controls()}
+        ${photo ? `<p class="fine body-ai">${PHOTO_NOTE}</p>` : ""}
       </div>
       <aside class="system-panel" data-ref="panel" aria-live="polite"></aside>
     </div>

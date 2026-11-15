@@ -286,6 +286,10 @@ NASA, "Space Radiation is Risky Business for the Human Body" (19 Sep 2017, page 
 - **Drawing choice, not data:** streaks cross the helix at a rate that follows the live dose rate compared with its usual value (0.5 a second at the usual rate, between 0.12 and 9). They are not counted particles, and a rung that flashes is not damage found in anyone. The screen says so under "What this picture is not".
 - The three short steps beside the helix paraphrase the quotes above and add nothing to them.
 
+### Body picture (generated with AI, 14 Nov 2026)
+
+`assets/body-front.webp`, the realistic body shown under the sensors in Live and on the Body screen in the day look, is **not** a photograph, a scan or an anatomical atlas. It was generated with an AI image model (through OpenAI Codex, by a team member, from a prompt written with Claude) as a picture of a plastic muscle-anatomy teaching model, front view. The white background was removed by code and the file compressed; nothing else was retouched. Both screens label it: "Body picture generated with AI: an illustration, not an anatomical reference." Where the sensors and the body systems are pinned on it is the app's own placement, approximate. The night look keeps the hologram figure drawn by code.
+
 ## Module 5 — future body
 
 NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 39, [V1 4027], its rationale, and [V1 4028]); the others are already listed above.

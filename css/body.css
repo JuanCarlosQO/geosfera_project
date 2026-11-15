@@ -121,3 +121,14 @@
   .body-module .figure .bones, .body-module .figure .organ, .body-module .links, .body-module .sys { opacity: 1; }
   .figure .scan { display: none; }
 }
+
+/* day look: a realistic body picture instead of the hologram */
+.body-photo { display: block; width: 100%; height: auto; }
+.with-photo .figure-wrap .body-photo { filter: drop-shadow(0 16px 24px rgba(15, 23, 42, .2)); }
+.with-photo .links { z-index: 1; }
+.with-photo .link path { stroke: color-mix(in srgb, var(--beacon) 55%, transparent); stroke-dasharray: 3 3; }
+.with-photo .link .node { fill: #ffffff; stroke: var(--beacon); stroke-width: 1.4; opacity: 1; r: 3.6px; }
+.with-photo .link.on path { stroke: var(--beacon); stroke-width: 1.8; }
+.with-photo .link.on .node { fill: var(--beacon); }
+.with-photo .sys { z-index: 2; }
+.body-ai { position: absolute; left: 0; right: 0; bottom: -4px; margin: 0; text-align: center; font-size: 11px; }

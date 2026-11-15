@@ -23,7 +23,7 @@ import { radiationTotals } from "./today-core.js";
 import { dateKey } from "./log-core.js";
 import { readLog } from "./store.js";
 import { RADIATION_LIMITS } from "./data/vital-ranges.js";
-import { figureSvg } from "./anatomy.js";
+import { photoFigure, PHOTO, PHOTO_NOTE } from "./anatomy.js";
 
 const DONKI = "https://ccmc.gsfc.nasa.gov/DONKI-API/get/FLR";
 
@@ -67,25 +67,30 @@ const fmt = (k, c) => (c.value == null ? "—" : k === "bloodPressure" ? `${c.va
 
 /* ---------- the wearables on the body, and their link to this tablet ---------- */
 
-// The figure is 200 x 450 units and sits in the middle 46 % of the stage (as in the medication log).
-const FIG = { left: 27, width: 46 };
-const px = (x) => FIG.left + (x / 200) * FIG.width;
-const py = (y) => (y / 450) * 100;
-const HUB = [84, 80];                                   // where the tablet sits on the stage, in %
-const LABELS = { chest: { side: "left", top: 12 }, cuff: { side: "left", top: 40 }, wrist: { side: "right", top: 36 }, clip: { side: "right", top: 7 } };
+// The body picture fills 72 % of the stage's width, 14 % in from the left. Each sensor's place
+// is given in % of the picture (x from its left, y from its top) and turned into stage %.
+const FIG = { left: 14, width: 72 };
+const STAGE_RATIO = 1.22;                               // stage height / width
+const px = (x) => FIG.left + (x / 100) * FIG.width;
+const py = (y) => (y / 100) * ((FIG.width * (PHOTO.h / PHOTO.w)) / STAGE_RATIO);
+const ON_BODY = { chest: [54.5, 24], cuff: [31.8, 29.5], wrist: [80.9, 45.6], clip: [55.5, 18.2] };
+const HUB = [50, 95];                                   // where the tablet sits on the stage, in %
+const LABELS = { chest: { side: "left", top: 2 }, cuff: { side: "left", top: 60 }, wrist: { side: "right", top: 60 }, clip: { side: "right", top: 2 } };
 const LINK_WORDS = { ok: "Linked", off: "Sensor off", lost: "Link lost" };
 
 function sensorsHtml() {
-  const list = Object.entries(T.SENSORS);
-  const lines = list.map(([id, sn]) => { const x = px(sn.at[0]), y = py(sn.at[1]); return `<path data-sn-line="${id}" d="M${x.toFixed(1)} ${y.toFixed(1)} Q${((x + HUB[0]) / 2).toFixed(1)} ${(Math.max(y, HUB[1]) + 8).toFixed(1)} ${HUB[0]} ${HUB[1]}"/>`; }).join("");
+  const list = Object.keys(T.SENSORS).map((id) => [id, T.SENSORS[id], px(ON_BODY[id][0]), py(ON_BODY[id][1])]);
+  const flows = list.map(([id, , x, y]) => `<path data-sn-line="${id}" d="M${x.toFixed(1)} ${y.toFixed(1)} Q${((x + HUB[0]) / 2 + (x < 50 ? -10 : 10)).toFixed(1)} ${((y + HUB[1]) / 2 + 12).toFixed(1)} ${HUB[0]} ${HUB[1] - 4}"/>`).join("");
+  const leads = list.map(([id, , x, y]) => { const l = LABELS[id]; return `<line class="sn-lead" x1="${l.side === "left" ? 29 : 71}" y1="${l.top + 7}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join("");
   return `<div class="sn-stage" role="group" aria-label="Wearable sensors on the body and their link to this tablet">
     <span class="tm-tag sn-sim">SIMULATED</span>
-    <div class="sn-fig" aria-hidden="true">${figureSvg()}</div>
-    <svg class="sn-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
-    ${list.map(([id, sn]) => `<span class="sn-dot" data-sn-dot="${id}" style="left:${px(sn.at[0]).toFixed(1)}%;top:${py(sn.at[1]).toFixed(1)}%" aria-hidden="true"></span>`).join("")}
+    <div class="sn-fig" aria-hidden="true">${photoFigure()}</div>
+    <svg class="sn-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${leads}${flows}</svg>
+    ${list.map(([id, , x, y]) => `<span class="sn-dot" data-sn-dot="${id}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%" aria-hidden="true"></span>`).join("")}
     ${list.map(([id, sn]) => `<div class="sn-label" data-sn="${id}" data-side="${LABELS[id].side}" style="top:${LABELS[id].top}%"><strong>${sn.name}</strong><span data-sn-val="${id}">—</span><small data-sn-link="${id}"></small></div>`).join("")}
-    <div class="sn-hub" style="left:${HUB[0]}%;top:${HUB[1]}%"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M10 18h4"/></svg><strong>This tablet</strong><small data-ref="hub" aria-live="polite"></small></div>
+    <div class="sn-hub" style="left:${HUB[0]}%;top:${HUB[1]}%"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M10 18h4"/></svg><span><strong>This tablet</strong><small data-ref="hub" aria-live="polite"></small></span></div>
   </div>
+  <p class="fine sn-ai">${PHOTO_NOTE}</p>
   <ol class="sn-chain" aria-label="Where the data goes"><li>Body sensors</li><li>This tablet<small>judges on board</small></li><li>Station computer</li><li>Mission Control<small>up to 20 min away</small></li></ol>`;
 }
 
@@ -225,7 +230,7 @@ export function mountLive(host, openTab) {
       { id: "rules", label: "Alert rules", html: rulesTab }
     ])}
 
-    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The four wearables (chest band, arm cuff, wrist unit, CO₂ clip), their batteries and their link are simulated; where they sit on the figure is an illustration. The DNA helix is an illustration: nothing measures DNA. Sleep mode, the CO₂ pocket alert, the wake alarm and its sounds are app rules; a web page cannot sound with the phone locked, so sleep mode needs this app open. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The four wearables (chest band, arm cuff, wrist unit, CO₂ clip), their batteries and their link are simulated; where they sit on the figure is an illustration, and the body picture itself was generated with AI. The DNA helix is an illustration: nothing measures DNA. Sleep mode, the CO₂ pocket alert, the wake alarm and its sounds are app rules; a web page cannot sound with the phone locked, so sleep mode needs this app open. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".live");

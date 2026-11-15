@@ -153,3 +153,13 @@ export function figureSvg() {
 export function silhouetteSvg(cls = "") {
   return `<svg class="silhouette ${cls}" viewBox="0 0 200 450" aria-hidden="true"><path d="${smooth(BODY)}"/><path d="${HEAD}"/></svg>`;
 }
+
+/* ---------- a realistic body, for the day look ---------- */
+
+// A front view of a muscle-anatomy teaching model. The picture was GENERATED WITH AI (see
+// docs/SOURCES.md and docs/AI_USE.md): it is an illustration, not an anatomical reference,
+// and the screens that use it say so. 1024 x 1536; the body spans x 8-91 %, y 1-98 %.
+export const PHOTO = { src: "assets/body-front.webp", w: 1024, h: 1536 };
+export const PHOTO_NOTE = "Body picture generated with AI: an illustration, not an anatomical reference.";
+export const photoFigure = () => `<img class="body-photo" src="${PHOTO.src}" width="${PHOTO.w}" height="${PHOTO.h}" alt="" decoding="async">`;
+

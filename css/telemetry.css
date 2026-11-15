@@ -156,3 +156,14 @@
 .dna-you strong { color: var(--ink); }
 .dna-quotes { margin: 0 0 8px; padding-left: 18px; display: grid; gap: 8px; color: var(--ink-2); line-height: 1.45; font-size: 14px; }
 .rad-dna { display: inline-flex; align-items: center; min-height: 40px; }
+
+/* the realistic body under the sensors */
+.sn-stage { max-width: 440px; aspect-ratio: 1 / 1.22; }
+.sn-fig { left: 14%; width: 72%; }
+.sn-fig .body-photo { display: block; width: 100%; height: auto; filter: drop-shadow(0 14px 22px rgba(15, 23, 42, .18)); }
+.sn-lines .sn-lead { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; fill: none; opacity: .8; }
+.sn-label { z-index: 1; }
+.sn-hub { width: 54%; flex-direction: row; justify-content: center; gap: 10px; padding: 8px 12px; text-align: left; z-index: 1; }
+.sn-hub span { display: flex; flex-direction: column; }
+.sn-ai { margin: 4px 0 0; text-align: center; font-size: 11.5px; }
+.sn-stage .sn-sim { right: auto; left: 0; top: auto; bottom: 1.5%; }
