@@ -2,6 +2,7 @@
 // NASA's five hazards, what to do now, radiation and every reading with a trend and a reason.
 
 import { watchLine } from "./devices.js";
+import { SOURCES } from "./devices-core.js";
 import { confirmHere } from "./ask.js";
 import {
   WINDOWS, summarise, headline, missionDay, cupolaGeometry,
@@ -127,7 +128,7 @@ function readingRows(log, day, entry) {
     const st = r?.value == null ? "none" : judgeReading(f.key, r);
     const d = sparkPath(series(log, f.key, day, 14));
     return `<li class="rd" style="--i:${i}">
-      <div class="rd-name"><span class="rd-label">${tile(f.key)}${f.label}</span><small class="rd-why">${reasonFor(f.key, r)}</small></div>
+      <div class="rd-name"><span class="rd-label">${tile(f.key)}${f.label}</span>${r?.value != null ? `<em class="rd-src">${r.src ? `⌁ ${SOURCES[r.src] ?? "Device"}` : "✎ Typed by you"}</em>` : ""}<small class="rd-why">${reasonFor(f.key, r)}</small></div>
       <svg class="spark" viewBox="0 0 120 32" aria-hidden="true">${d ? `<path d="${d}" pathLength="1"/>` : `<line x1="0" y1="16" x2="120" y2="16" class="flat"/>`}</svg>
       <div class="rd-val"><strong>${r?.value != null ? fmt(f.key, r.value) : "—"}</strong><span>${f.unit}</span></div>
       <div class="rd-st">${chip(st)}</div>
@@ -259,7 +260,7 @@ export function mountToday(host, { go }, requested) {
   });
   host.querySelector(".crew-status").addEventListener("click", (e) => {
     const card = e.target.closest("[data-member]");
-    if (card) { S.setActive(card.dataset.member); rerender(); return; }
+    if (card) { if (card.dataset.member !== S.current()?.id) document.dispatchEvent(new CustomEvent("ergosphere:switch", { detail: card.dataset.member })); return; } // their own code
     if (e.target.closest('[data-action="manage-crew"]')) {
       host.insertAdjacentHTML("beforeend", manageHtml(S.getCrew()));
       const veil = host.querySelector('[data-ref="crew-veil"]');

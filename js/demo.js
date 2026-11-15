@@ -1,6 +1,6 @@
 // Loads and removes the demo crew on this device (rules and values: demo-core.js).
 // Loading is offered only while no crew is registered, so it never mixes with real entries.
-// Removing takes away only what the demo wrote: its three members and their logs, its
+// Removing takes away only what the demo wrote: its two members and their logs, its
 // medication doses and vitamin D days, and its mission start.
 
 import { buildDemo, DEMO_KEY, isDemoId } from "./demo-core.js";
@@ -49,6 +49,6 @@ export const demoNoticeHtml = () => `<div class="demo-note" role="note"><span cl
   <button type="button" class="textlink" data-action="remove-demo">Remove demo crew</button></div>`;
 
 export const demoOfferHtml = () => `<div class="demo-offer">
-  <p><strong>Just looking around?</strong> Load a demo crew: three fictional crew members with two weeks of simulated readings.</p>
+  <p><strong>Just looking around?</strong> Load a demo crew: two fictional astronauts, a woman and a man, each with their own code and two weeks of simulated readings.</p>
   <button type="button" class="cta" data-action="load-demo">Load demo crew</button>
   <p class="fine">Not real astronaut data. Remove it any time from the Today screen.</p></div>`;

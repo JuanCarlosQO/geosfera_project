@@ -2,6 +2,8 @@
 // Front view, anatomical position, about eight heads tall. The person's left is on the viewer's right.
 // Every region has a data-region so a body system can light it.
 
+import { current } from "./store.js";
+
 export const REGIONS = ["brain", "eyes", "halo", "heart", "vessels", "lungs", "gut", "skeleton", "skin"];
 
 const MIRROR = 'transform="matrix(-1 0 0 1 200 0)"';
@@ -160,6 +162,11 @@ export function silhouetteSvg(cls = "") {
 // docs/SOURCES.md and docs/AI_USE.md): it is an illustration, not an anatomical reference,
 // and the screens that use it say so. 1024 x 1536; the body spans x 8-91 %, y 1-98 %.
 export const PHOTO = { src: "assets/body-front.webp", w: 1024, h: 1536 };
+// The same AI-generated teaching model as a woman, same pose and framing, so every spot placed
+// on the picture (sensors, body systems, "what for" zones) fits both.
+export const PHOTO_F = { ...PHOTO, src: "assets/body-front-f.webp" };
 export const PHOTO_NOTE = "Body picture generated with AI: an illustration, not an anatomical reference.";
-export const photoFigure = () => `<img class="body-photo" src="${PHOTO.src}" width="${PHOTO.w}" height="${PHOTO.h}" alt="" decoding="async">`;
+/** The body picture of the active crew member (a woman's or a man's). */
+export const photoFor = (member = current()) => (member?.body === "f" ? PHOTO_F : PHOTO);
+export const photoFigure = (member) => { const p = photoFor(member); return `<img class="body-photo" src="${p.src}" width="${p.w}" height="${p.h}" alt="" decoding="async">`; };
 

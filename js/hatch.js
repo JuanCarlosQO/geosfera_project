@@ -2,7 +2,9 @@
 // All decisions (code rules, hashing, waits, fingerprint check) come from access-core.js.
 
 import * as core from "./access-core.js";
-import { current } from "./store.js";
+import { current, getCrew, setActive } from "./store.js";
+import { logKeyFor } from "./crew-core.js";
+import { DEMO_CODES } from "./demo-core.js";
 
 const STORE = "geosfera.crew-access";
 const OPEN_DURATION = 3800;
@@ -23,6 +25,7 @@ const HINTS = {
   create: "Choose a four-digit code on the ring",
   repeat: "Tap the same code again to confirm",
   enter: "Tap your four digits on the ring",
+  who: "Choose your profile",
   biometric: "Add your fingerprint or face to open faster"
 };
 
@@ -34,6 +37,23 @@ function timeOfDay() {
 }
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const initials = (n) => esc(n.split(" ").map((w) => w[0]).slice(0, 2).join(""));
+const spaced = (code) => code.split("").join(" ");
+
+/** The crew to choose from: each profile with its own code. Demo profiles show theirs. */
+function crewHtml(members, store) {
+  return `<ul class="hs-crew-list">${members.map((m, i) => {
+    const rec = core.accessFor(store, m.id).record;
+    const demo = DEMO_CODES[m.id];
+    const line = demo ? `<span class="hs-code">Demo code <b>${spaced(demo)}</b></span>` : rec ? `<span class="hs-code">Code set</span>` : `<span class="hs-code">First time: choose a code</span>`;
+    return `<li style="--i:${i}"><button type="button" class="hs-prof" data-pick="${esc(m.id)}">
+      <span class="hs-avatar big" data-body="${m.body ?? ""}" aria-hidden="true">${initials(m.name)}</span>
+      <span class="hs-prof-txt"><strong>${esc(m.name)}</strong><small>${esc(m.role)}${m.age ? ` · ${m.age}` : ""}${m.home ? ` · ${esc(m.home)}` : ""}</small>${line}</span>
+      <span class="hs-go" aria-hidden="true">›</span></button></li>`;
+  }).join("")}</ul>
+  ${members.some((m) => DEMO_CODES[m.id]) ? `<p class="hs-crew-note">Demo profiles: fictional astronauts with simulated readings. Their codes are shown so anyone can try them.</p>` : ""}`;
+}
 
 function markup() {
   const who = current(); // the crew member last active on this device, if a crew is registered
@@ -55,12 +75,14 @@ function markup() {
       <time class="utc" data-utc>--:-- UTC</time>
     </div>
     <div class="hs-title">
-      ${who ? `<p class="hs-who"><span class="hs-avatar" aria-hidden="true">${esc(who.name.split(" ").map((w) => w[0]).slice(0, 2).join(""))}</span>${esc(who.name)} · ${esc(who.role)}</p>` : ""}
-      <h1 id="hs-heading">${timeOfDay()}, ${name}</h1>
+      <p class="hs-who" data-ref="who" ${who ? "" : "hidden"}>${who ? `<span class="hs-avatar" aria-hidden="true">${initials(who.name)}</span>${esc(who.name)} · ${esc(who.role)}` : ""}</p>
+      <h1 id="hs-heading" data-ref="heading">${timeOfDay()}, ${name}</h1>
       <p data-ref="hint"></p>
       <div class="hs-dots" data-ref="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
+
+  <div class="hs-crew" data-ref="crew" hidden></div>
 
   <div class="hatch" data-ref="hatch">
     <svg class="hatch-art" viewBox="0 0 200 200" aria-hidden="true">
@@ -93,14 +115,14 @@ function markup() {
 
   <div class="arrival" aria-hidden="true">
     <span class="eyebrow">Pressure equalised</span>
-    <h2>Welcome aboard,<br>${name}.</h2>
+    <h2>Welcome aboard,<br><span data-ref="arrive-name">${name}</span>.</h2>
     <p>Opening the station…</p>
   </div>
 
   <div class="veil" data-ref="veil" hidden>
     <div class="sheet" role="alertdialog" aria-labelledby="fg-h" aria-describedby="fg-p">
       <h2 id="fg-h">Forgot your code?</h2>
-      <p id="fg-p">It cannot be recovered. Resetting erases everything Ergosphere saved on this device, including your daily log, and then you choose a new code. Save a backup first if you can still get in on another device.</p>
+      <p id="fg-p">It cannot be recovered. Resetting erases this profile's code and daily log on this device (the rest of the crew is not touched), and then you choose a new code. Save a backup first if you can still get in another way.</p>
       <div class="pair" style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="cta" data-do="keep">Keep trying</button>
         <button type="button" class="cta stop" data-do="erase">Erase and reset</button>
@@ -123,6 +145,10 @@ function eraseDevice() {
     const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i));
     for (const k of core.appKeys(keys)) localStorage.removeItem(k);
   } catch { /* nothing to erase */ }
+}
+/** "Forgot your code?" for one profile: only that person's code and daily log are erased. */
+function eraseMember(id) {
+  try { localStorage.removeItem(logKeyFor(id)); } catch { /* nothing to erase */ }
 }
 
 /* ---------- platform authenticator ---------- */
@@ -172,10 +198,14 @@ async function confirmBiometric(saved) {
 /* ---------- the screen ---------- */
 
 export class Hatch {
-  constructor(root, { onEnter }) {
+  constructor(root, { onEnter, memberId = null }) {
     this.root = root;
     this.onEnter = onEnter;
-    this.saved = readStore();
+    this.all = core.migrateAccess(readStore(), current()?.id ?? null);
+    this.members = getCrew().members;
+    // a crew: everyone picks their own profile (or the one asked for); no crew: one device lock
+    this.memberId = this.members.length ? (memberId && this.members.some((m) => m.id === memberId) ? memberId : null) : core.DEVICE_ID;
+    this.saved = this.memberId ? core.accessFor(this.all, this.memberId) : {};
     this.digits = [];
     this.pendingCode = null;
     this.working = false;
@@ -188,7 +218,7 @@ export class Hatch {
     setTimeout(() => this.root.querySelector(".hatch-screen")?.classList.add("settled"), 1100);
     this.screen = this.root.firstElementChild;
     const ref = (name) => this.screen.querySelector(`[data-ref="${name}"]`);
-    this.ui = { hatch: ref("hatch"), hint: ref("hint"), readout: ref("readout"), choices: ref("choices"), veil: ref("veil") };
+    this.ui = { hatch: ref("hatch"), hint: ref("hint"), readout: ref("readout"), choices: ref("choices"), veil: ref("veil"), crew: ref("crew"), who: ref("who"), heading: ref("heading"), arrive: ref("arrive-name") };
     this.keys = [...this.screen.querySelectorAll(".key")];
     this.bolts = [...this.screen.querySelectorAll(".bolt")];
     this.canBiometric = await biometricReady();
@@ -205,9 +235,38 @@ export class Hatch {
     this.screen.addEventListener("click", (e) => this.onClick(e));
     this.screen.addEventListener("keydown", (e) => this.onKey(e));
 
-    this.goTo(this.saved.record ? "enter" : "create");
-    if (!this.saved.record) this.tell("First time on this device: set your crew code.");
+    if (this.memberId) await this.pick(this.memberId);
+    else this.goTo("who");
     this.screen.focus();
+  }
+
+  persist() {
+    this.all = core.withAccess(this.all, this.memberId, this.saved);
+    writeStore(this.all);
+  }
+
+  /** A profile was chosen: greet that person and ask for their own code (a demo profile's is ready). */
+  async pick(id) {
+    this.memberId = id;
+    const m = this.members.find((x) => x.id === id);
+    if (m) {
+      setActive(id);
+      this.ui.who.hidden = false;
+      this.ui.who.innerHTML = `<span class="hs-avatar" aria-hidden="true">${initials(m.name)}</span>${esc(m.name)} · ${esc(m.role)}`;
+      this.ui.heading.textContent = `${timeOfDay()}, ${m.name.split(" ")[0]}`;
+      this.ui.arrive.textContent = m.name.split(" ")[0];
+    }
+    this.saved = core.accessFor(this.all, id);
+    if (!this.saved.record && DEMO_CODES[id]) {
+      this.working = true;
+      this.tell("Preparing the demo profile…");
+      this.saved = { record: await core.deriveRecord(DEMO_CODES[id]), misses: core.cleanSlate() };
+      this.persist();
+      this.working = false;
+      this.tell(`Demo code: ${spaced(DEMO_CODES[id])}`);
+    }
+    this.goTo(this.saved.record ? "enter" : "create");
+    if (!this.saved.record) this.tell(m ? `First time for ${m.name.split(" ")[0]}: choose a four-digit code.` : "First time on this device: set your crew code.");
   }
 
   tell(text, warn = false) {
@@ -229,6 +288,14 @@ export class Hatch {
     this.digits = [];
     this.drawBolts();
     this.ui.hint.textContent = HINTS[step];
+    this.screen.classList.toggle("picking", step === "who");
+    this.ui.crew.hidden = step !== "who";
+    if (step === "who") {
+      this.ui.crew.innerHTML = crewHtml(this.members, this.all);
+      this.ui.who.hidden = true;
+      this.ui.heading.textContent = `${timeOfDay()}`;
+      this.tell("");
+    }
     this.lockKeys(step === "biometric");
     this.drawChoices();
     if (step === "enter") this.watchWait();
@@ -244,6 +311,7 @@ export class Hatch {
       c.insertAdjacentHTML("beforeend", `<div class="pair"><button type="button" class="cta main" data-do="enrol">${fingerprintSvg}Add fingerprint</button><button type="button" class="cta" data-do="skip">Not now</button></div>`);
     }
     if (this.step === "enter") c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="forgot">Forgot your code?</button>`);
+    if (["enter", "create"].includes(this.step) && this.members.length > 1) c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="switch">Not you? Choose another profile</button>`);
     if (this.step === "repeat") c.insertAdjacentHTML("beforeend", `<button type="button" class="textlink" data-do="restart">Start again</button>`);
   }
 
@@ -318,7 +386,7 @@ export class Hatch {
       this.working = true;
       this.tell("Sealing the hatch…");
       this.saved = { record: await core.deriveRecord(code), misses: core.cleanSlate() };
-      writeStore(this.saved);
+      this.persist();
       this.pendingCode = null;
       this.working = false;
       if (this.canBiometric) { this.tell("Code saved."); this.goTo("biometric"); } else this.open();
@@ -332,12 +400,12 @@ export class Hatch {
       this.working = false;
       if (right) {
         this.saved.misses = core.cleanSlate();
-        writeStore(this.saved);
+        this.persist();
         this.open();
         return;
       }
       this.saved.misses = core.afterMiss(this.saved.misses, Date.now());
-      writeStore(this.saved);
+      this.persist();
       this.reject();
       if (!this.watchWait()) {
         const left = core.attemptsRemaining(this.saved.misses);
@@ -349,6 +417,7 @@ export class Hatch {
   async onClick(e) {
     const btn = e.target.closest("button");
     if (!btn) return;
+    if (btn.dataset.pick !== undefined) { if (!this.working) await this.pick(btn.dataset.pick); return; }
     if (btn.dataset.key !== undefined) { if (Date.now() - (this.pointerAt ?? 0) > 700) this.press(Number(btn.dataset.key)); return; }
 
     switch (btn.dataset.do) {
@@ -360,11 +429,16 @@ export class Hatch {
         this.ui.veil.hidden = true;
         break;
       case "erase":
-        eraseDevice();
+        if (this.memberId === core.DEVICE_ID) eraseDevice();
+        else { eraseMember(this.memberId); this.all = core.withoutAccess(this.all, this.memberId); writeStore(this.all); }
         this.saved = {};
         this.ui.veil.hidden = true;
-        this.tell("Lock erased. Choose a new code.");
+        this.tell("Code erased. Choose a new code.");
         this.goTo("create");
+        break;
+      case "switch":
+        this.pendingCode = null;
+        this.goTo("who");
         break;
       case "restart":
         this.pendingCode = null;
@@ -379,7 +453,7 @@ export class Hatch {
         this.tell("Follow the prompt on your phone…");
         try {
           this.saved.biometric = await enrolBiometric();
-          writeStore(this.saved);
+          this.persist();
           this.tell("Fingerprint added.");
           this.open();
         } catch (err) {

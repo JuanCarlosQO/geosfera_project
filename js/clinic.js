@@ -71,7 +71,7 @@ export function clinicHero({ log, day, entry, summary, mday, streak, exercise, a
   const next = actions[0];
   const checkIn = isToday ? "#log" : `#log/${day}`;
   const info = `<section class="cl-card cl-info" aria-labelledby="cl-info-h">
-        <h2 id="cl-info-h">Crew member</h2>
+        <div class="cl-info-head"><h2 id="cl-info-h">Crew member</h2><button type="button" class="cl-signout" data-action="signout">Sign out</button></div>
         <div class="cl-info-grid">
           <div class="cl-avatar" aria-hidden="true"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="26" r="15"/><path d="M22 26a10 8 0 0 1 20 0v3a10 6 0 0 1-20 0z"/><path d="M12 56c2-9 9-13 20-13s18 4 20 13"/><path d="M26 47v6M38 47v6"/></svg></div>
           <dl>

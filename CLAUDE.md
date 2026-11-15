@@ -102,7 +102,7 @@ Ergosphere is the team's entry for the **NASA Space Apps Challenge 2026**, chall
 | `family.html`, `js/family-page.js` | The family's own page: only the writing form (`mountWrite` from `family.js`), no app shell |
 | `js/family-notify.js`, `css/notify.css` | Announces a new message from home on any screen (sealed, "Open it" / "Later"), polls the mailbox every 8 s while the app is open, respects a paused channel |
 | `js/ask.js` | In-page "Yes / Cancel" confirmation next to the button; use it instead of the browser's confirm(), which some in-app browsers block silently |
-| `js/demo-core.js`, `js/demo.js` | Demo crew, tested: three fictional members with 14 days of simulated readings, Valentina's short-sleep story, melatonin doses and vitamin D days; load on an empty station (button or `?demo`), remove only what the demo wrote |
+| `js/demo-core.js`, `js/demo.js` | Demo crew, tested: two fictional members (a woman and a man, each with a demo code in `DEMO_CODES`) with 14 days of simulated readings, Valentina's short-sleep story, melatonin doses and vitamin D days; load on an empty station (button or `?demo`), remove only what the demo wrote |
 | `docs/SOURCES.md` | Every fact the app may show, with the exact quote and link |
 
 ## Modules

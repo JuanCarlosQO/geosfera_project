@@ -19,6 +19,7 @@ import { initFold } from "./fold.js";
 import { mountAlarm } from "./alarm.js";
 import { mountFamilyNotify } from "./family-notify.js";
 import { initI18n } from "./i18n.js";
+import * as S from "./store.js";
 
 initI18n(); // English as written, or Spanish from the dictionary (top-bar button)
 
@@ -76,10 +77,12 @@ function render() {
   window.scrollTo({ top: 0 });
 }
 
-async function closeHatch() {
+/** Signs out (or asks for one profile's code when memberId is given) and shows the hatch. */
+async function closeHatch(memberId = null) {
   station.inert = true;
   nav.inert = true;
   const hatch = new Hatch(hatchRoot, {
+    memberId: typeof memberId === "string" ? memberId : null,
     onEnter() {
       station.inert = false;
       nav.inert = false;
@@ -105,7 +108,10 @@ document.addEventListener("ergosphere:family-read", () => { if (["#family", "#mi
 window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });
 mountSyncButton(document.querySelector('[data-action="sync"]'), document.body);
 startSync();
-document.querySelector('[data-action="lock"]').addEventListener("click", closeHatch);
+document.querySelector('[data-action="lock"]').addEventListener("click", () => closeHatch()); // sign out: back to the profiles
+// another crew member's profile is opened with that person's own code
+document.addEventListener("click", (e) => { if (e.target.closest('[data-action="signout"]')) closeHatch(); }); // "Sign out" inside the app
+document.addEventListener("ergosphere:switch", (e) => { if (e.detail && e.detail !== S.current()?.id) closeHatch(e.detail); });
 document.querySelector('[data-action="theme"]').addEventListener("click", () => {
   const next = document.documentElement.dataset.mode === "dark" ? "day" : "night";
   applyTheme(next);
@@ -119,7 +125,9 @@ setInterval(stampUtc, 1000);
 // Preview mode for the hackathon: the app starts already inside the station so anyone with
 // the link can look around at once. The hatch is still there: the lock button closes it and
 // asks for the crew code. Set START_UNLOCKED to false to start behind the hatch again.
-const START_UNLOCKED = true;
+// With a crew on the device the app now opens on the profiles, each with its own code (the demo
+// profiles show theirs). A device with no crew yet opens straight on "create your crew".
+const START_UNLOCKED = !S.getCrew().members.length;
 if (START_UNLOCKED) {
   station.inert = false;
   nav.inert = false;

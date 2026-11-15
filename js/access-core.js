@@ -160,3 +160,20 @@ export async function checkAssertion(want, got) {
   }
   return valid ? { ok: true, counter: auth.counter } : no("The signature does not match.");
 }
+
+/* ---------- one code per crew member (profiles) ---------- */
+
+// Stored as { v: 2, members: { [memberId]: { record, misses, biometric? } } }. A device that
+// still has the single code of earlier versions ({ record, misses }) gives it to the crew
+// member who was active, so nobody is locked out by the update.
+export const DEVICE_ID = "_device"; // the lock of a device with no crew yet
+
+export function migrateAccess(raw, activeId = null) {
+  if (raw?.v === 2 && raw.members && typeof raw.members === "object") return { v: 2, members: { ...raw.members } };
+  const members = {};
+  if (raw?.record) members[activeId ?? DEVICE_ID] = { record: raw.record, misses: raw.misses ?? cleanSlate(), ...(raw.biometric ? { biometric: raw.biometric } : {}) };
+  return { v: 2, members };
+}
+export const accessFor = (store, id) => store?.members?.[id] ?? {};
+export const withAccess = (store, id, rec) => ({ v: 2, members: { ...(store?.members ?? {}), [id]: rec } });
+export const withoutAccess = (store, id) => { const members = { ...(store?.members ?? {}) }; delete members[id]; return { v: 2, members }; };

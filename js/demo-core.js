@@ -1,4 +1,4 @@
-// Demo crew: three FICTIONAL people with SIMULATED values, so the app can be shown without
+// Demo crew: two FICTIONAL people with SIMULATED values, so the app can be shown without
 // typing two weeks of data first. No real astronaut is used: NASA publishes no individual
 // crew health data, and inventing readings under a real person's name would be fabricating
 // records about them. Every number below is made up, but kept inside the same input limits
@@ -12,11 +12,13 @@ export const DEMO_KEY = "geosfera.demo";
 export const DEMO_DAYS = 14;
 export const DEMO_NOTE = "Demo crew: fictional people, simulated values. Not real astronaut data.";
 
+// Two fictional astronauts for the demo and the judges: a woman and a man, each with their own
+// body picture and their own code (shown on the profile screen, since anyone may try the demo).
 export const DEMO_CREW = [
-  { id: "demo-vreyes", name: "Valentina Reyes", role: "Commander" },
-  { id: "demo-tokafor", name: "Tomás Okafor", role: "Flight Engineer" },
-  { id: "demo-alindqvist", name: "Amara Lindqvist", role: "Mission Specialist" }
+  { id: "demo-vreyes", name: "Valentina Reyes", role: "Commander", body: "f", age: 41, home: "Colombia" },
+  { id: "demo-tokafor", name: "Tomás Okafor", role: "Flight Engineer", body: "m", age: 36, home: "Nigeria" }
 ];
+export const DEMO_CODES = { "demo-vreyes": "3719", "demo-tokafor": "8264" };
 
 // small seeded generator so the demo is the same every time it is loaded on the same day
 function rng(seed) {
@@ -44,11 +46,11 @@ function memberLog(profile, days, seed) {
   days.forEach((day, i) => {
     const today = i === days.length - 1;
     const p = profile(i, r);
-    // where each reading came from: the watch (sleep) and the live sensors (heart rate, blood
-    // pressure) as the Devices screen fills them; the rest typed, as a crew member would
+    // where each reading came from: sleep from the watch; the rest typed from other instruments
+    // (cuff, thermometer, oximeter, glucometer), as a crew member would
     const e = {
-      heartRate: { value: p.hr, src: "sensors" },
-      bloodPressure: { value: p.bp, src: "sensors" },
+      heartRate: { value: p.hr },
+      bloodPressure: { value: p.bp },
       temperature: { value: fix(p.temp, 1) },
       bloodOxygen: { value: p.spo2 },
       glucose: { value: p.glu },
@@ -91,18 +93,6 @@ const tomas = (i, r) => ({
   mood: between(r, 4, 5),
   exercise: between(r, 95, 115, 5)
 });
-// Amara: a rough first two days (space adaptation), then fine; a slightly high pressure today.
-const amara = (i, r) => ({
-  hr: i < 2 ? between(r, 76, 82) : between(r, 60, 68),
-  bp: i === DEMO_DAYS - 1 ? [124, 79] : [between(r, 106, 116), between(r, 66, 74)],
-  temp: between(r, 36.6, 37.1, 0.1),
-  spo2: between(r, 96, 99),
-  glu: between(r, 85, 97),
-  sleep: i < 2 ? between(r, 5.8, 6.4, 0.1) : between(r, 7.0, 7.6, 0.1),
-  mood: i < 2 ? 3 : between(r, 4, 5),
-  exercise: i < 2 ? 40 : between(r, 85, 100, 5)
-});
-
 /**
  * Everything the demo writes: { crew, logs: { memberId: log }, meds, mission, marker }.
  * Medication doses belong to Valentina's story (melatonin after midnight, three nights in a row).
@@ -114,8 +104,7 @@ export function buildDemo(now = new Date()) {
   const seed = Number(today.replaceAll("-", ""));
   const logs = {
     [DEMO_CREW[0].id]: memberLog(valentina, days, seed + 1),
-    [DEMO_CREW[1].id]: memberLog(tomas, days, seed + 2),
-    [DEMO_CREW[2].id]: memberLog(amara, days, seed + 3)
+    [DEMO_CREW[1].id]: memberLog(tomas, days, seed + 2)
   };
 
   const doses = days.slice(-3).map((day, k) => {

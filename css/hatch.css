@@ -170,3 +170,27 @@
 @media (prefers-reduced-motion: reduce) {
   .hatch-screen .key, .hatch-screen .key.lit, .hatch-screen .porthole, .hatch-screen .porthole::before, .hatch-screen #hs-heading, .hatch-screen .hs-who { animation: none; }
 }
+
+/* ---- profiles: each astronaut with their own code ---- */
+.hatch-screen.picking .hatch, .hatch-screen.picking .hs-dots, .hatch-screen.picking .hs-title [data-ref="hint"] + .hs-dots { display: none; }
+.hatch-screen.picking .hs-foot .readout { display: none; }
+.hs-crew { width: 100%; max-width: 420px; margin: clamp(16px, 4vh, 34px) 0 10px; }
+.hs-crew-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.hs-crew-list li { animation: hs-rise .45s ease both; animation-delay: calc(80ms + var(--i) * 90ms); }
+.hs-prof { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 20px; border: 1px solid var(--seam); background: var(--hull); color: var(--ink); text-align: left; cursor: pointer; font: inherit; box-shadow: 0 14px 30px -22px rgba(15, 23, 42, .45); transition: transform .2s, border-color .2s, box-shadow .2s; -webkit-tap-highlight-color: transparent; }
+.hs-prof:active { transform: scale(.98); }
+@media (hover: hover) and (pointer: fine) { .hs-prof:hover { border-color: var(--beacon); transform: translateY(-2px); box-shadow: 0 18px 34px -22px color-mix(in srgb, var(--beacon) 70%, transparent); } }
+.hs-prof:focus-visible { outline: 2px solid var(--beacon); outline-offset: 2px; }
+.hs-avatar.big { width: 54px; height: 54px; flex: none; font-size: 18px; letter-spacing: .02em; }
+.hs-avatar.big[data-body="f"] { background: linear-gradient(135deg, #5b7cff, #a46bff); }
+.hs-avatar.big[data-body="m"] { background: linear-gradient(135deg, #2f5bea, #28b3c9); }
+.hs-prof-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hs-prof-txt strong { font-size: 18px; font-weight: 600; }
+.hs-prof-txt small { color: var(--ink-2); font-size: 13.5px; }
+.hs-code { margin-top: 4px; font-size: 12.5px; color: var(--ink-3); }
+.hs-code b { font: 600 13px var(--mono, monospace); letter-spacing: .12em; color: var(--beacon); }
+.hs-go { font-size: 28px; color: var(--ink-3); line-height: 1; }
+.hs-crew-note { margin: 12px 4px 0; font-size: 12.5px; line-height: 1.45; color: var(--ink-3); text-align: center; }
+@media (prefers-reduced-motion: reduce) { .hs-crew-list li { animation: none; } }
+.hs-title .hs-who[hidden] { display: none; }
+.hs-top { gap: 14px; }

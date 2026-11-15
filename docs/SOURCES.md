@@ -191,7 +191,7 @@ HL7 FHIR R4, MedicationStatement — https://hl7.org/fhir/R4/medicationstatement
 
 ### Pictures on the medication and future-body screens (15 Nov 2026)
 
-The medication log's "what for" figure and Future body now use the same AI-generated body picture as Body systems (labelled on screen as an illustration, not an anatomical reference). Future body is ready for four AI skeleton pictures (`assets/bone-00.webp`, `bone-06`, `bone-18`, `bone-36`) drawn at the worst case of NASA's average loss without countermeasures (1.5 % a month): 100 %, 91 %, 73 % and 46 % of pre-mission bone density. The porosity in those pictures would be drawn for illustration, not measured; 36 months is the app's extrapolation, as the chart already says.
+The medication log's "what for" figure and Future body now use the same AI-generated body picture as Body systems (labelled on screen as an illustration, not an anatomical reference). Future body shows four AI skeleton pictures supplied by a team member on 15 Nov 2026 (`assets/bone-00.webp`, `bone-06`, `bone-18`, `bone-36`; white background removed with our own code) drawn at the worst case of NASA's average loss without countermeasures (1.5 % a month): 100 %, 91 %, 73 % and 46 % of pre-mission bone density. The porosity in those pictures would be drawn for illustration, not measured; 36 months is the app's extrapolation, as the chart already says.
 
 ## Spanish look (15 Nov 2026)
 
@@ -231,6 +231,26 @@ Read on 15 Nov 2026. The Philips sheet was read as text from its PDF.
 **Spacewalk (team statement, pending a source):** a team member stated that the Actiwatch is not worn during a spacewalk (it is disconnected when the astronaut goes outside). We looked for a NASA source and did not find one, so the app marks it as the team's statement. In the app: at suit-up the watch is recorded as off "for the spacewalk", with no "put it back on" reminder however long it lasts; family notices are held (the same hold as after a Fit for duty check); when the crew member is back inside the watch goes back on and the hold ends. The simulator's spacewalk lasts a few minutes (time compressed for the demo).
 
 **ActiGraph CentrePoint (other actigraphy watches):** ActiGraph's public API documentation, https://github.com/actigraph/CentrePoint3APIDocumentation (read 15 Nov 2026, repository updated 24 Oct 2026). Used as published there: OAuth 2.0 client credentials (client ID and client secret, scope "Analytics") against https://auth.actigraphcorp.com/connect/token; base URL https://api.actigraphcorp.com; "Dustin Tracy Sleep Periods" (inBedTime, outBedTime, timeAwakeMinutes, awakeningCount, averageAwakening); "Minute Summaries" (TimestampUtc, isWear, isSleep); pages of at most 100 items; a limit of 500 requests a minute. The client secret stays on the server (api/actigraph.js, lib/actigraph-handler.js; keys only in environment variables, `.env` is git-ignored); a crew access code keeps strangers from querying subjects; only times, wear and sleep reach the app. **Not verified:** that NASA uses ActiGraph watches on the station (we found no source; NASA's station watch is Philips' Actiwatch). Tested against a fake server built from the documentation, not against ActiGraph. The awakenings are spread evenly across the night because the API gives their number and average length, not their times (app rule).
+
+### Devices: recorded, estimated, reported (15 Nov 2026)
+
+Following a team member's review, each night is shown in three lanes so it is clear who said what: what the watch **recorded** (worn or off the wrist), what the app **estimated** from the watch's movement (asleep, awake), and what the crew member **reported** with a tap ("I went to bed", "I got up", "I took the watch off", "I put it back on"). When the watch's file marks time off the wrist it comes in by itself; otherwise the crew member's taps record it. **Time with the watch off inside the night is not counted as sleep** (it was not measured). With no watch night, the crew member's "went to bed" and "got up" give the estimate, labelled "estimated from your own marks". Readings no watch measures (heart rate, blood pressure, temperature, blood oxygen, blood sugar) are either typed from another instrument (labelled "Typed by you") or simulated (labelled "simulated"). In the demo the last night always includes a short stretch with the watch off, so the exclusion is visible. All of this is app rules, not NASA procedures. Whether a study shows these numbers to the crew member is that study's decision; the app shows them.
+
+### Devices: what the Actiwatch file brings (15 Nov 2026)
+
+Source: Philips Respironics, *Actiware and Actiware CT Software Manual* (2008), as published by the NIA Aging Research Biobank with the MrOS Sleep visit 2 protocol: https://agingresearchbiobank.nia.nih.gov/studies/mros/documents/download/Protocols/Sleep_V2/SleepV2_ActiwatchSoftwareManual.pdf/ (read 15 Nov 2026 as text from the PDF). Epoch-by-epoch list columns used, word for word:
+
+| Column | Definition |
+| --- | --- |
+| Off-Wrist Status | "One of 0 (on-wrist), 1 (off-wrist), or NaN" |
+| Activity | "Activity measurement for the epoch." |
+| Event Marker | "Indicates if the event marker button was pushed during the epoch." |
+| Sleep/Wake Score | "One of 0 (sleep), 1 (wake), or NaN for the epoch." |
+| Interval Status | "One of Active, Rest, Rest-Sleep, Excluded, or *(N/A) for the epoch." |
+
+Also from the manual: "The Actiwatch Spectrum device is capable of determining when it is off the subject's wrist." and Onset Latency is "The time elapsed between the Start Time of a given Rest Interval and the following Sleep Start Time, in minutes."
+
+**What comes in by itself from the file:** wrist activity (kept in 15-minute sums), time off the wrist (Off-Wrist Status 1), time in bed (Rest intervals), falling asleep and waking (first and last SLEEP epoch inside the rest interval), awakenings (runs of WAKE epochs of at least 2 minutes inside the night: app rule), and every press of the watch's event-marker button (shown as the crew member's own mark, made on the watch). **What the crew member taps:** only what the watch cannot know (how rested they feel, 1 to 5) or a moment the file does not cover; when a file arrives, it replaces their taps for what it covers. **Pulse, blood pressure, oxygen, temperature, blood sugar:** they go into the daily log only when another instrument measured them (a Bluetooth sensor, or typed by the crew member); the live screen's sensors are a simulation for monitoring and no longer fill the log, so a reading nobody measured stays empty. The exact file is still to be confirmed with a real export: the column names come from the manual, and the reader also accepts the interval statistics export. `samples/actiware-epochs-sample.csv` is a SIMULATED file in that layout.
 
 ## Module 9 — fit for duty
 
@@ -414,9 +434,13 @@ NASA OCHMO-TB-016 Rev B (Behavioral Health and Performance, 24 Oct 2023) read on
 
 **App choices (not NASA rules):** the SOS button (press and hold 2 seconds, one gesture, cancel within 10 seconds if sent by mistake) and the one-tap "talk to someone" button, the list of reasons, showing an unanswered alert on crewmates' screens for 12 hours, and the comfort settings (calm motion, larger text, one thing at a time) for different sensory and attention needs. Alerts reach crewmates' devices only through the team's station sync; delivery to Mission Control is simulated in this prototype and the screen says so.
 
+### Profiles and the woman's body picture (15 Nov 2026)
+
+The app opens on the crew's profiles; each astronaut has their own four-digit code (stored on the device as a salted PBKDF2 hash, as before), and "Sign out" goes back to the profiles. The two demo profiles, Valentina Reyes (woman, Commander, 41, Colombia) and Tomás Okafor (man, Flight Engineer, 36, Nigeria), are **fictional**: the team chose fictional astronauts so that no real person is given invented health data. Their codes are shown on the profile screen so judges can try them. The woman's body picture (`assets/body-front-f.webp`) is an AI-generated image of the same teaching model, same pose and framing as the man's, supplied by a team member; its white background was removed with our own code. Labelled on screen as generated with AI, not an anatomical reference.
+
 ## Demo crew (simulated)
 
-Valentina Reyes, Tomás Okafor and Amara Lindqvist are fictional. Every reading in the demo is made up by `js/demo-core.js`, kept inside the daily log's input limits, and labelled SIMULATED in the app. The only figure taken from a source is the daily radiation dose, kept between 0.44 and 0.56 mSv around the typical ISS value the team verified ("about 0.5 mSv per day", LSAH bulletin, Oct 2023, in the team document above). No real astronaut's name or data is used: NASA publishes no individual crew health records.
+Valentina Reyes and Tomás Okafor are fictional. Every reading in the demo is made up by `js/demo-core.js`, kept inside the daily log's input limits, and labelled SIMULATED in the app. The only figure taken from a source is the daily radiation dose, kept between 0.44 and 0.56 mSv around the typical ISS value the team verified ("about 0.5 mSv per day", LSAH bulletin, Oct 2023, in the team document above). No real astronaut's name or data is used: NASA publishes no individual crew health records.
 
 ## Pending
 

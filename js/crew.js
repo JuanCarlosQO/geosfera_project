@@ -56,6 +56,7 @@ export function crewFormHtml(first = false) {
     <div class="cf-row">
       <label class="cf-field"><span>Name</span><input name="name" type="text" autocomplete="off" maxlength="40" placeholder="e.g. Ana Ruiz" required></label>
       <label class="cf-field"><span>Role</span><select name="role">${ROLES.map((r) => `<option>${r}</option>`).join("")}</select></label>
+      <label class="cf-field"><span>Body picture</span><select name="body"><option value="f">Woman</option><option value="m">Man</option></select></label>
       <button type="submit" class="cta-wide cf-add">Add to crew</button>
     </div>
     <p class="cf-msg" role="status" aria-live="polite"></p>
@@ -79,7 +80,7 @@ export function bindCrewForm(root, done) {
   if (!form) return;
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const r = S.createMember({ name: form.name.value, role: form.role.value });
+    const r = S.createMember({ name: form.name.value, role: form.role.value, body: form.body?.value });
     if (!r.ok) { form.querySelector(".cf-msg").textContent = r.why; form.name.focus(); return; }
     done(r.member);
   });

@@ -119,3 +119,9 @@ html, body { overflow-x: clip; }
 
 /* the wide call-to-action is a link: screen rules that colour links blue must not hide its text */
 a.cta-wide, a.cta-wide:visited, a.cta-wide:hover { color: #ffffff !important; }
+
+/* sign out, on the crew member's card and in the top bar */
+.cl-info-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cl-info-head h2 { margin: 0; }
+.cl-signout { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--seam-hi); background: transparent; color: var(--ink-2); font: 500 13px var(--sans); cursor: pointer; }
+.cl-signout:hover { border-color: var(--beacon); color: var(--beacon); }

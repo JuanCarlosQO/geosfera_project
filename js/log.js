@@ -67,7 +67,7 @@ function module(f, n, saved, prev) {
     </div>
     ${control}
     <div class="mod-foot">
-      <span class="last">${saved?.src ? `<span class="src-chip" title="Change it if it looks wrong: your value replaces the device's">⌁ ${SOURCES[saved.src] ?? "Device"}${saved.at ? ` · ${new Date(saved.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}</span> ` : ""}${prev != null ? `Last <b>${fmt(prev)}</b>${f.unit ? ` ${f.unit}` : ""}` : "No earlier reading"}</span>
+      <span class="last">${saved?.value != null && !saved?.src ? `<span class="src-chip typed" title="Measured with another instrument and typed">✎ Typed by you</span> ` : ""}${saved?.src ? `<span class="src-chip" title="Change it if it looks wrong: your value replaces the device's">⌁ ${SOURCES[saved.src] ?? "Device"}${saved.at ? ` · ${new Date(saved.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}</span> ` : ""}${prev != null ? `Last <b>${fmt(prev)}</b>${f.unit ? ` ${f.unit}` : ""}` : "No earlier reading"}</span>
       <span class="delta" data-delta></span>
     </div>
     <p class="mod-msg" role="status" aria-live="polite"></p>
@@ -233,7 +233,7 @@ export function mountLog(host, { go }, day = L.dateKey()) {
 
   host.querySelector(".who").addEventListener("click", (e) => {
     const b = e.target.closest("[data-who]");
-    if (b && b.dataset.who !== member.id) { S.setActive(b.dataset.who); mountLog(host, { go }, day); }
+    if (b && b.dataset.who !== member.id) document.dispatchEvent(new CustomEvent("ergosphere:switch", { detail: b.dataset.who })); // their own code
   });
 
   host.addEventListener("click", (e) => {

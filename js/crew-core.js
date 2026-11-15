@@ -12,7 +12,7 @@ export function cleanName(raw) {
 }
 
 /** Validates a new member. Returns { ok, member } or { ok: false, why }. */
-export function makeMember(crew, { name, role }, idSource = () => Math.random().toString(36).slice(2, 10)) {
+export function makeMember(crew, { name, role, body }, idSource = () => Math.random().toString(36).slice(2, 10)) {
   const n = cleanName(name);
   if (n.length < 2) return { ok: false, why: "Enter a name of at least 2 letters." };
   if (!ROLES.includes(role)) return { ok: false, why: "Choose a role from the list." };
@@ -20,7 +20,7 @@ export function makeMember(crew, { name, role }, idSource = () => Math.random().
   if ((crew?.members ?? []).some((m) => m.name.toLowerCase() === n.toLowerCase())) return { ok: false, why: "Someone with that name is already on the crew." };
   let id = idSource();
   while ((crew?.members ?? []).some((m) => m.id === id)) id = idSource();
-  return { ok: true, member: { id, name: n, role } };
+  return { ok: true, member: { id, name: n, role, ...(body === "f" || body === "m" ? { body } : {}) } };
 }
 
 export function addMember(crew, member) {
