@@ -13,18 +13,19 @@ import { LIMIT_FACTS, RESPONSES } from "./data/telemetry.js";
 import { RADLAB_ISS } from "./data/radlab-iss.js";
 import { STATUS } from "./data/body-systems.js";
 import { sparkPath } from "./today-core.js";
-import { dateKey } from "./log-core.js";
-import { readLog, current } from "./store.js";
+import { current } from "./store.js";
+import { startFeed, subscribe, toggle, setPaused, TYPICAL_DOSE } from "./feed.js";
+import { goToSleep } from "./alarm.js";
 import { fold, tabsHtml } from "./fold.js";
 import { figureSvg } from "./anatomy.js";
 
 const DONKI = "https://ccmc.gsfc.nasa.gov/DONKI-API/get/FLR";
-const TYPICAL_DOSE = T.median(RADLAB_ISS.values);
 
 const CARDS = {
   heartRate: { name: "Heart rate", unit: "bpm", group: "crew" },
   bloodPressure: { name: "Blood pressure", unit: "mmHg", group: "crew" },
   still: { name: "Time without moving", unit: "min", group: "crew" },
+  co2Personal: { name: "CO₂ near you", unit: "mmHg", group: "crew" },
   hydration: { name: "Estimated hydration", unit: "%", group: "crew" },
   co2: { name: "Cabin CO₂", unit: "mmHg", group: "cabin" },
   temperature: { name: "Cabin temperature", unit: "°C", group: "cabin" },
@@ -42,6 +43,7 @@ const LIMIT_TEXT = {
   heartRate: "Team reference 60–100 bpm",
   bloodPressure: "Team reference: CDC categories",
   still: "App rule: move after 60 min",
+  co2Personal: "App rule: NASA's cabin limit, 3 mmHg, near you",
   co2: "NASA: no more than 3 mmHg (1-hour average)",
   temperature: "NASA: 18–27 °C · comfort 20–25 °C",
   humidity: "NASA: 25–75 % · comfort 30–60 %",
@@ -64,7 +66,7 @@ const FIG = { left: 27, width: 46 };
 const px = (x) => FIG.left + (x / 200) * FIG.width;
 const py = (y) => (y / 450) * 100;
 const HUB = [84, 80];                                   // where the tablet sits on the stage, in %
-const LABELS = { chest: { side: "left", top: 12 }, cuff: { side: "left", top: 40 }, wrist: { side: "right", top: 30 } };
+const LABELS = { chest: { side: "left", top: 12 }, cuff: { side: "left", top: 40 }, wrist: { side: "right", top: 36 }, clip: { side: "right", top: 7 } };
 const LINK_WORDS = { ok: "Linked", off: "Sensor off", lost: "Link lost" };
 
 function sensorsHtml() {
@@ -133,19 +135,12 @@ async function spaceWeather(box) {
 
 export function mountLive(host) {
   const member = current();
-  const log = member ? readLog(member.id) : {};
-  const today = dateKey();
-  const bands = { hr: T.baseline(log, "heartRate", today), sys: T.baseline(log, "bloodPressure", today, 0) };
-  const dia = T.baseline(log, "bloodPressure", today, 1);
-  let state = T.startState({ hr: bands.hr?.mean, sys: bands.sys?.mean, dia: dia?.mean }, RADLAB_ISS);
-  const rand = T.rng(Date.now() % 100000);
-  let history = {};
-  let paused = false;
+  const { bands } = startFeed(); // the feed is shared: it keeps running, and alerting, after leaving this screen
 
   const crewTab = `<h2 class="tm-h">Crew member${member ? ` · ${member.name.replace(/[<>&"]/g, "")}` : ""}</h2>
     ${sensorsHtml()}
     ${fold("How real sensors connect", realHtml(), { cls: "block" })}
-    <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration"].map(card).join("")}</ul>
+    <ul class="tm-grid">${["heartRate", "bloodPressure", "still", "hydration", "co2Personal"].map(card).join("")}</ul>
     ${fold("Your usual range", `<p class="fine">${bands.hr ? `App rule, last ${T.RULES.baselineDays} days, ${bands.hr.n} readings: heart rate ${bands.hr.low}–${bands.hr.high} bpm${bands.sys ? `, top blood pressure ${bands.sys.low}–${bands.sys.high} mmHg` : ""}. Values outside it are flagged even inside the reference range.` : `Log heart rate and blood pressure on ${T.RULES.baselineMin} days and the feed will also compare you with yourself.`}</p>`)}`;
 
   const cabinTab = `<h2 class="tm-h">Cabin</h2>
@@ -186,12 +181,13 @@ export function mountLive(host) {
     ${[["cabin", "Cabin"], ["crew", "Crew member"], ["sensor", "Sensors"]].map(([g, label]) => `<span class="tm-glabel mono">${label}</span><div class="tm-controls scroll-row" role="group" aria-label="${label} simulations">
       ${Object.entries(T.SCENARIOS).filter(([, x]) => x.group === g).map(([id, x]) => `<button type="button" class="tm-scn" data-scn="${id}" data-group="${g}" aria-pressed="false">${x.label}</button>`).join("")}</div>`).join("")}
     <div class="tm-controls"><button type="button" class="tm-scn tm-reset" data-scn="nominal">${T.SCENARIOS.nominal.label}</button>
+      <button type="button" class="tm-scn tm-sleep" data-ref="sleep">☾ Sleep mode</button>
       <button type="button" class="tm-pause" data-ref="pause" aria-pressed="false">Pause</button></div>
     <p class="fine" data-ref="note">${T.SCENARIOS.nominal.note}</p>
 
     <ul class="tm-alerts" data-ref="alerts" aria-live="polite"></ul>
     <details class="tm-log"><summary>Event log · <span data-ref="logn">0</span></summary><ol data-ref="log"></ol>
-      <p class="fine">The log lasts while this screen is open.</p></details>
+      <p class="fine">The feed keeps running on the other screens: an alert shows across the top of any of them, and sounds.</p></details>
 
     ${tabsHtml("live", [
       { id: "crew", label: "Crew", html: crewTab },
@@ -200,30 +196,23 @@ export function mountLive(host) {
       { id: "rules", label: "Alert rules", html: rulesTab }
     ])}
 
-    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The three wearables (chest band, arm cuff, wrist unit), their batteries and their link are simulated; where they sit on the figure is an illustration. Sources: docs/SOURCES.md.</p>
+    <p class="fine rule-note">Not a medical device and not real crew data. Simulated values move around NASA's usual cabin values and your own log; the dose-rate replay is real. The simulator engine (scenarios that combine, effort and recovery, steady alerts) comes from a prototype by a team member; its thresholds for smoke, ammonia, power, hydration, effort heart rate and the leak rate are illustrative app rules, not NASA procedures: on a real vehicle the crew follows its own emergency procedures. "Your usual range", the movement reminder and the dose-rate alert are app rules. The four wearables (chest band, arm cuff, wrist unit, CO₂ clip), their batteries and their link are simulated; where they sit on the figure is an illustration. Sleep mode, the CO₂ pocket alert, the wake alarm and its sounds are app rules; a web page cannot sound with the phone locked, so sleep mode needs this app open. Sources: docs/SOURCES.md.</p>
   </section>`;
 
   const root = host.querySelector(".live");
   const $ = (r) => root.querySelector(`[data-ref="${r}"]`);
-  let lastAlerts = "";
-  let tracker = T.makeTracker();
-  let steady = [];
-  const events = [];
-  const MODES = { rest: "At rest", exercise: "Exercising", eva: "On a spacewalk", recovery: "Recovering from effort" };
+  let lastAlerts = null;
+  let lastLog = null;
+  const MODES = { rest: "At rest", exercise: "Exercising", eva: "On a spacewalk", recovery: "Recovering from effort", sleep: "Asleep" };
   const clock = (t) => `T+${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 
-  function paint(advance = false) {
-    const r = T.readout(state, bands, TYPICAL_DOSE, history);
-    history = T.remember(history, r);
-    if (advance) {
-      const out = T.track(tracker, r.alerts);
-      tracker = out.tracker; steady = out.active;
-      for (const ev of out.events) events.unshift({ ...ev, t: state.t });
-      if (out.events.length) {
-        events.length = Math.min(events.length, 30);
-        $("logn").textContent = events.length;
-        $("log").innerHTML = events.map((ev) => `<li><span class="mono">${clock(ev.t)}</span> <span class="tone-${ev.type === "resolved" ? STATUS.normal.tone : STATUS[ev.status].tone}">${ev.type === "resolved" ? `${STATUS.normal.shape} Resolved` : `${STATUS[ev.status].shape} ${STATUS[ev.status].word}`}</span> ${RESPONSES[ev.id].title}</li>`).join("");
-      }
+  function paint(feed) {
+    const { state, readout: r, history, steady, events } = feed;
+    const logSig = events.map((ev) => `${ev.t}${ev.id}${ev.type}`).join(",");
+    if (logSig !== lastLog) {
+      lastLog = logSig;
+      $("logn").textContent = events.length;
+      $("log").innerHTML = events.map((ev) => `<li><span class="mono">${clock(ev.t)}</span> <span class="tone-${ev.type === "resolved" ? STATUS.normal.tone : STATUS[ev.status].tone}">${ev.type === "resolved" ? `${STATUS.normal.shape} Resolved` : `${STATUS[ev.status].shape} ${STATUS[ev.status].word}`}</span> ${RESPONSES[ev.id].title}</li>`).join("");
     }
     const top = steady.some((a) => a.status === "act") ? "act" : steady.length ? "watch" : "normal";
     const st = STATUS[top];
@@ -237,21 +226,25 @@ export function mountLive(host) {
       root.querySelector(`[data-ch="${k}"]`).dataset.status = c.status;
       root.querySelector(`[data-spark="${k}"]`).setAttribute("d", sparkPath(history[k] ?? [], 120, 32));
     }
+    const near = r.channels.co2Personal;
     root.querySelector('[data-extra="co2"]').textContent = ` ≈ ${r.channels.co2.ppm} ppm`;
+    root.querySelector('[data-extra="co2Personal"]').textContent = near.value == null ? "" : ` · ${near.gap > 0 ? "+" : ""}${near.gap} vs the cabin`;
+    root.querySelector('[data-extra="still"]').textContent = r.channels.still.asleep ? " · asleep, not counted" : "";
     root.querySelector('[data-extra="pressure"]').textContent = Math.abs(r.channels.pressure.rate) >= 0.5 ? ` · ${r.channels.pressure.rate > 0 ? "+" : ""}${r.channels.pressure.rate} kPa/min` : "";
-    root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : "";
+    root.querySelector('[data-extra="heartRate"]').textContent = r.mode === "exercise" || r.mode === "eva" ? ` · effort, max ≈ ${T.maxHeartRate()}` : r.mode === "recovery" ? " · recovering" : r.mode === "sleep" ? " · asleep" : "";
     root.querySelector('[data-extra="dose"]').textContent = r.channels.dose.time ? ` · ISS ${r.channels.dose.time} UTC` : "";
     root.querySelector('[data-tag="dose"]').textContent = r.channels.dose.real ? "REAL NASA DATA" : "REAL × SIMULATED EVENT";
     let linked = 0;
     for (const [id, sn] of Object.entries(r.sensors)) {
       const c = r.channels[sn.feeds];
       if (sn.link === "ok") linked += 1;
-      for (const el of root.querySelectorAll(`[data-sn="${id}"], [data-sn-dot="${id}"], [data-sn-line="${id}"]`)) { el.dataset.link = sn.link; el.dataset.low = String(sn.low && sn.link === "ok"); }
+      const tone = sn.link === "ok" && (c.status === "act" || c.status === "watch") ? c.status : "";
+      for (const el of root.querySelectorAll(`[data-sn="${id}"], [data-sn-dot="${id}"], [data-sn-line="${id}"]`)) { el.dataset.link = sn.link; el.dataset.low = String(sn.low && sn.link === "ok"); el.dataset.tone = tone; }
       root.querySelector(`[data-sn-val="${id}"]`).innerHTML = c.value == null ? "No data" : `${fmt(sn.feeds, c)} <i>${CARDS[sn.feeds].unit}</i>`;
       root.querySelector(`[data-sn-link="${id}"]`).textContent = sn.link === "ok" ? `${LINK_WORDS.ok} · bat. ${sn.battery} %` : sn.link === "lost" ? `${LINK_WORDS.lost} · ${r.silent} s` : sn.battery <= 0 ? "Off · battery empty" : "Off · no skin contact";
     }
     $("hub").textContent = `${linked} of ${Object.keys(r.sensors).length} sensors linked`;
-    for (const k of ["heartRate", "bloodPressure", "still"]) root.querySelector(`[data-ch="${k}"]`).dataset.nodata = String(r.channels[k].value == null);
+    for (const k of ["heartRate", "bloodPressure", "still", "co2Personal"]) root.querySelector(`[data-ch="${k}"]`).dataset.nodata = String(r.channels[k].value == null);
     for (const k of ["heartRate", "bloodPressure"]) {
       const mine = r.channels[k].mine;
       if (mine && mine !== "inside") root.querySelector(`[data-st="${k}"]`).insertAdjacentHTML("beforeend", ` <small>${mine} your usual</small>`);
@@ -261,32 +254,25 @@ export function mountLive(host) {
       b.setAttribute("aria-pressed", String(Boolean(c) && c.phase !== "rec"));
       b.classList.toggle("rec", c?.phase === "rec");
     });
+    $("pause").setAttribute("aria-pressed", String(feed.paused));
+    $("pause").textContent = feed.paused ? "Resume" : "Pause";
     $("note").textContent = active.length ? active.map((id) => T.SCENARIOS[id].note).join(" ") : T.SCENARIOS.nominal.note;
     const sig = steady.map((a) => `${a.id}:${a.status}`).join(",");
     if (sig !== lastAlerts) { $("alerts").innerHTML = steady.map(alertHtml).join(""); lastAlerts = sig; }
   }
 
-  const timer = setInterval(() => {
-    if (!root.isConnected) { clearInterval(timer); return; } // left the screen: stop the feed
-    if (paused) return;
-    state = T.step(state, rand);
-    paint(true);
-  }, T.TICK_MS);
+  const stop = subscribe((feed) => {
+    if (!root.isConnected) { stop(); return; } // left the screen: stop painting; the feed itself carries on
+    paint(feed);
+  }, { screen: true });
 
   root.addEventListener("click", (e) => {
     const b = e.target.closest("[data-scn]");
-    if (b) {
-      state = b.dataset.scn === "nominal" ? T.resetAll(state) : T.toggleScenario(state, b.dataset.scn);
-      paint();
-      return;
-    }
-    if (e.target.closest('[data-ref="pause"]')) {
-      paused = !paused;
-      $("pause").setAttribute("aria-pressed", String(paused));
-      $("pause").textContent = paused ? "Resume" : "Pause";
-    }
+    if (b) { toggle(b.dataset.scn); return; }
+    if (e.target.closest('[data-ref="sleep"]')) { goToSleep(); return; }
+    if (e.target.closest('[data-ref="pause"]')) setPaused($("pause").getAttribute("aria-pressed") !== "true");
   });
 
-  paint();
+  paint(startFeed());
   spaceWeather($("weather"));
 }

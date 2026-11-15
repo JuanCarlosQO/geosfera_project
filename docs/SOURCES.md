@@ -255,6 +255,21 @@ The Live screen draws three simulated wearables on the body figure (chest band, 
 - **Simulated, and labelled so:** the three wearables, their batteries, the link and the three sensor simulations (chest sensor loose, cuff battery dying, wireless link lost). Where each sensor sits on the figure is an illustration. "Estimated hydration" has no sensor on the figure.
 - **App rules, illustrative (`js/telemetry-core.js`):** a channel whose sensor is silent shows no value and "Measure again"; it is never judged normal and never raises a health alert. The sensor raises its own alert: no signal, battery at 20 % or less, or no data from any body sensor for 30 seconds ("Act now": a crewmate checks in person). The steps shown with these alerts are app rules, not a NASA procedure.
 
+### Sleep mode, the CO₂ pocket and alerts that sound (app rules, 14 Nov 2026)
+
+NASA OCHMO-TB-004 Rev D (Carbon Dioxide), read in the PDF text on 14 November 2026.
+
+| Fact | Exact words | Source |
+| --- | --- | --- |
+| Ventilation must prevent pockets | "provide circulation that prevents CO2 and thermal pockets from forming" | NASA OCHMO-TB-004, quoting NASA-STD-3001 [V2 6107]: https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf |
+| CO₂ differs from place to place | "There is a slight variation across the different nodes of the ISS due to location of CO2 scrubbing equipment and ventilation patterns." | same brief |
+
+- **What NASA says and what the app adds:** NASA requires ventilation that prevents CO₂ pockets; the brief does not describe a pocket around a sleeping crew member. That scene ("CO₂ pocket while asleep") is the app's own simulation of ventilation failing where someone sleeps, and is labelled simulated.
+- **Simulated:** a fourth wearable, a CO₂ clip near the collar, reading the air the crew member breathes ("CO₂ near you"). Normally it follows the cabin value.
+- **App rules, illustrative (`js/telemetry-core.js`):** NASA's cabin limit (3 mmHg, a 1-hour average for the habitable volume) and the 4.5 mmHg symptom line are applied to the air near the crew member, read second by second; it is called a pocket when that air is over the limit while the cabin is normal and at least 1 mmHg lower. Asleep: a heart rate between 40 and 100 bpm raises nothing and time without moving is not counted; any "Act now" alert becomes a wake alarm; a wake alarm not answered in 30 seconds alerts the crew through the same channel as an SOS, marked "Automatic". The steps shown are app rules, not a NASA procedure.
+- **Alerts on every screen (`js/feed.js`, `js/alarm.js`):** the simulated feed keeps running after leaving Live. A bar across the top of any screen names the most serious alert; "Act now" pulses red once a second (below the rate that can trigger photosensitive seizures; it stops with "Calm motion" or reduced motion) and sounds every 3 seconds until it clears or is silenced; "Watch" chimes once. Sounds are generated in the browser. A new "Act now" alert is never silent because an earlier one was silenced.
+- **Limit, stated on the sleep screen:** a web page cannot sound with the phone locked or the app closed, so sleep mode needs the app open (it asks the browser to keep the screen on). Waking a locked phone would need an installed app or a notification server.
+
 ## Module 5 — future body
 
 NASA-STD-3001 Vol. 1 Rev. C quotes read on 14 November 2026 in the PDF text (p. 39, [V1 4027], its rationale, and [V1 4028]); the others are already listed above.

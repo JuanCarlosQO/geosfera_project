@@ -1,0 +1,83 @@
+/* Alerts on every screen (js/alarm.js): the bar across the top, the red edge for "Act now",
+   and sleep mode with its wake alarm. Pulses stay at one a second, well under what can
+   trigger photosensitive seizures, and stop with "Calm motion" or reduced motion. */
+
+.al-bar {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 44; display: flex; align-items: center; gap: 12px;
+  min-height: 56px; padding: calc(8px + env(safe-area-inset-top)) 14px 8px; color: #1b1203; background: #ffb454;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .55); font-family: var(--sans);
+}
+.al-bar[hidden], body.al-sleeping .al-bar { display: none; }
+.al-bar[data-level="act"] { min-height: 72px; color: #ffffff; background: #d92d33; animation: al-bar 1s ease-in-out infinite; }
+.al-icon { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; background: rgba(255, 255, 255, .28); }
+.al-bar[data-level="act"] .al-icon { width: 46px; height: 46px; font: 800 28px var(--sans); background: #ffffff; color: #d92d33; animation: al-icon 1s ease-in-out infinite; }
+.al-text { flex: 1; min-width: 0; display: flex; flex-direction: column; color: inherit !important; text-decoration: none; line-height: 1.2; }
+.al-text strong { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
+.al-text > span { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.al-bar[data-level="act"] .al-text > span { font-size: 18px; }
+.al-text small { font-size: 12px; font-weight: 400; opacity: .9; }
+.al-go { text-decoration: underline; }
+.al-btn { flex: none; min-height: 44px; padding: 0 14px; border-radius: 22px; border: 0; background: #ffffff; color: #111827; font: 600 14px var(--sans); cursor: pointer; }
+.al-btn.al-ghost { background: rgba(255, 255, 255, .22); color: inherit; font-weight: 500; font-size: 12px; padding: 0 10px; }
+@keyframes al-bar { 50% { background: #a81419; } }
+@keyframes al-icon { 50% { transform: scale(1.15); } }
+
+body.al-on { padding-top: 56px; }
+body.al-act { padding-top: 72px; }
+body.al-on .sp-banners { top: 68px; }
+body.al-act .sp-banners { top: 84px; }
+/* "Act now": a red frame round the whole screen, breathing once a second */
+body.al-act::before { content: ""; position: fixed; inset: 0; z-index: 43; pointer-events: none; box-shadow: inset 0 0 0 5px #d92d33, inset 0 0 70px rgba(217, 45, 51, .55); animation: al-edge 1s ease-in-out infinite; }
+@keyframes al-edge { 50% { box-shadow: inset 0 0 0 5px #d92d33, inset 0 0 26px rgba(217, 45, 51, .25); } }
+
+/* the alert cards in Live get the same urgency */
+.tm-alert[data-status="act"] { border-width: 2px; animation: tm-in .35s ease-out, al-card 1s ease-in-out .35s infinite; }
+@keyframes al-card { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tone-act) 28%, transparent); } }
+.tm-sleep { margin-left: auto; }
+.tm-controls .tm-pause { margin-left: 0; }
+
+/* sensors on the figure take the colour of what they read */
+.sn-dot[data-tone="watch"], .sn-dot[data-tone="act"] { animation-duration: .8s; }
+.sn-dot[data-tone="watch"] { background: var(--tone-watch); box-shadow: 0 0 0 5px color-mix(in srgb, var(--tone-watch) 30%, transparent); }
+.sn-dot[data-tone="act"] { background: var(--tone-act); box-shadow: 0 0 0 7px color-mix(in srgb, var(--tone-act) 34%, transparent); }
+.sn-lines path[data-tone="watch"] { stroke: var(--tone-watch); }
+.sn-lines path[data-tone="act"] { stroke: var(--tone-act); stroke-width: 2.4; }
+.sn-label[data-tone="watch"] { border-left-color: var(--tone-watch); }
+.sn-label[data-tone="act"] { border-left-color: var(--tone-act); background: color-mix(in srgb, var(--tone-act) 10%, var(--hull)); }
+
+/* ---------- sleep mode: a dim bedside screen ---------- */
+.al-sleep { position: fixed; inset: 0; z-index: 39; display: grid; place-items: center; padding: 24px 20px calc(110px + env(safe-area-inset-bottom)); overflow: auto; background: #03060b; color: #9fb0c6; font-family: var(--sans); text-align: center; }
+.al-sleep[hidden] { display: none; }
+body.al-sleeping { overflow: hidden; }
+.al-night, .al-wake { width: min(420px, 100%); display: grid; gap: 10px; justify-items: center; }
+.al-moon { margin: 0; font-size: 34px; color: #6f8fc4; }
+.al-clock { margin: 0; font: 300 64px var(--sans); letter-spacing: .02em; color: #c7d3e3; line-height: 1; }
+.al-clock small { font-size: 14px; color: #5f7391; }
+.al-state { margin: 0 0 8px; font-size: 14px; color: #6f8fc4; }
+.al-rows { list-style: none; width: 100%; margin: 0; padding: 0; display: grid; gap: 6px; }
+.al-rows li { display: grid; grid-template-columns: 1fr auto 96px; align-items: baseline; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #0a111c; text-align: left; font-size: 14px; }
+.al-rows strong { font-size: 18px; font-weight: 500; color: #c7d3e3; }
+.al-rows strong small { font-size: 11px; color: #5f7391; font-weight: 400; }
+.al-rows li > span:last-child { font-size: 12px; text-align: right; }
+.al-sleep .tone-normal { color: #5fae9a; }
+.al-sleep .tone-watch { color: #ff9f5a; }
+.al-sleep .tone-act { color: #ff7b6b; }
+.al-sleep .tone-none, .al-sleep .tone-again { color: #8fa3bd; }
+.al-fine { margin: 2px 0; font-size: 12px; line-height: 1.45; color: #5f7391; }
+.al-sleep .tm-tag { border-color: #2b3a52; color: #6f8fc4; }
+.al-awake { width: 100%; min-height: 64px; margin-top: 10px; border: 0; border-radius: 20px; background: #ffffff; color: #111827; font: 600 20px var(--sans); cursor: pointer; }
+.al-awake.al-soft { min-height: 52px; background: #142238; color: #c7d3e3; font-size: 16px; font-weight: 500; }
+.al-demo { min-height: 44px; padding: 0 16px; border-radius: 22px; border: 1px dashed #2b3a52; background: none; color: #6f8fc4; font: 14px var(--sans); cursor: pointer; }
+.al-demo[aria-pressed="true"] { border-style: solid; border-color: #ff9f5a; color: #ff9f5a; }
+
+.al-sleep[data-wake="true"] { background: #b3161c; color: #ffffff; animation: al-wake 1s ease-in-out infinite; }
+@keyframes al-wake { 50% { background: #6e0b0f; } }
+.al-wake-big { margin: 0; font: 700 clamp(52px, 17vw, 84px) var(--sans); letter-spacing: .04em; line-height: 1; }
+.al-wake-title { margin: 4px 0 0; font-size: 22px; font-weight: 600; }
+.al-wake ol { margin: 6px 0 0; padding-left: 22px; text-align: left; font-size: 16px; line-height: 1.45; }
+.al-sleep[data-wake="true"] .al-fine { color: #ffd9da; }
+.al-sleep[data-wake="true"] .tm-tag { border-color: #ffd9da; color: #ffd9da; }
+
+@media (prefers-reduced-motion: reduce) {
+  .al-bar[data-level="act"], .al-bar[data-level="act"] .al-icon, body.al-act::before, .al-sleep[data-wake="true"], .tm-alert[data-status="act"] { animation: none; }
+}

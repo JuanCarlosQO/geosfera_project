@@ -239,9 +239,9 @@ describe("wearable sensors: measurement before health", () => {
   const play = (s, n, seed = 5) => { const rand = T.rng(seed); let h = {}; let r; for (let i = 0; i < n; i++) { s = T.step(s, rand); r = T.readout(s, {}, 5, h); h = T.remember(h, r); } return { s, r, h }; };
   const ids = (r) => r.alerts.map((a) => a.id);
 
-  it("starts with three linked sensors, each feeding one channel", () => {
+  it("starts with four linked sensors, each feeding one channel", () => {
     const { r } = play(start(), 3);
-    assert.deepEqual(Object.keys(r.sensors), ["chest", "cuff", "wrist"]);
+    assert.deepEqual(Object.keys(r.sensors), ["chest", "cuff", "wrist", "clip"]);
     for (const sn of Object.values(r.sensors)) { assert.equal(sn.link, "ok"); assert.ok(r.channels[sn.feeds].value != null); }
     assert.deepEqual(ids(r).filter((x) => x.startsWith("sensor")), []);
   });
@@ -283,7 +283,79 @@ describe("wearable sensors: measurement before health", () => {
   it("has words and a condition for every sensor alert, and a place on the figure for every sensor", () => {
     for (const id of ["sensorChest", "sensorCuff", "sensorBattery", "sensorLink"]) { assert.ok(RESPONSES[id]?.title && RESPONSES[id].steps.length, id); assert.equal(RESPONSES[id].illustrative, true); }
     assert.ok(T.conditions(5).some((c) => c.name === "A wearable sensor" && c.basis === "app"));
-    for (const sn of Object.values(T.SENSORS)) { assert.ok(sn.at[0] >= 0 && sn.at[0] <= 200 && sn.at[1] >= 0 && sn.at[1] <= 450); assert.ok(["heartRate", "bloodPressure", "still"].includes(sn.feeds)); }
+    for (const sn of Object.values(T.SENSORS)) { assert.ok(sn.at[0] >= 0 && sn.at[0] <= 200 && sn.at[1] >= 0 && sn.at[1] <= 450); assert.ok(["heartRate", "bloodPressure", "still", "co2Personal"].includes(sn.feeds)); }
     for (const id of ["leadoff", "battery", "linkdrop"]) assert.equal(T.SCENARIOS[id].group, "sensor");
+  });
+});
+
+describe("asleep: the CO₂ pocket and the wake alarm", () => {
+  const start = () => T.startState({}, RADLAB_ISS);
+  const play = (s, n, seed = 9) => { const rand = T.rng(seed); let h = {}; let r; for (let i = 0; i < n; i++) { s = T.step(s, rand); r = T.readout(s, {}, 5, h); h = T.remember(h, r); } return { s, r, h }; };
+  const ids = (r) => r.alerts.map((a) => a.id);
+
+  it("reads the air near the crew member a little above the cabin's, and raises nothing", () => {
+    const { r } = play(start(), 30);
+    assert.ok(Math.abs(r.channels.co2Personal.gap) < 0.6, String(r.channels.co2Personal.gap));
+    assert.equal(r.channels.co2Personal.status, "normal");
+    assert.ok(!ids(r).includes("co2Pocket"));
+  });
+  it("asleep, a slow pulse and hours without moving are expected", () => {
+    const { r, s } = play(T.setSleeping(start(), true), 150);
+    assert.equal(r.mode, "sleep");
+    assert.ok(s.heartRate < 66, String(s.heartRate));
+    assert.ok(r.channels.still.value >= T.RULES.stillAct && r.channels.still.status === "normal" && r.channels.still.asleep);
+    assert.deepEqual(r.alerts, []);
+    assert.deepEqual(r.wake, []);
+    assert.equal(T.judgeHeart("sleep", 50), "normal");
+    assert.equal(T.judgeHeart("sleep", 38), "watch");
+    assert.equal(T.judgeHeart("sleep", 135), "act");
+  });
+  it("finds a pocket the cabin sensor cannot see: watch first, then act and a wake alarm", () => {
+    const begin = T.startScenario(start(), "pocket");
+    assert.equal(begin.sleeping, true, "a pocket forms around someone asleep");
+    const early = play(begin, 16);
+    assert.equal(early.r.channels.co2.status, "normal", "the cabin stays normal");
+    assert.deepEqual(early.r.alerts.filter((a) => a.id === "co2Pocket").map((a) => a.status), ["watch"]);
+    assert.deepEqual(early.r.wake, [], "a watch-level pocket does not wake anyone");
+    const late = play(early.s, 40);
+    assert.equal(late.r.channels.co2.status, "normal");
+    assert.ok(late.r.channels.co2Personal.value > T.LIMITS.co2Symptoms);
+    assert.ok(late.r.channels.co2Personal.gap >= T.RULES.pocketGap);
+    assert.deepEqual(late.r.alerts.filter((a) => a.id === "co2Pocket").map((a) => a.status), ["act"]);
+    assert.deepEqual(late.r.wake, ["co2Pocket"]);
+    assert.ok(!ids(late.r).includes("co2"), "it is not reported as a cabin problem");
+  });
+  it("waking up ends the pocket: the air moves again", () => {
+    const { s } = play(T.startScenario(start(), "pocket"), 60);
+    const awake = T.setSleeping(s, false);
+    assert.equal(awake.sleeping, false);
+    assert.equal(awake.active.pocket, undefined);
+    const { r } = play(awake, 40);
+    assert.equal(r.mode, "rest");
+    assert.equal(r.channels.co2Personal.status, "normal");
+    assert.deepEqual(r.wake, []);
+  });
+  it("with the whole cabin's CO₂ high it is a cabin alert, not a pocket", () => {
+    const { r } = play(T.setSleeping(T.startScenario(start(), "co2"), true), 70);
+    assert.ok(ids(r).includes("co2") && !ids(r).includes("co2Pocket"), String(ids(r)));
+    assert.deepEqual(r.wake.includes("co2"), r.alerts.some((a) => a.id === "co2" && a.status === "act"));
+  });
+  it("any Act now alert wakes a sleeping crew member, and an effort ends sleep", () => {
+    const fire = play(T.setSleeping(T.startScenario(start(), "fire"), true), 60);
+    assert.ok(fire.r.wake.includes("smoke"), String(fire.r.wake));
+    assert.equal(T.startScenario(T.setSleeping(start(), true), "exercise").sleeping, false);
+    assert.equal(play(T.startScenario(start(), "fire"), 60).r.wake.length, 0, "awake: nothing to wake");
+  });
+  it("a silent clip is not a pocket", () => {
+    const { r } = play(T.startScenario(T.startScenario(start(), "pocket"), "linkdrop"), 60);
+    assert.equal(r.channels.co2Personal.value, null);
+    assert.ok(!ids(r).includes("co2Pocket"));
+  });
+  it("has words, quoted facts and a condition for the pocket", () => {
+    assert.ok(RESPONSES.co2Pocket.steps.length >= 2 && RESPONSES.co2Pocket.illustrative);
+    for (const f of RESPONSES.co2Pocket.facts) assert.ok(LIMIT_FACTS[f], f);
+    assert.match(LIMIT_FACTS.co2Pockets.quote, /pockets/);
+    assert.ok(T.conditions(5).some((c) => c.key === "co2Personal"));
+    assert.equal(T.SCENARIOS.pocket.group, "crew");
   });
 });

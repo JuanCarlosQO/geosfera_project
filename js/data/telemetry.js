@@ -17,6 +17,8 @@ export const LIMIT_FACTS = {
   co2Standard: { quote: "limits the average 1-hour CO2 partial pressure (ppCO2) in the habitat volume to no more than 3 mmHg", url: CO2, source: "NASA OCHMO-TB-004" },
   co2Headache: { quote: "Headaches at levels between 2.8-4.5 mmHg", url: CO2, source: "NASA OCHMO-TB-004" },
   co2Above: { quote: "Fatigue malaise, decreased sleep, and nausea reported at levels above 4.5 mmHg.", url: CO2, source: "NASA OCHMO-TB-004" },
+  co2Pockets: { quote: "provide circulation that prevents CO2 and thermal pockets from forming", url: CO2, source: "NASA OCHMO-TB-004, quoting NASA-STD-3001 [V2 6107]" },
+  co2Nodes: { quote: "There is a slight variation across the different nodes of the ISS due to location of CO2 scrubbing equipment and ventilation patterns.", url: CO2, source: "NASA OCHMO-TB-004" },
   co2Ppm: { quote: "0.5% CO2 = 3.8 mmHg CO2.", url: CO2, source: "NASA OCHMO-TB-004" },
   temperature: { quote: "anchored at 18°C and 75% humidity on the upper left corner and 27 °C and 25% humidity", url: VOL2, source: "NASA-STD-3001 Vol. 2 [V2 6012]" },
   comfort: { quote: "these atmospheric parameters (20°C - 25°C and 30-60% humidity) to support human comfort and performance", url: VOL2, source: "NASA-STD-3001 Vol. 2 [V2 6013]" },
@@ -45,6 +47,7 @@ export const LIMIT_FACTS = {
 export const RESPONSES = {
   co2: { title: "Cabin CO₂ above NASA's limit", steps: ["Tell the crew and Mission Control: CO₂ removal may be failing.", "Move to a ventilated module and keep the air moving.", "Headache? Open Meds › Head for what to try first."], link: { href: "#meds", text: "Open Meds" }, facts: ["co2Standard", "co2Headache", "co2Above"] },
   dose: { title: "Dose rate far above the usual", steps: ["Tell the crew and Mission Control.", "Follow the flight rules for a solar particle event: move to the most shielded part of the vehicle. NASA's plan for Orion is a shelter built from the stowage bags.", "Log your dosimeter reading in today's check-in."], link: { href: "#log", text: "Open the check-in" }, facts: ["shelter", "shelterTime", "doseEvent"] },
+  co2Pocket: { title: "CO₂ pocket around you", steps: ["The cabin reading is normal: it is the air around you that is not moving.", "Move, and point the nearest fan or vent at where you are.", "Headache or short of breath once the air is moving? Tell your crew medical officer."], link: null, facts: ["co2Pockets", "co2Headache", "co2Above"], illustrative: true },
   sensorChest: { title: "Chest sensor: no signal", steps: ["This is the sensor, not the heart: no heart rate is shown until it reads again.", "Press the chest band flat against the skin, or moisten its contacts.", "Still nothing? Measure by hand and log it in the check-in."], link: { href: "#log", text: "Open the check-in" }, facts: [], illustrative: true },
   sensorCuff: { title: "Arm cuff is off: battery empty", steps: ["No blood pressure is shown until the cuff is back.", "Change or charge the battery, then measure again."], link: null, facts: [], illustrative: true },
   sensorBattery: { title: "Arm cuff battery is low", steps: ["Change or charge it at the next break, before it stops.", "Readings are still good for now."], link: null, facts: [], illustrative: true },

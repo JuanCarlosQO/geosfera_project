@@ -43,6 +43,10 @@ export const RULES = {
   batteryLow: 20,                   // % of battery: time to change or charge it
   batteryDrain: 2,                  // % a second in the "battery running out" simulation
   linkAct: 30,                      // seconds with no data from the body before "check in person"
+  // --- asleep; illustrative app rules ---
+  sleepHr: [40, 100],               // heart rate outside this while asleep is worth a look (a slow pulse is expected)
+  pocketGap: 1,                     // mmHg the air near the crew member must be above the cabin's to call it a pocket
+  wakeEscalate: 30,                 // seconds a wake alarm can go unanswered before the crew is alerted
   raiseAfter: 3,                    // readings in a row before an alert is raised
   clearAfter: 5                     // readings in a row back to normal before it is cleared
 };
@@ -74,6 +78,7 @@ export const SCENARIOS = {
   still: { label: "Long time still", note: "Simulated: hours at a console without moving.", group: "crew" },
   hydration: { label: "Dehydration", note: "Simulated: estimated hydration falls; heart rate rises, pressure drops.", group: "crew" },
   tachy: { label: "Racing heart", note: "Simulated: heart rate jumps at rest with no effort.", group: "crew" },
+  pocket: { label: "CO₂ pocket while asleep", note: "Simulated: the air around the sleeping crew member stops moving and the CO₂ they breathe out builds up. The cabin sensor sees nothing.", group: "crew" },
   leadoff: { label: "Chest sensor loose", note: "Simulated: the chest band loses skin contact. No heart rate arrives, and none is invented.", group: "sensor" },
   battery: { label: "Cuff battery dying", note: "Simulated: the arm cuff's battery runs out.", group: "sensor" },
   linkdrop: { label: "Wireless link lost", note: "Simulated: the body sensors stop reaching the tablet. The cabin sensors are wired and keep reporting.", group: "sensor" }
@@ -83,7 +88,8 @@ export const SCENARIOS = {
 export const SENSORS = {
   chest: { name: "Chest band", feeds: "heartRate", at: [100, 118], battery: 86 },
   cuff: { name: "Arm cuff", feeds: "bloodPressure", at: [58, 140], battery: 74 },
-  wrist: { name: "Wrist unit", feeds: "still", at: [150, 222], battery: 91 }
+  wrist: { name: "Wrist unit", feeds: "still", at: [150, 222], battery: 91 },
+  clip: { name: "CO₂ clip", feeds: "co2Personal", at: [112, 74], battery: 88 }
 };
 
 /** Link and battery of each wearable this second. link: "ok" | "off" (the sensor itself) | "lost" (the wireless link). */
@@ -155,6 +161,8 @@ export function startState({ hr = null, sys = null, dia = null } = {}, radiation
     diastolic: dia ?? 75,
     still: 12,
     co2: 2.2,
+    co2Personal: 2.3,
+    sleeping: false,
     temperature: 22.4,
     humidity: 46,
     pressure: LIMITS.pressureIss,
@@ -191,18 +199,19 @@ function contribution(id, c) {
     case "power": return { power: -65 * k(90), co2: 2.2 * k(90), temperature: 4 * k(90), hr: 3 * k(90) };
     case "hydration": return { hydration: -35 * k(90), hr: 22 * k(90), sys: -12 * k(90) };
     case "tachy": return { hr: 75 * k(30) };
+    case "pocket": return { co2p: 3.6 * k(40), hr: 6 * k(40) };
     case "exercise": return { hr: 77 * k(20), sys: 32 * k(20), dia: 6 * k(20), temperature: 0.5 * k(20), humidity: 8 * k(20), co2: 0.4 * k(20) };
     case "eva": return { hr: 40 * k(15), sys: 15 * k(15), dia: 4 * k(15) };
     default: return {};
   }
 }
 
-/** "exercise", "eva", "recovery" (just stopped an effort) or "rest". */
-export function modeOf(active = {}) {
+/** "exercise", "eva", "recovery" (just stopped an effort), "sleep" or "rest". */
+export function modeOf(active = {}, sleeping = false) {
   if (active.eva && active.eva.phase !== "rec") return "eva";
   if (active.exercise && active.exercise.phase !== "rec") return "exercise";
   if (EFFORT.some((id) => active[id]?.phase === "rec")) return "recovery";
-  return "rest";
+  return sleeping ? "sleep" : "rest";
 }
 /** Seconds since the last effort stopped (0 when not recovering). */
 export const recoveryTime = (active = {}) => Math.max(0, ...EFFORT.map((id) => (active[id]?.phase === "rec" ? active[id].t : 0)));
@@ -218,11 +227,14 @@ export function step(state, rand) {
     }
     s.active[id] = c;
   }
-  s.mode = modeOf(s.active);
-  const T = { hr: s.base.hr, sys: s.base.sys, dia: s.base.dia, co2: 2.2, temperature: 22.4, humidity: 46, pressure: LIMITS.pressureIss, smoke: 5, ammonia: 0, power: 100, hydration: 95 };
+  s.mode = modeOf(s.active, s.sleeping);
+  const asleep = s.mode === "sleep";
+  const T = { hr: s.base.hr - (asleep ? 12 : 0), sys: s.base.sys - (asleep ? 8 : 0), dia: s.base.dia - (asleep ? 5 : 0), co2p: 0, co2: 2.2, temperature: 22.4, humidity: 46, pressure: LIMITS.pressureIss, smoke: 5, ammonia: 0, power: 100, hydration: 95 };
   for (const [id, c] of Object.entries(s.active)) for (const [k, v] of Object.entries(contribution(id, c))) T[k] += v;
 
   s.co2 = clamp(drift(s.co2, T.co2, 0.12, 0.05, rand), 0.4, 12);
+  // the clip reads the air the crew member breathes: the cabin's, plus whatever builds up around them
+  s.co2Personal = clamp(drift(state.co2Personal ?? s.co2, s.co2 + 0.1 + T.co2p, 0.15, 0.04, rand), 0.4, 14);
   s.heartRate = clamp(drift(s.heartRate, T.hr, 0.15, 1.2, rand), 35, 200);
   s.systolic = clamp(drift(s.systolic, T.sys, 0.12, 1.1, rand), 70, 230);
   s.diastolic = clamp(drift(s.diastolic, T.dia, 0.12, 0.8, rand), 45, 130);
@@ -231,7 +243,7 @@ export function step(state, rand) {
   s.pressure = clamp(drift(s.pressure, T.pressure, 0.2, 0.05, rand), 30, 110);
   // one simulated second stands for one minute at the console
   const resting = s.mode === "rest";
-  s.still = !resting ? 0 : s.active.still ? s.still + 1 : Math.max(0, s.still + (rand() < 0.08 ? -s.still : 0.25));
+  s.still = asleep ? s.still + 1 : !resting ? 0 : s.active.still ? s.still + 1 : Math.max(0, s.still + (rand() < 0.08 ? -s.still : 0.25));
   s.smoke = clamp(drift(s.smoke ?? 5, T.smoke, 0.15, 0.5, rand), 0, 400);
   s.ammonia = clamp(drift(s.ammonia ?? 0, T.ammonia, 0.15, 0.03, rand), 0, 60);
   s.power = clamp(drift(s.power ?? 100, T.power, 0.1, 0.15, rand), 0, 100);
@@ -250,7 +262,8 @@ export function step(state, rand) {
 export function startScenario(state, id) {
   if (!SCENARIOS[id] || id === "nominal" || state.active?.[id]) return state;
   const c = { since: 0, ...(EFFORT.includes(id) ? { phase: "on" } : {}) };
-  return { ...state, scenario: id, since: 0, active: { ...(state.active ?? {}), [id]: c }, ...(id === "still" ? { still: Math.max(state.still, 30) } : {}) };
+  const sleeping = id === "pocket" ? true : EFFORT.includes(id) ? false : state.sleeping ?? false; // a pocket forms around someone asleep; an effort wakes them
+  return { ...state, sleeping, scenario: id, since: 0, active: { ...(state.active ?? {}), [id]: c }, ...(id === "still" ? { still: Math.max(state.still, 30) } : {}) };
 }
 
 /** Stopping an effort starts its recovery (heart rate comes down little by little); anything else just ends. */
@@ -264,6 +277,14 @@ export function stopScenario(state, id) {
   const sensors = id === "battery" ? { ...(state.sensors ?? {}), cuff: SENSORS.cuff.battery } : state.sensors; // a charged battery goes back in
   return { ...state, active, sensors, scenario: left.at(-1) ?? "nominal" };
 }
+
+/** Going to sleep, or waking up. Waking and moving mixes the air again, so a pocket ends. */
+export function setSleeping(state, sleeping) {
+  if (sleeping) return { ...resetEfforts(state), sleeping: true };
+  const awake = state.active?.pocket ? stopScenario(state, "pocket") : state;
+  return { ...awake, sleeping: false, still: 0 };
+}
+const resetEfforts = (state) => EFFORT.reduce((st, id) => { if (!st.active?.[id]) return st; const active = { ...st.active }; delete active[id]; return { ...st, active }; }, state);
 
 export const toggleScenario = (state, id) => (state.active?.[id] && state.active[id].phase !== "rec" ? stopScenario(state, id) : startScenario(stopRecovery(state, id), id));
 const stopRecovery = (state, id) => { if (state.active?.[id]?.phase !== "rec") return state; const active = { ...state.active }; delete active[id]; return { ...state, active }; };
@@ -335,9 +356,11 @@ export function judgeHeart(mode, hr, band, recovering = 0) {
   const max = maxHeartRate();
   if (mode === "exercise" || mode === "eva") { const [w, a] = mode === "exercise" ? RULES.hrExercise : RULES.hrEva; return hr > a * max ? "act" : hr > w * max ? "watch" : "normal"; }
   if (mode === "recovery") return recovering >= RULES.recoveryAfter && hr > RULES.hrRecovery ? "watch" : "normal";
+  if (mode === "sleep") return hr > RULES.hrRestAct ? "act" : hr < RULES.sleepHr[0] || hr > RULES.sleepHr[1] ? "watch" : "normal";
   return hr > RULES.hrRestAct ? "act" : judgeVital("heartRate", hr, band);
 }
 export function judgePressureArterial(mode, bp, band) {
+  if (mode === "sleep") return judgeVital("bloodPressure", bp, null); // asleep: the reference range only, a lower pressure is expected
   if (mode !== "rest") return bp[0] > RULES.sysEffort ? "watch" : "normal";
   const st = judgeVital("bloodPressure", bp, band);
   return st === "normal" && bp[0] < RULES.sysLow ? "watch" : st;
@@ -363,6 +386,8 @@ export function conditions(typicalDose = 0) {
     { key: "ammonia", basis: "app", watch: `${R.ammonia[0]} ppm or more`, act: `${R.ammonia[1]} ppm or more`, facts: [] },
     { key: "power", basis: "app", watch: `below ${R.power[0]} %`, act: `below ${R.power[1]} %`, facts: [] },
     { key: "hydration", basis: "app", watch: `below ${R.hydration[0]} %`, act: `below ${R.hydration[1]} %`, facts: [] },
+    { key: "co2Personal", name: "CO₂ pocket (the clip you wear)", basis: "app", watch: `the air near you above ${L.co2Standard} mmHg while the cabin is normal and at least ${R.pocketGap} mmHg lower`, act: `the same above ${L.co2Symptoms} mmHg`, facts: ["co2Pockets"] },
+    { key: "heartRate", name: "While asleep", basis: "app", watch: `heart rate under ${R.sleepHr[0]} or over ${R.sleepHr[1]} bpm; time without moving is not counted`, act: `any “Act now” alert sounds the wake alarm; not answered in ${R.wakeEscalate} s, the crew is alerted`, facts: [] },
     { key: "heartRate", name: "A wearable sensor", basis: "app", watch: `no signal from it, or its battery at ${R.batteryLow} % or less`, act: `no data from any body sensor for ${R.linkAct} seconds`, facts: [] },
     { key: "heartRate", name: "Heart rate in effort", basis: "app", watch: `exercise: above ${Math.round(R.hrExercise[0] * 100)} % of an estimated maximum of ${220 - R.age} bpm; spacewalk: above ${Math.round(R.hrEva[0] * 100)} %; ${R.recoveryAfter} s after stopping: still above ${R.hrRecovery} bpm`, act: `exercise: above ${Math.round(R.hrExercise[1] * 100)} %; spacewalk: above ${Math.round(R.hrEva[1] * 100)} %; at rest: above ${R.hrRestAct} bpm`, facts: [] },
     { key: "heartRate", basis: "team", watch: `outside 60–100 bpm, or outside your usual range, on the ${R.smoothSeconds}-second average`, act: null, facts: [] },
@@ -392,7 +417,7 @@ const CABIN = ["co2", "pressure", "dose", "smoke", "ammonia", "temperature", "po
  */
 export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   const dose = doseRate(state);
-  const mode = state.mode ?? modeOf(state.active), rec = recoveryTime(state.active);
+  const mode = state.mode ?? modeOf(state.active, state.sleeping), rec = recoveryTime(state.active);
   const hr = round(state.heartRate);
   const bp = [round(state.systolic), round(state.diastolic)];
   // judge vital signs on a short average so one noisy second does not raise an alert
@@ -400,11 +425,13 @@ export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   const hrJ = avg(history.heartRate, hr);
   const bpJ = [avg(history.bloodPressure, bp[0]), avg(history.diastolic, bp[1])];
   const co2 = round(state.co2, 1);
+  const co2p = round(state.co2Personal ?? state.co2, 1);
   const rest = mode === "rest";
   const ch = {
     heartRate: { value: hr, status: judgeHeart(mode, hrJ, bands.hr, rec), mine: rest ? versusBaseline(hrJ, bands.hr) : null },
     bloodPressure: { value: bp, status: judgePressureArterial(mode, bpJ, bands.sys), mine: rest ? versusBaseline(bpJ[0], bands.sys) : null },
-    still: { value: Math.floor(state.still), status: judgeStill(state.still) },
+    still: { value: Math.floor(state.still), status: mode === "sleep" ? "normal" : judgeStill(state.still), asleep: mode === "sleep" },
+    co2Personal: { value: co2p, ppm: co2Ppm(co2p), status: judgeCo2(co2p), gap: round(co2p - co2, 1) },
     hydration: { value: round(state.hydration ?? 95), status: judgeHydration(state.hydration ?? 95) },
     co2: { value: co2, ppm: co2Ppm(co2), status: judgeCo2(co2) },
     temperature: { value: round(state.temperature, 1), status: judgeTemperature(state.temperature) },
@@ -422,6 +449,9 @@ export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   let alerts = [];
   const hrId = { exercise: "hrExercise", eva: "hrEva", recovery: "hrRecovery" }[mode] ?? "heartRate";
   if (ch.co2.status !== "normal") alerts.push({ id: "co2", status: ch.co2.status });
+  // a pocket: the air near the crew member is over the limit while the cabin's is not
+  const near = ch.co2Personal;
+  if (near.value != null && (near.status === "act" || near.status === "watch") && ch.co2.status === "normal" && near.gap >= RULES.pocketGap) alerts.push({ id: "co2Pocket", status: near.status });
   if (ch.dose.status !== "normal") alerts.push({ id: "dose", status: ch.dose.status });
   if (ch.heartRate.status === "act" || ch.heartRate.status === "watch") alerts.push({ id: hrId, status: ch.heartRate.status, vital: true });
   if (ch.bloodPressure.status === "act" || ch.bloodPressure.status === "watch") alerts.push({ id: "bloodPressure", status: ch.bloodPressure.status, vital: true });
@@ -438,7 +468,8 @@ export function readout(state, bands = {}, typicalDose = 0, history = {}) {
   else if (sensors.cuff.low) alerts.push({ id: "sensorBattery", status: "watch" });
   if (state.active?.linkdrop) alerts.push({ id: "sensorLink", status: (state.silent ?? 0) >= RULES.linkAct ? "act" : "watch" });
   alerts.sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status));
-  return { channels: ch, sensors, silent: state.silent ?? 0, alerts, mode, overall: worst(Object.values(ch).map((c) => c.status)) };
+  const wake = mode === "sleep" ? alerts.filter((a) => a.status === "act").map((a) => a.id) : []; // asleep: what must wake them
+  return { channels: ch, sensors, silent: state.silent ?? 0, alerts, wake, mode, overall: worst(Object.values(ch).map((c) => c.status)) };
 }
 
 /* ---------- steady alerts: raised after a few readings in a row, cleared after a few back to normal ---------- */
@@ -476,6 +507,7 @@ export function remember(history, r) {
   if (r.channels.bloodPressure.value != null) { push("bloodPressure", r.channels.bloodPressure.value[0]); push("diastolic", r.channels.bloodPressure.value[1]); }
   if (r.channels.still.value != null) push("still", r.channels.still.value);
   push("co2", r.channels.co2.value);
+  if (r.channels.co2Personal.value != null) push("co2Personal", r.channels.co2Personal.value);
   push("temperature", r.channels.temperature.value);
   push("humidity", r.channels.humidity.value);
   push("pressure", r.channels.pressure.value);

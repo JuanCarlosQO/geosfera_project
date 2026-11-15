@@ -14,6 +14,7 @@ import { mountSupport } from "./support.js";
 import { mountMind } from "./mind.js";
 import { startSync, mountSyncButton } from "./sync.js";
 import { initFold } from "./fold.js";
+import { mountAlarm } from "./alarm.js";
 
 const station = document.getElementById("station");
 const hatchRoot = document.getElementById("hatch-root");
@@ -83,6 +84,7 @@ if (new URLSearchParams(location.search).has("demo")) {
   history.replaceState(null, "", location.pathname + location.hash); // so a reload after "Remove demo crew" stays empty
 }
 const support = mountSupport(); // the support button works even with the hatch closed
+mountAlarm(); // telemetry alerts on every screen, with sound, and sleep mode
 initFold(station); // tabs, and intros and sources tucked away on every screen
 window.addEventListener("hashchange", render);
 window.addEventListener("geosfera:synced", () => { if (!document.querySelector(".veil:not([hidden])")) render(); });
